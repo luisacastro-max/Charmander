@@ -1,0 +1,17 @@
+{
+  "versao": 1,
+  "aviso": "Trechos fictícios entre pontos de referência. Distâncias estimadas a partir do mapa ilustrativo.",
+  "trechos": [
+    { "id": "T01", "de": "ENT", "para": "BAL", "distanciaM": 15, "escada": false, "trocaPiso": null, "movimento": "normal" },
+    { "id": "T02", "de": "ENT", "para": "EST", "distanciaM": 16, "escada": false, "trocaPiso": null, "movimento": "normal" },
+    { "id": "T03", "de": "BAL", "para": "BAN", "distanciaM": 16, "escada": false, "trocaPiso": null, "movimento": "normal" },
+    { "id": "T04", "de": "BAL", "para": "ESC", "distanciaM": 19, "escada": true, "trocaPiso": null, "movimento": "normal" },
+    { "id": "T05", "de": "BAL", "para": "ELV", "distanciaM": 19, "escada": false, "trocaPiso": null, "movimento": "normal" },
+    { "id": "T06", "de": "ESC", "para": "PA", "distanciaM": 19, "escada": true, "trocaPiso": "escada", "movimento": "normal" },
+    { "id": "T07", "de": "ELV", "para": "PA", "distanciaM": 27, "escada": false, "trocaPiso": "elevador", "movimento": "alto" },
+    { "id": "T08", "de": "ELV", "para": "LOJ", "distanciaM": 19, "escada": false, "trocaPiso": null, "movimento": "normal" },
+    { "id": "T09", "de": "LOJ", "para": "PA", "distanciaM": 20, "escada": false, "trocaPiso": "rampa", "movimento": "normal" },
+    { "id": "T10", "de": "LOJ", "para": "ET", "distanciaM": 15, "escada": false, "trocaPiso": "rampa", "movimento": "normal" },
+    { "id": "T11", "de": "PA", "para": "ET", "distanciaM": 15, "escada": false, "trocaPiso": null, "movimento": "normal" }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "versao": 1,
+  "aviso": "Dados fictícios do shopping demonstrativo do Acessa+. Não representam um shopping real.",
+  "mapa": { "largura": 300, "altura": 200 },
+  "pontos": [
+    { "id": "ENT", "nome": "Entrada Sul", "piso": "Térreo", "beacon": "BLE-01", "x": 25, "y": 100, "tipo": "entrada", "saidaEmergencia": true },
+    { "id": "BAL", "nome": "Balcão de Informações", "piso": "Térreo", "beacon": "BLE-02", "x": 85, "y": 100, "tipo": "servico", "saidaEmergencia": false },
+    { "id": "BAN", "nome": "Banheiro acessível", "piso": "Térreo", "beacon": "BLE-03", "x": 85, "y": 165, "tipo": "servico", "saidaEmergencia": false },
+    { "id": "EST", "nome": "Estacionamento acessível", "piso": "Térreo", "beacon": "BLE-04", "x": 25, "y": 165, "tipo": "servico", "saidaEmergencia": true },
+    { "id": "ESC", "nome": "Escada", "piso": "Térreo", "beacon": "BLE-05", "x": 150, "y": 60, "tipo": "escada", "saidaEmergencia": false },
+    { "id": "ELV", "nome": "Elevadores", "piso": "Térreo", "beacon": "BLE-06", "x": 150, "y": 140, "tipo": "elevador", "saidaEmergencia": false },
+    { "id": "LOJ", "nome": "Loja Aurora Moda", "piso": "Térreo", "beacon": "BLE-07", "x": 225, "y": 140, "tipo": "loja", "saidaEmergencia": false },
+    { "id": "PA", "nome": "Praça de Alimentação", "piso": "Piso 1", "beacon": "BLE-08", "x": 225, "y": 60, "tipo": "alimentacao", "saidaEmergencia": false },
+    { "id": "ET", "nome": "Espaço Tranquilo", "piso": "Piso 1", "beacon": "BLE-09", "x": 272, "y": 100, "tipo": "servico", "saidaEmergencia": false }
+  ],
+  "locais": [
+    {
+      "id": "BAL", "pontoId": "BAL", "nome": "Balcão de Informações", "categoria": "Serviços", "icone": "info",
+      "descricao": "Atendimento com balcão rebaixado. Aceita conversa por escrito.",
+      "recursos": ["Balcão rebaixado", "Atendimento por escrito", "Piso tátil"]
+    },
+    {
+      "id": "BAN", "pontoId": "BAN", "nome": "Banheiro acessível", "categoria": "Serviços", "icone": "banheiro",
+      "descricao": "Cabine ampla com barras de apoio e porta de abertura leve.",
+      "recursos": ["Barras de apoio", "Espaço para giro de cadeira"]
+    },
+    {
+      "id": "EST", "pontoId": "EST", "nome": "Estacionamento acessível", "categoria": "Serviços", "icone": "estacionamento",
+      "descricao": "Vagas largas próximas à entrada, com piso nivelado.",
+      "recursos": ["Vagas largas", "Piso nivelado"]
+    },
+    {
+      "id": "ELV", "pontoId": "ELV", "nome": "Elevadores", "categoria": "Serviços", "icone": "elevador",
+      "descricao": "Dois elevadores com botões em braille e aviso sonoro de andar.",
+      "recursos": ["Braille", "Aviso sonoro", "Espelho interno"]
+    },
+    {
+      "id": "LOJ", "pontoId": "LOJ", "nome": "Loja Aurora Moda", "categoria": "Lojas", "icone": "loja",
+      "descricao": "Loja fictícia com corredores largos e provadores amplos.",
+      "recursos": ["Corredores largos", "Provador acessível", "Atendimento por escrito"]
+    },
+    {
+      "id": "PA", "pontoId": "PA", "nome": "Praça de Alimentação", "categoria": "Alimentação", "icone": "alimentacao",
+      "descricao": "Mesas com espaço livre para cadeira de rodas e cardápio em letras grandes.",
+      "recursos": ["Mesas adaptadas", "Cardápio ampliado"],
+      "horario": "10h às 22h"
+    },
+    {
+      "id": "ET", "pontoId": "ET", "nome": "Espaço Tranquilo", "categoria": "Serviços", "icone": "tranquilo",
+      "descricao": "Sala com pouca luz e sem música, para pausar de ruídos e estímulos.",
+      "recursos": ["Baixo estímulo", "Sem música", "Assentos"],
+      "horario": "Até 21h"
+    },
+    {
+      "id": "ESC", "pontoId": "ESC", "nome": "Escada", "categoria": "Circulação", "icone": "escada",
+      "descricao": "Escada fixa. Não faz parte de rotas sem escadas.",
+      "destino": false
+    }
+  ]
+}

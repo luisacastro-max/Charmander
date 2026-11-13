@@ -4,14 +4,16 @@
 import 'package:acessa_plus/app/app.dart';
 import 'package:acessa_plus/app/theme/app_theme.dart';
 import 'package:acessa_plus/app/theme/tokens.dart';
-import 'package:acessa_plus/features/welcome_preferences/preferences_scope.dart';
-import 'package:flutter/material.dart';
 import 'dart:ui' show Tristate;
+
+import 'package:acessa_plus/features/welcome_preferences/preferences.dart';
+import 'package:acessa_plus/features/welcome_preferences/preferences_scope.dart';
+import 'package:acessa_plus/features/welcome_preferences/preferences_store.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<PreferencesController> abrirApp(WidgetTester t,
     {bool reduzirMovimento = false}) async {
-  useBrandFonts = false;
   t.view.physicalSize = const Size(1080, 7500);
   t.view.devicePixelRatio = 2.5;
   addTearDown(t.view.reset);
@@ -58,7 +60,6 @@ void main() {
 
   testWidgets('Título inteiro em tela estreita (360 dp), sem quebrar palavra',
       (t) async {
-    useBrandFonts = false;
     t.view.physicalSize = const Size(360 * 3, 5000);
     t.view.devicePixelRatio = 3;
     addTearDown(t.view.reset);
@@ -121,7 +122,7 @@ void main() {
     await abrirApp(t);
     await irParaPreferencias(t);
     await tocar(t, 'Alto contraste');
-    final ctx = t.element(find.text('Minha acessibilidade'));
+    final ctx = t.element(find.text('Alto contraste'));
     expect(AcessaTheme.of(ctx).colors.background,
         AcessaColors.highContrast.background);
   });
@@ -139,14 +140,34 @@ void main() {
     expect(ctrl.prefs.preferElevators, isFalse);
   });
 
-  testWidgets('Desativar todas volta ao padrão', (t) async {
-    final ctrl = await abrirApp(t);
+  testWidgets('RF44/CA14: apagar preferências pede confirmação e limpa o '
+      'que foi salvo', (t) async {
+    t.view.physicalSize = const Size(1080, 7500);
+    t.view.devicePixelRatio = 2.5;
+    addTearDown(t.view.reset);
+    final store = MemoryPreferencesStore();
+    final ctrl = PreferencesController(const Preferences(), store);
+    await t.pumpWidget(AcessaApp(controller: ctrl));
+    await t.pumpAndSettle();
     await irParaPreferencias(t);
     await tocar(t, 'Alto contraste');
     await tocar(t, 'Rotas sem escadas');
+    expect((await store.load()).activeCount, 2, reason: 'salvo ao mudar');
+
+    // Cancelar não apaga nada.
+    await tocar(t, 'Apagar minhas preferências');
+    expect(find.text('Apagar suas preferências?'), findsOneWidget);
+    await t.tap(find.text('Cancelar'));
+    await t.pumpAndSettle();
     expect(ctrl.prefs.activeCount, 2);
-    await tocar(t, 'Desativar todas');
+
+    // Confirmar apaga e avisa.
+    await tocar(t, 'Apagar minhas preferências');
+    await t.tap(find.text('Apagar'));
+    await t.pumpAndSettle();
     expect(ctrl.prefs.activeCount, 0);
+    expect((await store.load()).activeCount, 0);
+    expect(find.text('Preferências apagadas deste aparelho.'), findsOneWidget);
   });
 
   testWidgets('Movimento reduzido do sistema: telas aparecem sem animação',
