@@ -23,13 +23,13 @@ O HTML é um protótipo de interface. A proposta para o aplicativo mobile é Flu
 
 | Entrega | Arquivo | Situação |
 |---|---|---|
-| Documentação de requisitos | [Requisitos v0.4](docs/requisitos/requisitos-v0.4.docx) | Documento preliminar |
+| Proposta e estrutura inicial das telas | [Proposta das 13 telas](docs/telas/proposta-e-estrutura-inicial-das-telas.docx) | Planejamento inicial |\n| Documentação de requisitos | [Requisitos v0.4](docs/requisitos/requisitos-v0.4.docx) | Documento preliminar |
 | Arquitetura proposta | [Proposta de arquitetura](docs/arquitetura/proposta-de-arquitetura.docx) | Proposta com decisões pendentes |
 | Linguagem e justificativa técnica | [Justificativa técnica](docs/tecnologias/justificativa-tecnica.docx) | Decisão proposta para confirmação da equipe |
 | Plataforma e tecnologias adotadas | [Plataforma e tecnologias v0.1](docs/tecnologias/plataforma-e-tecnologias-v0.1.docx) | Documento fornecido pela equipe |\n| Tecnologia sorteada: Trello | [Uso do Trello](docs/gestao/uso-do-trello.docx) | Documento fornecido pela equipe |
 | Visualização das telas | [Protótipo interativo](prototipo/index.html) | Demonstração em HTML |
 
-Os documentos originais foram preservados em Word. A proposta textual de estrutura das telas poderá ser acrescentada quando disponibilizada pela equipe.
+Os documentos originais foram preservados em Word.
 
 ## Escopo da demonstração
 
@@ -63,4 +63,4 @@ Os documentos registram decisões em aberto, incluindo a entrada de OCR no MVP, 
 | `docs/arquitetura/` | Arquitetura proposta |
 | `docs/tecnologias/` | Justificativa tecnológica |
 | `docs/gestao/` | Uso do Trello |
-| `prototipo/` | Protótipo interativo |
+| `docs/telas/` | Proposta, estrutura e fluxos das telas |\n| `prototipo/` | Protótipo interativo |
