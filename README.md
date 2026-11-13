@@ -8,11 +8,7 @@ O Acessa+ propõe reduzir barreiras de comunicação, orientação e mobilidade 
 
 O [protótipo HTML](prototipo/index.html) apresenta as telas e os fluxos da proposta. Para experimentar, baixe o arquivo e abra-o em um navegador. O GitHub exibe o código do HTML ao abrir esse link.
 
-A publicação pelo GitHub Pages está preparada. Após habilitar **Settings → Pages → Source → GitHub Actions** e executar o fluxo **Publicar protótipo**, o endereço previsto é:
-
-https://luisacastro-max.github.io/Charmander/
-
-Esse endereço depende da ativação do Pages e da conclusão da primeira publicação.
+**Como acessar:** abra o link do protótipo acima, clique em **Download raw file** (ícone de download) e abra o arquivo `index.html` no Chrome, Edge ou outro navegador. Não é necessário instalar o aplicativo ou configurar o GitHub Pages.
 
 ### Roteiro de demonstração
 
@@ -68,4 +64,3 @@ Os documentos registram decisões em aberto, incluindo a entrada de OCR no MVP, 
 | `docs/tecnologias/` | Justificativa tecnológica |
 | `docs/gestao/` | Uso do Trello |
 | `prototipo/` | Protótipo interativo |
-| `.github/workflows/` | Publicação do protótipo no GitHub Pages |
