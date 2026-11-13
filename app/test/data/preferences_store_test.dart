@@ -16,8 +16,9 @@ void main() {
     ctrl.update((p) => p.copyWith(largeText: true, language: AppLanguage.es));
     await Future<void>.delayed(Duration.zero);
 
-    final reaberto =
-        await PreferencesController.restore(LocalPreferencesStore());
+    final reaberto = await PreferencesController.restore(
+      LocalPreferencesStore(),
+    );
     expect(reaberto.prefs.largeText, isTrue);
     expect(reaberto.prefs.language, AppLanguage.es);
   });

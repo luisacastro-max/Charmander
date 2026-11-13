@@ -9,7 +9,7 @@ import '../../core/widgets/entrance.dart';
 import '../../core/widgets/preference_toggle.dart';
 import '../../core/widgets/sticker_button.dart';
 import '../../core/widgets/sticker_card.dart';
-import 'next_step_screen.dart';
+import '../destino/destino_screen.dart';
 import 'preferences.dart';
 import 'preferences_scope.dart';
 
@@ -18,7 +18,11 @@ import 'preferences_scope.dart';
 /// Organizada por necessidade, não por diagnóstico. Texto ampliado,
 /// alto contraste e redução de estímulos mudam a tela na hora.
 class PreferencesScreen extends StatelessWidget {
-  const PreferencesScreen({super.key});
+  const PreferencesScreen({super.key, this.continuarParaDestino = true});
+
+  /// No primeiro uso, "Continuar" leva a "Para onde você quer ir?".
+  /// Quando aberta de outra tela (ex.: revisar rota), só volta.
+  final bool continuarParaDestino;
 
   @override
   Widget build(BuildContext context) {
@@ -197,11 +201,14 @@ class PreferencesScreen extends StatelessWidget {
             Entrance(
               index: i++,
               child: StickerButton(
-                label: 'Continuar',
-                icon: Icons.arrow_forward,
-                onPressed: () =>
-                    Navigator.of(context)
-                        .push(acessaRoute(const NextStepScreen())),
+                label: continuarParaDestino ? 'Continuar' : 'Voltar',
+                icon: continuarParaDestino
+                    ? Icons.arrow_forward
+                    : Icons.arrow_back,
+                onPressed: () => continuarParaDestino
+                    ? Navigator.of(context)
+                          .push(acessaRoute(const DestinoScreen()))
+                    : Navigator.of(context).maybePop(),
               ),
             ),
             const SizedBox(height: AcessaSpacing.md),
@@ -211,8 +218,7 @@ class PreferencesScreen extends StatelessWidget {
                 label: 'Apagar minhas preferências',
                 kind: StickerButtonKind.secondary,
                 icon: Icons.delete_outline,
-                semanticHint:
-                    'Apaga as escolhas salvas neste aparelho. Pede confirmação.',
+                semanticHint: 'Apaga as escolhas salvas neste aparelho. Pede confirmação.',
                 onPressed: () => _confirmErase(context, ctrl),
               ),
             ),

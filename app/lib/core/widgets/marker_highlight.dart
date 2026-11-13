@@ -32,10 +32,8 @@ class MarkerHighlight extends StatelessWidget {
         1,
         curve: Motion.enter,
       ),
-      builder: (context, t, child) => CustomPaint(
-        painter: _MarkerPainter(t, c.marker),
-        child: child,
-      ),
+      builder: (context, t, child) =>
+          CustomPaint(painter: _MarkerPainter(t, c.marker), child: child),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6),
         child: Text(text, style: style?.copyWith(color: c.onMarker)),

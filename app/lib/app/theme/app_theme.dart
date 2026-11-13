@@ -45,14 +45,13 @@ ThemeData buildTheme(Preferences prefs) {
   final c = colorsFor(prefs);
 
   // Fredoka é uma fonte variável: o peso vem do eixo "wght".
-  TextStyle display(double size, {FontWeight w = FontWeight.w700}) =>
-      TextStyle(
-        fontFamily: fontDisplay,
-        fontSize: size,
-        fontWeight: w,
-        fontVariations: [FontVariation.weight(w.value.toDouble())],
-        height: 1.08,
-      );
+  TextStyle display(double size, {FontWeight w = FontWeight.w700}) => TextStyle(
+    fontFamily: fontDisplay,
+    fontSize: size,
+    fontWeight: w,
+    fontVariations: [FontVariation.weight(w.value.toDouble())],
+    height: 1.08,
+  );
 
   TextStyle body(double size, {FontWeight? w, double? height}) => TextStyle(
     fontFamily: fontBody,

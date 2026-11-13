@@ -1,6 +1,6 @@
 # Dicionário de dados — Acessa+ (MVP)
 
-Situação: **Etapa 2**. Todos os dados são **fictícios** e servem só para a demonstração.
+Situação: **Etapa 3a** (shopping fictício v2, ver MUD-01 em `docs/backlog/mudancas-de-escopo.md`). Todos os dados são **fictícios** e servem só para a demonstração.
 Nenhum dado pessoal é coletado ou armazenado.
 
 ## Onde cada dado fica
@@ -18,7 +18,15 @@ Nenhum dado pessoal é coletado ou armazenado.
 - Campo ausente ou vazio aparece como **"Não informado"** (`app/lib/domain/rules/informacao.dart`).
 - Lista de recursos ausente ou vazia também aparece como "Não informado".
 - Ausência de cadastro **nunca** é tratada como prova de que algo é ou não acessível.
-- Exemplos no catálogo: o horário do banheiro e os recursos da escada não foram cadastrados.
+- Exemplos no catálogo: o horário e os recursos dos Banheiros do Térreo e o horário da Livraria Página não foram cadastrados.
+
+## O shopping fictício (v2)
+
+- **31 pontos** em 3 níveis: Térreo, Mezanino e 2º piso. Inclui corredores (só para cálculo de rota, não aparecem como destino).
+- **22 locais**: lojas, alimentação, serviços, banheiros (2 acessíveis), saídas e circulação.
+- **36 trechos**, com elevador, escada rolante e escadas.
+- **Galeria do Mezanino**: acesso **somente por escada** — usada para demonstrar RN04 (rota incompatível).
+- Formato geral inspirado numa planta de 2 pisos enviada pela equipe. **Nomes, lojas e medidas são inventados; nenhuma área técnica ou de segurança foi incluída**, e um teste automático confere isso.
 
 ## Ponto de referência (`pontos`)
 
@@ -31,7 +39,7 @@ Ponto do mapa associado a um beacon BLE **simulado** (RN09).
 | `piso` | texto | não | "Térreo" ou "Piso 1"; ausente = "Não informado" |
 | `beacon` | texto | sim | Identificador do beacon simulado (ex.: `BLE-06`) |
 | `x`, `y` | número | sim | Posição no mapa ilustrativo (300 × 200) |
-| `tipo` | `entrada` · `servico` · `loja` · `alimentacao` · `escada` · `elevador` | sim | Tipo do ponto |
+| `tipo` | `entrada` · `servico` · `loja` · `alimentacao` · `escada` · `elevador` · `corredor` | sim | Tipo do ponto |
 | `saidaEmergencia` | sim/não | não | Se é saída usada na emergência simulada (RF53) |
 
 ## Local (`locais`)
@@ -48,7 +56,9 @@ Estabelecimento ou serviço consultado em Explorar (RF07–RF10).
 | `descricao` | texto | não | Descrição curta |
 | `recursos` | lista de textos | não | Recursos de acessibilidade cadastrados |
 | `horario` | texto | não | Horário de funcionamento |
-| `destino` | sim/não | não (padrão: sim) | Se pode ser destino de rota — a escada não pode |
+| `destino` | sim/não | não (padrão: sim) | Se pode ser destino de rota |
+| `acessivel` | sim/não | não | Marcado como acessível no cadastro (ex.: banheiro PNE) |
+| `palavrasChave` | lista de textos | não | Termos extras da busca (ex.: "wc", "fraldário"); a busca ignora acentos |
 
 ## Trecho (`trechos`)
 
@@ -60,10 +70,12 @@ Ligação entre dois pontos, válida nos dois sentidos.
 | `de`, `para` | texto | Pontos ligados |
 | `distanciaM` | inteiro | Distância estimada em metros |
 | `escada` | sim/não | Tem degraus. **Rotas "sem escadas" nunca usam este trecho** (RN03) |
-| `trocaPiso` | `elevador` · `rampa` · `escada` · vazio | Como muda de piso, quando muda |
+| `trocaPiso` | `elevador` · `rampa` · `escada` · `escadaRolante` · vazio | Como muda de piso, quando muda |
 | `movimento` | `normal` · `alto` | Movimento cadastrado; não é medição em tempo real (RN10) |
 
-**Correção em relação ao protótipo HTML:** no protótipo só o trecho Balcão → Escada era marcado com degraus. Aqui o trecho Escada → Praça de Alimentação (a subida em si) também é marcado, e um teste garante que todo trecho que toca a escada tenha `escada = sim`.
+**Regra conservadora:** todo trecho que chega a uma escada ou escada rolante é marcado com `escada = sim` (inclusive a aproximação), para que rotas "sem escadas" nem cheguem perto delas. Um teste automático garante isso.
+
+**Motor de rotas** (`app/lib/domain/rules/rotas.dart`): calcula o caminho de menor custo. "Sem escadas" remove trechos com escada; "Preferência por elevadores" encarece trocas de piso por escada; "Redução de estímulos" encarece trechos com muito movimento. Sem rota compatível, informa e oferece alternativas, sem remover restrições (RN04).
 
 ## Comunicação
 

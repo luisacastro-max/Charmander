@@ -17,10 +17,12 @@ class _JsonAsset {
       .loadString(path)
       .then((s) => jsonDecode(s) as Map<String, dynamic>);
 
-  Future<List<T>> list<T>(String key, T Function(Map<String, dynamic>) f) async =>
-      ((await data)[key] as List)
-          .map((e) => f(e as Map<String, dynamic>))
-          .toList(growable: false);
+  Future<List<T>> list<T>(
+    String key,
+    T Function(Map<String, dynamic>) f,
+  ) async => ((await data)[key] as List)
+      .map((e) => f(e as Map<String, dynamic>))
+      .toList(growable: false);
 }
 
 class JsonCatalogoRepository implements CatalogoRepository {

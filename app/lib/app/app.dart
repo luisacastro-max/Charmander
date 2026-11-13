@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../features/welcome_preferences/preferences_scope.dart';
 import '../core/widgets/theme_reveal.dart';
+import '../data/shopping_data.dart';
 import '../features/welcome_preferences/welcome_screen.dart';
 import 'theme/app_theme.dart';
 import 'theme/tokens.dart';
 
 class AcessaApp extends StatefulWidget {
-  const AcessaApp({super.key, this.controller});
+  const AcessaApp({super.key, this.controller, this.dados});
 
   /// Permite injetar o controlador nos testes.
   final PreferencesController? controller;
+
+  /// Dados do shopping já carregados (main.dart). Se ausentes, as telas
+  /// carregam sob demanda.
+  final ShoppingData? dados;
 
   @override
   State<AcessaApp> createState() => _AcessaAppState();
@@ -22,6 +27,12 @@ class _AcessaAppState extends State<AcessaApp> {
 
   @override
   Widget build(BuildContext context) {
+    final app = _buildApp();
+    final dados = widget.dados;
+    return dados == null ? app : DadosScope(dados: dados, child: app);
+  }
+
+  Widget _buildApp() {
     return PreferencesScope(
       controller: _prefs,
       child: ListenableBuilder(

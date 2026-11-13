@@ -13,10 +13,10 @@ void main() {
   final comunicacao = JsonComunicacaoRepository();
 
   group('Catálogo', () {
-    test('carrega 9 pontos com beacons simulados únicos', () async {
+    test('cada ponto tem um beacon simulado único', () async {
       final pontos = await catalogo.pontos();
-      expect(pontos, hasLength(9));
-      expect(pontos.map((p) => p.beacon).toSet(), hasLength(9));
+      expect(pontos.length, greaterThanOrEqualTo(20));
+      expect(pontos.map((p) => p.beacon).toSet(), hasLength(pontos.length));
     });
 
     test('todo local aponta para um ponto existente', () async {
@@ -26,9 +26,49 @@ void main() {
       }
     });
 
-    test('a escada não pode ser escolhida como destino', () async {
-      final esc = (await catalogo.locais()).firstWhere((l) => l.id == 'ESC');
-      expect(esc.destino, isFalse);
+    test('escadas e corredores não aparecem como destino', () async {
+      final tipo = {for (final p in await catalogo.pontos()) p.id: p.tipo};
+      for (final l in await catalogo.locais()) {
+        expect(
+          [TipoPonto.escada, TipoPonto.corredor].contains(tipo[l.pontoId]),
+          isFalse,
+          reason: l.nome,
+        );
+      }
+    });
+
+    test('há banheiro acessível nos dois pisos principais', () async {
+      final pisos = {for (final p in await catalogo.pontos()) p.id: p.piso};
+      final pne = (await catalogo.locais()).where((l) => l.acessivel);
+      expect(
+        pne.map((l) => pisos[l.pontoId]).toSet(),
+        containsAll(['Térreo', '2º piso']),
+      );
+    });
+
+    test('busca ignora acentos e usa palavras-chave', () async {
+      final locais = await catalogo.locais();
+      expect(locais.where((l) => l.corresponde('sanitario')), isNotEmpty);
+      expect(locais.where((l) => l.corresponde('fraldário')).map((l) => l.id), [
+        'FAM',
+      ]);
+    });
+
+    test('nenhuma área técnica ou de segurança no catálogo', () async {
+      final nomes = [
+        ...(await catalogo.pontos()).map((p) => p.nome),
+        ...(await catalogo.locais()).map((l) => l.nome),
+      ].join(' ').toLowerCase();
+      for (final proibido in [
+        'cftv',
+        'segurança',
+        'brigada',
+        'subestação',
+        'qgbt',
+        'doca',
+      ]) {
+        expect(nomes.contains(proibido), isFalse, reason: proibido);
+      }
     });
 
     test('há saída de emergência e todas ficam no térreo (RF53)', () async {
@@ -46,18 +86,20 @@ void main() {
       }
     });
 
-    test('RN03: todo trecho que chega à escada está marcado com escada',
-        () async {
-      final escadas = (await catalogo.pontos())
-          .where((p) => p.tipo == TipoPonto.escada)
-          .map((p) => p.id)
-          .toSet();
-      for (final t in await percursos.trechos()) {
-        if (escadas.contains(t.de) || escadas.contains(t.para)) {
-          expect(t.escada, isTrue, reason: '${t.id} toca a escada');
+    test(
+      'RN03: todo trecho que chega à escada está marcado com escada',
+      () async {
+        final escadas = (await catalogo.pontos())
+            .where((p) => p.tipo == TipoPonto.escada)
+            .map((p) => p.id)
+            .toSet();
+        for (final t in await percursos.trechos()) {
+          if (escadas.contains(t.de) || escadas.contains(t.para)) {
+            expect(t.escada, isTrue, reason: '${t.id} toca a escada');
+          }
         }
-      }
-    });
+      },
+    );
 
     test('toda troca de piso diz como acontece', () async {
       final piso = {for (final p in await catalogo.pontos()) p.id: p.piso};
@@ -85,12 +127,21 @@ void main() {
       }
     });
 
-    test('RN14: toda sugestão prepara mensagem ou ativa preferência',
-        () async {
+    test('toda sugestão aponta para um ponto existente', () async {
+      final ids = (await catalogo.pontos()).map((p) => p.id).toSet();
+      for (final s in await comunicacao.sugestoesPorPonto()) {
+        expect(ids, contains(s.pontoId));
+      }
+    });
+
+    test('RN14: toda sugestão prepara mensagem ou ativa preferência', () async {
       for (final s in await comunicacao.sugestoesPorPonto()) {
         for (final a in s.acoes) {
-          expect(a.mensagem != null || a.ativarPreferencia != null, isTrue,
-              reason: '${s.pontoId}: ${a.titulo}');
+          expect(
+            a.mensagem != null || a.ativarPreferencia != null,
+            isTrue,
+            reason: '${s.pontoId}: ${a.titulo}',
+          );
         }
       }
     });
@@ -111,10 +162,9 @@ void main() {
 
     test('dados do catálogo: horário e recursos ausentes', () async {
       final locais = await catalogo.locais();
-      final banheiro = locais.firstWhere((l) => l.id == 'BAN');
+      final banheiro = locais.firstWhere((l) => l.id == 'BAN_T');
       expect(exibir(banheiro.horario), naoInformado);
-      final escada = locais.firstWhere((l) => l.id == 'ESC');
-      expect(exibirRecursos(escada.recursos), [naoInformado]);
+      expect(exibirRecursos(banheiro.recursos), [naoInformado]);
     });
   });
 }

@@ -71,7 +71,11 @@ class FraseTraduzida {
 /// do visitante: prepara uma [mensagem] ou ativa uma preferência.
 @immutable
 class AcaoSugerida {
-  const AcaoSugerida({required this.titulo, this.mensagem, this.ativarPreferencia});
+  const AcaoSugerida({
+    required this.titulo,
+    this.mensagem,
+    this.ativarPreferencia,
+  });
 
   final String titulo;
   final String? mensagem;

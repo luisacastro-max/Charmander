@@ -4,6 +4,7 @@
 import 'package:acessa_plus/app/app.dart';
 import 'package:acessa_plus/app/theme/app_theme.dart';
 import 'package:acessa_plus/app/theme/tokens.dart';
+
 import 'dart:ui' show Tristate;
 
 import 'package:acessa_plus/features/welcome_preferences/preferences.dart';
@@ -12,16 +13,20 @@ import 'package:acessa_plus/features/welcome_preferences/preferences_store.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Future<PreferencesController> abrirApp(WidgetTester t,
-    {bool reduzirMovimento = false}) async {
+Future<PreferencesController> abrirApp(
+  WidgetTester t, {
+  bool reduzirMovimento = false,
+}) async {
   t.view.physicalSize = const Size(1080, 7500);
   t.view.devicePixelRatio = 2.5;
   addTearDown(t.view.reset);
   final ctrl = PreferencesController();
-  await t.pumpWidget(MediaQuery(
-    data: MediaQueryData(disableAnimations: reduzirMovimento),
-    child: AcessaApp(controller: ctrl),
-  ));
+  await t.pumpWidget(
+    MediaQuery(
+      data: MediaQueryData(disableAnimations: reduzirMovimento),
+      child: AcessaApp(controller: ctrl),
+    ),
+  );
   await t.pumpAndSettle();
   return ctrl;
 }
@@ -39,27 +44,34 @@ Future<void> tocar(WidgetTester t, String titulo) async {
 }
 
 void main() {
-  testWidgets('RF01: boas-vindas apresenta nome, proposta e três pilares',
-      (t) async {
+  testWidgets('RF01: boas-vindas apresenta nome, proposta e três pilares', (
+    t,
+  ) async {
     await abrirApp(t);
     expect(find.bySemanticsLabel('Acessa mais'), findsOneWidget);
-    expect(find.bySemanticsLabel('Acessibilidade que conecta pessoas.'),
-        findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Acessibilidade que conecta pessoas.'),
+      findsOneWidget,
+    );
     for (final p in ['Comunicação Universal', 'Navegação Viva', 'Ajuda+']) {
       expect(find.text(p), findsOneWidget);
     }
     expect(find.textContaining('simulados'), findsOneWidget);
   });
 
-  testWidgets('Mapa vivo tem descrição em texto para leitor de tela (RNF04)',
-      (t) async {
+  testWidgets('Mapa vivo tem descrição em texto para leitor de tela (RNF04)', (
+    t,
+  ) async {
     await abrirApp(t);
-    expect(find.bySemanticsLabel(RegExp('desvia pelo elevador')),
-        findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp('desvia pelo elevador')),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('Título inteiro em tela estreita (360 dp), sem quebrar palavra',
-      (t) async {
+  testWidgets('Título inteiro em tela estreita (360 dp), sem quebrar palavra', (
+    t,
+  ) async {
     t.view.physicalSize = const Size(360 * 3, 5000);
     t.view.devicePixelRatio = 3;
     addTearDown(t.view.reset);
@@ -80,8 +92,9 @@ void main() {
     expect(find.text('Rota mais curta'), findsNothing);
   });
 
-  testWidgets('RN01: preferências não pedem deficiência nem diagnóstico',
-      (t) async {
+  testWidgets('RN01: preferências não pedem deficiência nem diagnóstico', (
+    t,
+  ) async {
     await abrirApp(t);
     await irParaPreferencias(t);
     expect(find.textContaining('Não é preciso declarar'), findsOneWidget);
@@ -95,20 +108,23 @@ void main() {
     expect(find.bySemanticsLabel('Nenhum recurso ativo'), findsOneWidget);
   });
 
-  testWidgets('RNF04: estado do interruptor aparece em texto e para leitor de tela',
-      (t) async {
-    final ctrl = await abrirApp(t);
-    await irParaPreferencias(t);
-    await tocar(t, 'Texto ampliado');
-    expect(ctrl.prefs.largeText, isTrue);
-    expect(find.text('Ativado'), findsOneWidget);
-    expect(find.bySemanticsLabel('1 recurso ativo'), findsOneWidget);
-    final node = t.getSemantics(find.bySemanticsLabel('Texto ampliado'));
-    expect(node.flagsCollection.isToggled, Tristate.isTrue);
-  });
+  testWidgets(
+    'RNF04: estado do interruptor aparece em texto e para leitor de tela',
+    (t) async {
+      final ctrl = await abrirApp(t);
+      await irParaPreferencias(t);
+      await tocar(t, 'Texto ampliado');
+      expect(ctrl.prefs.largeText, isTrue);
+      expect(find.text('Ativado'), findsOneWidget);
+      expect(find.bySemanticsLabel('1 recurso ativo'), findsOneWidget);
+      final node = t.getSemantics(find.bySemanticsLabel('Texto ampliado'));
+      expect(node.flagsCollection.isToggled, Tristate.isTrue);
+    },
+  );
 
-  testWidgets('Texto ampliado aumenta a escala do texto em todo o app',
-      (t) async {
+  testWidgets('Texto ampliado aumenta a escala do texto em todo o app', (
+    t,
+  ) async {
     await abrirApp(t);
     await irParaPreferencias(t);
     final ctx = t.element(find.text('Minha acessibilidade'));
@@ -123,8 +139,10 @@ void main() {
     await irParaPreferencias(t);
     await tocar(t, 'Alto contraste');
     final ctx = t.element(find.text('Alto contraste'));
-    expect(AcessaTheme.of(ctx).colors.background,
-        AcessaColors.highContrast.background);
+    expect(
+      AcessaTheme.of(ctx).colors.background,
+      AcessaColors.highContrast.background,
+    );
   });
 
   testWidgets('RN02: comunicação e mobilidade são independentes', (t) async {
@@ -170,16 +188,21 @@ void main() {
     expect(find.text('Preferências apagadas deste aparelho.'), findsOneWidget);
   });
 
-  testWidgets('Movimento reduzido do sistema: telas aparecem sem animação',
-      (t) async {
+  testWidgets('Movimento reduzido do sistema: telas aparecem sem animação', (
+    t,
+  ) async {
     await abrirApp(t, reduzirMovimento: true);
     // Sem animação, um único quadro já mostra tudo opaco.
     await t.tap(find.text('Começar'));
     await t.pump();
     await t.pump();
     final opacidades = t
-        .widgetList<Opacity>(find.descendant(
-            of: find.byType(Scaffold).last, matching: find.byType(Opacity)))
+        .widgetList<Opacity>(
+          find.descendant(
+            of: find.byType(Scaffold).last,
+            matching: find.byType(Opacity),
+          ),
+        )
         .map((o) => o.opacity);
     expect(opacidades.every((o) => o == 1), isTrue);
   });
@@ -203,8 +226,11 @@ void main() {
     await irParaPreferencias(t);
     await expectLater(t, meetsGuideline(textContrastGuideline));
     await tocar(t, 'Alto contraste');
-    await t.scrollUntilVisible(find.text('Minha acessibilidade'), -300,
-        scrollable: find.byType(Scrollable).last);
+    await t.scrollUntilVisible(
+      find.text('Minha acessibilidade'),
+      -300,
+      scrollable: find.byType(Scrollable).last,
+    );
     await expectLater(t, meetsGuideline(textContrastGuideline));
   });
 }

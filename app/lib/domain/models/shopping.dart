@@ -1,10 +1,18 @@
 import 'package:flutter/foundation.dart';
 
 /// Tipo de ponto de referência no mapa.
-enum TipoPonto { entrada, servico, loja, alimentacao, escada, elevador }
+enum TipoPonto {
+  entrada,
+  servico,
+  loja,
+  alimentacao,
+  escada,
+  elevador,
+  corredor,
+}
 
 /// Como um trecho troca de piso, quando troca.
-enum TrocaPiso { elevador, rampa, escada }
+enum TrocaPiso { elevador, rampa, escada, escadaRolante }
 
 /// Nível de movimento de pessoas cadastrado para o trecho (RN10: não é
 /// medição em tempo real).
@@ -65,6 +73,8 @@ class Local {
     this.recursos,
     this.horario,
     this.destino = true,
+    this.acessivel = false,
+    this.palavrasChave = const [],
   });
 
   final String id;
@@ -81,6 +91,22 @@ class Local {
   /// Se pode ser escolhido como destino de rota (a escada não pode).
   final bool destino;
 
+  /// Marcado como acessível no cadastro (ex.: banheiro PNE).
+  final bool acessivel;
+
+  /// Termos extras para a busca (ex.: "wc", "fraldário").
+  final List<String> palavrasChave;
+
+  /// Busca por nome, categoria, recursos e palavras-chave, sem acentos.
+  bool corresponde(String consulta) {
+    final q = semAcento(consulta.trim().toLowerCase());
+    if (q.isEmpty) return true;
+    final alvo = semAcento(
+      [nome, categoria, ...?recursos, ...palavrasChave].join(' ').toLowerCase(),
+    );
+    return q.split(RegExp(r'\s+')).every(alvo.contains);
+  }
+
   factory Local.fromJson(Map<String, dynamic> j) => Local(
     id: j['id'] as String,
     pontoId: j['pontoId'] as String,
@@ -91,7 +117,21 @@ class Local {
     recursos: (j['recursos'] as List?)?.cast<String>(),
     horario: j['horario'] as String?,
     destino: j['destino'] as bool? ?? true,
+    acessivel: j['acessivel'] as bool? ?? false,
+    palavrasChave: (j['palavrasChave'] as List?)?.cast<String>() ?? const [],
   );
+}
+
+/// Remove acentos para a busca ("sanitário" encontra "sanitario").
+String semAcento(String s) {
+  const de = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+  const para = 'aaaaaeeeeiiiiooooouuuucn';
+  final b = StringBuffer();
+  for (final ch in s.split('')) {
+    final i = de.indexOf(ch);
+    b.write(i < 0 ? ch : para[i]);
+  }
+  return b.toString();
 }
 
 /// Ligação entre dois pontos de referência (sem direção).

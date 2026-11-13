@@ -9,7 +9,7 @@ import '../../core/widgets/living_map.dart';
 import '../../core/widgets/marker_highlight.dart';
 import '../../core/widgets/sticker_button.dart';
 import '../../core/widgets/sticker_card.dart';
-import 'next_step_screen.dart';
+import '../destino/destino_screen.dart';
 import 'preferences_screen.dart';
 
 /// T01 — Boas-vindas (RF01). Seleção de idioma (RF02) fica na T02 nesta etapa.
@@ -155,7 +155,7 @@ class WelcomeScreen extends StatelessWidget {
                 kind: StickerButtonKind.secondary,
                 onPressed: () =>
                     Navigator.of(context)
-                        .push(acessaRoute(const NextStepScreen())),
+                        .push(acessaRoute(const DestinoScreen())),
               ),
             ),
             const SizedBox(height: AcessaSpacing.lg),
