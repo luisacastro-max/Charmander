@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Acessa+ — protótipo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{--bg:#F3F6F9;--cd:#fff;--tx:#10243A;--mu:#4B5B6C;--pr:#0A5C8C;--on:#fff;--ok:#0F7B55;--wa:#9A4A00;--bd:#CBD5DF;--sf:#E4EEF5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0C1824;--cd:#142536;--tx:#EAF1F8;--mu:#B3C1CF;--pr:#6BB8EA;--on:#06121D;--ok:#4FD6A0;--wa:#F5B461;--bd:#2B4157;--sf:#1A3047}}
+:root[data-theme=dark]{--bg:#0C1824;--cd:#142536;--tx:#EAF1F8;--mu:#B3C1CF;--pr:#6BB8EA;--on:#06121D;--ok:#4FD6A0;--wa:#F5B461;--bd:#2B4157;--sf:#1A3047}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);font-family:'Atkinson Hyperlegible',system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.app{max-width:430px;height:100%;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);color:var(--tx);font-size:16px;line-height:1.45;position:relative}
+.app.big{font-size:20px}
+.app.hc{--bg:#000;--cd:#000;--tx:#fff;--mu:#fff;--pr:#FFE600;--on:#000;--ok:#00FFB3;--wa:#FFB000;--bd:#fff;--sf:#111}
+.app.calm{filter:saturate(.55)}
+.app.calm *,.app.calm *::before{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){.app *{animation:none!important;transition:none!important}}
+main{flex:1;overflow:auto;padding:16px 16px 24px}
+main:focus{outline:none}
+h1{font-size:1.6em;margin:.2em 0 .3em;line-height:1.15}h2{font-size:1.15em;margin:1em 0 .4em}p{margin:.3em 0}
+.mu{color:var(--mu)}.sm{font-size:.88em}
+.cd{background:var(--cd);border:1.5px solid var(--bd);border-radius:16px;padding:14px;margin:10px 0}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.b{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;padding:10px 16px;border-radius:14px;border:2px solid var(--pr);background:var(--pr);color:var(--on);font-weight:700}
+.b.s{background:transparent;color:var(--pr)}.b.w{background:var(--wa);border-color:var(--wa);color:var(--on)}
+.b.sm{min-height:44px;width:auto;padding:6px 14px}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--pr);outline-offset:2px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:92px;padding:12px;border-radius:16px;border:1.5px solid var(--bd);background:var(--cd);text-align:left;font-weight:700}
+.sc span.i{font-size:1.6em}
+.tg{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;background:var(--cd);border:1.5px solid var(--bd);border-radius:14px;margin:6px 0;min-height:56px}
+.tg[aria-pressed=true],.sc[aria-pressed=true]{border-color:var(--pr);background:var(--sf)}
+.sw{margin-left:auto;font-weight:700;color:var(--pr);white-space:nowrap}
+.ch{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 14px;border-radius:999px;border:1.5px solid var(--bd);background:var(--cd);margin:3px 4px 3px 0}
+.ch[aria-pressed=true]{background:var(--pr);color:var(--on);border-color:var(--pr)}
+input,textarea,select{width:100%;min-height:48px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--bd);background:var(--cd)}
+label{font-weight:700;display:block;margin:10px 0 4px}
+nav{display:flex;border-top:1.5px solid var(--bd);background:var(--cd)}
+nav button{flex:1;min-height:60px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:.78em;font-weight:700;color:var(--mu)}
+nav button[aria-current=page]{color:var(--pr);box-shadow:inset 0 3px 0 var(--pr)}
+nav .i{font-size:1.5em}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bk{min-height:44px;min-width:44px;border-radius:12px;border:1.5px solid var(--bd);background:var(--cd)}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;border:1.5px solid var(--bd);font-size:.82em;margin:2px 4px 2px 0}
+.bar{height:12px;border-radius:9px;background:var(--sf);border:1.5px solid var(--bd);overflow:hidden}.bar i{display:block;height:100%;background:var(--ok);transition:width .4s}
+.big-msg{font-size:1.7em;font-weight:700;text-align:center;padding:18px;border:3px solid var(--pr);border-radius:18px;background:var(--cd)}
+.ms{max-width:86%;padding:10px 12px;border-radius:14px;margin:6px 0;border:1.5px solid var(--bd);background:var(--cd)}
+.ms.v{margin-left:auto;background:var(--sf)}.ms b{display:block;font-size:.8em}
+.fs{position:absolute;inset:0;z-index:9;background:var(--bg);display:flex;flex-direction:column;justify-content:center;padding:20px;gap:16px}
+.fs .big-msg{font-size:2.3em}
+.note{padding:10px 12px;border-radius:12px;border:1.5px dashed var(--wa);margin:8px 0;font-size:.9em}
+.step{display:flex;gap:10px;padding:8px 0;align-items:flex-start}.step .d{width:28px;height:28px;border-radius:50%;border:2px solid var(--bd);display:grid;place-items:center;flex:none;font-weight:700}
+.step.on .d{background:var(--ok);border-color:var(--ok);color:var(--on)}
+.hero{background:linear-gradient(160deg,#0A3F66,#0A5C8C);color:#fff;border-radius:22px;padding:22px;margin-bottom:12px}
+.hero .b{background:#fff;color:#0A3F66;border-color:#fff}.hero .b.s{background:transparent;color:#fff}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@keyframes p{0%{r:9;opacity:.7}100%{r:20;opacity:0}}.pulse{animation:p 2s infinite}
+</style></head><body>
+<div class="app" id="app"></div>
+<div class="vh" id="lv" role="status" aria-live="polite"></div>
+<script>
+const P={ENT:{n:'Entrada Sul',f:'Térreo',x:25,y:100,b:'01',d:'Entrada principal com porta automática e piso tátil.',r:['Porta automática','Piso tátil'],i:'🚪'},
+BAL:{n:'Balcão de Informações',f:'Térreo',x:85,y:100,b:'02',d:'Atendimento com balcão rebaixado. Aceita conversa por escrito.',r:['Balcão rebaixado','Atendimento por escrito','Piso tátil'],i:'ℹ️',c:'Serviços'},
+BAN:{n:'Banheiro acessível',f:'Térreo',x:85,y:165,b:'03',d:'Cabine ampla com barras de apoio e porta de abertura leve.',r:['Barras de apoio','Espaço para giro de cadeira'],i:'🚻',c:'Serviços'},
+EST:{n:'Estacionamento acessível',f:'Térreo',x:25,y:165,b:'04',d:'Vagas largas próximas à entrada, com piso nivelado.',r:['Vagas largas','Piso nivelado'],i:'🅿️',c:'Serviços'},
+ESC:{n:'Escada',f:'Térreo',x:150,y:60,b:'05',d:'Escada fixa. Não faz parte de rotas sem escadas.',r:[],i:'🪜'},
+ELV:{n:'Elevadores',f:'Térreo',x:150,y:140,b:'06',d:'Dois elevadores com botões em braille e aviso sonoro de andar.',r:['Braille','Aviso sonoro','Espelho interno'],i:'🛗',c:'Serviços'},
+LOJ:{n:'Loja Aurora Moda',f:'Térreo',x:225,y:140,b:'07',d:'Loja fictícia com corredores largos e provadores amplos.',r:['Corredores largos','Provador acessível','Atendimento por escrito'],i:'🛍️',c:'Lojas'},
+PA:{n:'Praça de Alimentação',f:'Piso 1',x:225,y:60,b:'08',d:'Mesas com espaço livre para cadeira de rodas e cardápio em letras grandes.',r:['Mesas adaptadas','Cardápio ampliado'],i:'🍽️',c:'Alimentação'},
+ET:{n:'Espaço Tranquilo',f:'Piso 1',x:272,y:100,b:'09',d:'Sala com pouca luz e sem música, para pausar de ruídos e estímulos.',r:['Baixo estímulo','Sem música','Assentos'],i:'🌿',c:'Serviços'}};
+const E=[['ENT','BAL'],['ENT','EST'],['BAL','BAN'],['BAL','ESC','s'],['BAL','ELV'],['ESC','PA'],['ELV','PA','q'],['ELV','LOJ'],['LOJ','PA'],['LOJ','ET'],['PA','ET']];
+const D=Object.keys(P).filter(k=>k!='ESC');
+const PR=[['audio','🔊','Orientações por áudio','Instruções faladas durante a navegação'],['text','💬','Comunicação por texto','Abre a Central já na conversa escrita'],['big','🔎','Texto ampliado','Letras maiores em todo o app'],['hc','◐','Alto contraste','Cores de máximo contraste'],['nost','♿','Rotas sem escadas','Evita degraus no planejamento'],['elv','🛗','Preferência por elevadores','Destaca elevadores nos trajetos'],['simp','✨','Navegação simplificada','Menos informações em cada tela'],['calm','🌿','Redução de estímulos','Sem animações e cores mais suaves']];
+const S={sc:'welcome',st:[],tab:'home',p:{audio:false,text:false,big:false,hc:false,nost:true,elv:true,simp:false,calm:false,lang:'pt'},loc:'ENT',q:'',pl:null,mode:'acc',dst:'',org:'ENT',R:null,ni:0,bl:[],live:false,done:false,msgs:[],role:'v',msg:'',ct:'cards',cl:0,cat:'Informações',sit:'',ch:'Mensagem de texto',det:'',req:null,lib:false,full:false,note:'',draft:'',alert:'',hm:{ENT:2,BAL:6,BAN:3,EST:1,ESC:0,ELV:9,LOJ:4,PA:5,ET:1},barr:[{n:'Elevadores: botão em braille solto',ok:false},{n:'Rampa da praça: piso molhado',ok:true}],nr:37,emc:0,em:null};
+const CARDS=[['🆘','Preciso de ajuda'],['🦻','Não consigo ouvir'],['🗣️','Não consigo falar'],['💧','Gostaria de água'],['🚻','Onde fica o banheiro?'],['🛗','Preciso de um elevador'],['✍️','Gostaria de atendimento por escrito'],['🐢','Por favor, fale devagar']];
+const QK={'Informações':['Qual o horário de funcionamento?','Onde posso ver o mapa?'],'Localização':['Onde estou agora?','Pode me levar até a saída?'],'Atendimento':['Preciso de atendimento por escrito.','Pode repetir mais devagar?'],'Compras':['Esta loja tem provador acessível?','Qual o valor deste produto?'],'Alimentação':['Há opções sem glúten?','Pode ler o cardápio para mim?'],'Acessibilidade':['Preciso de uma rota sem escadas.','Preciso de um lugar tranquilo.']};
+const ML=[['Olá, preciso de ajuda.','Hello, I need help.','Hola, necesito ayuda.'],['Onde fica o banheiro?','Where is the restroom?','¿Dónde está el baño?'],['Preciso de um elevador.','I need an elevator.','Necesito un ascensor.'],['Obrigado(a) pela ajuda.','Thank you for your help.','Gracias por su ayuda.'],['Pode escrever, por favor?','Could you write it down, please?','¿Puede escribirlo, por favor?'],['Onde fica a praça de alimentação?','Where is the food court?','¿Dónde está la zona de comida?']];
+const SIT=['Não consigo encontrar meu destino','Encontrei uma barreira no caminho','Preciso de ajuda para me comunicar','Preciso de acompanhamento','Necessito de apoio de um funcionário'];
+const LG={pt:'pt-BR',en:'en-US',es:'es-ES'},LI={pt:0,en:1,es:2};
+const CTX={ENT:{t:'Entrada Sul',a:[{t:'Pedir um mapa tátil',m:'Gostaria de um mapa tátil, por favor.'}]},BAL:{t:'Balcão de Informações',a:[{t:'Atendimento por escrito',m:'Gostaria de atendimento por escrito.'},{t:'Pedir acompanhante',m:'Preciso de acompanhamento até meu destino.'}]},BAN:{t:'Banheiro acessível',a:[{t:'Pedir ajuda neste local',m:'Preciso de ajuda no banheiro acessível.'}]},EST:{t:'Estacionamento acessível',a:[{t:'Pedir ajuda com a vaga',m:'Preciso de ajuda perto do estacionamento.'}]},ESC:{t:'Escada (evite em rotas acessíveis)',a:[{t:'Preciso de um elevador',m:'Preciso de um elevador.'}]},ELV:{t:'Elevadores com braille e aviso sonoro',a:[{t:'Ajuda para usar o elevador',m:'Preciso de ajuda para usar o elevador.'}]},LOJ:{t:'Loja Aurora Moda',a:[{t:'Pedir provador acessível',m:'Gostaria de usar o provador acessível.'},{t:'Atendimento por escrito',m:'Gostaria de atendimento por escrito.'}]},PA:{t:'Praça de Alimentação',a:[{t:'Cardápio ampliado',m:'Gostaria do cardápio em letras grandes.'},{t:'Informar alergia',m:'Tenho alergia alimentar. Pode me ajudar a escolher?'},{t:'Pedir água',m:'Gostaria de água.'}]},ET:{t:'Espaço Tranquilo',a:[{t:'Ativar redução de estímulos',calm:1}]}};
+function ctx(){const c=CTX[S.loc];return `<div class="cd" style="border-color:var(--pr)"><b>✨ Neste local: ${c.t}</b><p class="mu sm" style="margin:2px 0 6px">Sugestões do beacon BLE-${P[S.loc].b} (simulado)</p>${c.a.map((a,i)=>`<button class="tg" onclick="A('ctx',${i})"><b>${a.t}</b></button>`).join('')}</div>`}
+function vib(){try{navigator.vibrate&&navigator.vibrate([250,100,250])}catch(e){}ann('Vibração enviada (se o aparelho permitir)')}
+const $=s=>document.querySelector(s);
+const dist=(u,v)=>Math.hypot(P[u].x-P[v].x,P[u].y-P[v].y);
+const isB=(u,v)=>S.bl.includes(u+'-'+v)||S.bl.includes(v+'-'+u);
+function path(a,b,m){const adj={};E.forEach(([u,v,f])=>{if(isB(u,v)||(f=='s'&&m!='short')||(m=='emg'&&(u=='ELV'||v=='ELV')&&P[u].f!=P[v].f))return;let d=dist(u,v);if(f=='q'&&m=='quiet')d*=3;(adj[u]=adj[u]||[]).push([v,d]);(adj[v]=adj[v]||[]).push([u,d])});
+const dd={[a]:0},pr={},q=new Set(Object.keys(P));
+while(q.size){let u=null;q.forEach(x=>{if(dd[x]!==undefined&&(u===null||dd[x]<dd[u]))u=x});if(u===null)break;q.delete(u);if(u==b)break;(adj[u]||[]).forEach(([v,d])=>{if(dd[v]===undefined||dd[u]+d<dd[v]){dd[v]=dd[u]+d;pr[v]=u}})}
+if(dd[b]===undefined)return null;const r=[b];while(r[0]!=a)r.unshift(pr[r[0]]);return r}
+const meters=R=>Math.round(R.slice(1).reduce((s,v,i)=>s+dist(R[i],v),0)/4);
+function ins(i,R0){const R=R0||S.R,u=R[i],v=R[i+1];if(!v)return 'Você chegou a '+P[u].n+'.';const e=E.find(x=>(x[0]==u&&x[1]==v)||(x[0]==v&&x[1]==u));let t=`Siga ${Math.round(dist(u,v)/4)} metros até ${P[v].n}.`;
+if(P[u].f!=P[v].f)t+=(u=='ELV'||v=='ELV')?` Suba pelo elevador até o ${P[v].f}.`:' Use a rampa de inclinação suave até o '+P[v].f+'.';
+if(e[2]=='s')t+=' Atenção: trecho com degraus.';if(e[2]=='q')t+=' Trecho com mais movimento de pessoas.';return t}
+function say(t,f){if(!(f||S.p.audio))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=LG[S.p.lang];speechSynthesis.speak(u)}catch(e){}}
+function ann(t){$('#lv').textContent='';setTimeout(()=>$('#lv').textContent=t,50)}
+const h=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const tp=(t,b)=>`<div class="top">${b?`<button class="bk" aria-label="Voltar" onclick="A('back')">←</button>`:''}<h1 style="margin:0;flex:1">${t}</h1></div>`;
+function tog(k){const [,i,t,d]=PR.find(x=>x[0]==k);const on=S.p[k];return `<button class="tg" aria-pressed="${on}" onclick="A('pref','${k}')"><span style="font-size:1.5em" aria-hidden="true">${i}</span><span><b>${t}</b><br><span class="mu sm">${d}</span></span><span class="sw">${on?'Ativado ✓':'Desativado'}</span></button>`}
+function langSel(){return `<label for="lg">Idioma</label><select id="lg" onchange="A('lang',this.value)"><option value="pt" ${S.p.lang=='pt'?'selected':''}>Português</option><option value="en" ${S.p.lang=='en'?'selected':''}>English</option><option value="es" ${S.p.lang=='es'?'selected':''}>Español</option></select><p class="mu sm">Define a voz do áudio e o idioma inicial das frases traduzidas. Textos do app seguem em português neste protótipo.</p>`}
+function map(R0,c0){let s=`<svg viewBox="0 0 300 200" role="img" aria-label="Mapa ilustrativo do shopping. Use a descrição em texto abaixo." style="width:100%;border-radius:14px;background:var(--sf);border:1.5px solid var(--bd)">`;
+E.forEach(([u,v,f])=>{const a=P[u],b=P[v],bk=isB(u,v);s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" style="stroke:${bk?'var(--wa)':f=='s'?'var(--wa)':'var(--bd)'}" stroke-width="6" stroke-linecap="round" ${f=='s'||bk?'stroke-dasharray="3 6"':''}/>`;
+if(f=='s')s+=`<text x="${(a.x+b.x)/2+4}" y="${(a.y+b.y)/2}" font-size="8" style="fill:var(--wa)">degraus</text>`;if(bk)s+=`<text x="${(a.x+b.x)/2}" y="${(a.y+b.y)/2+4}" font-size="16" font-weight="700" style="fill:var(--wa)">✕</text>`});
+const R=R0||S.R||[];if(R.length>1)s+=`<polyline points="${R.map(k=>P[k].x+','+P[k].y).join(' ')}" fill="none" style="stroke:var(--pr)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`;
+Object.keys(P).forEach(k=>{const p=P[k],cur=c0?c0==k:S.live?R[S.ni]==k:S.loc==k;s+=`<circle class="pulse" cx="${p.x}" cy="${p.y}" r="9" style="fill:none;stroke:var(--pr)" stroke-width="2"/><circle cx="${p.x}" cy="${p.y}" r="${cur?9:6}" style="fill:${cur?'var(--pr)':'var(--cd)'};stroke:var(--pr)" stroke-width="2.5"/>${cur?`<text x="${p.x}" y="${p.y+3}" font-size="9" text-anchor="middle" style="fill:var(--on)">●</text>`:''}<text x="${p.x}" y="${p.y+(p.y>150?19:-13)}" font-size="8" font-weight="700" text-anchor="middle" style="fill:var(--tx)">${p.n.split(' ')[0]}</text>`});
+return s+'</svg><p class="mu sm">Mapa ilustrativo com dados fictícios. Círculos pulsantes = beacons BLE simulados.</p>'}
+function res(){const q=S.q.toLowerCase().trim();const l=D.filter(k=>(P[k].n+P[k].c+P[k].r.join()).toLowerCase().includes(q));
+return l.length?l.map(k=>`<button class="tg" onclick="A('place','${k}')"><span style="font-size:1.6em" aria-hidden="true">${P[k].i}</span><span><b>${P[k].n}</b><br><span class="mu sm">${P[k].f} · ${P[k].c||'Local'}${P[k].r[0]?' · '+P[k].r[0]:''}</span></span></button>`).join(''):`<div class="cd"><b>Nada encontrado para “${h(S.q)}”.</b><p class="mu">Tente “banheiro”, “elevador” ou “tranquilo”.</p></div>`}
+const H={
+welcome(){return `<main tabindex="-1"><div class="hero"><div style="font-size:2.4em;font-weight:700">Acessa<span style="color:#7FD0FF">+</span></div><h1 style="font-size:1.35em">Acessibilidade que conecta pessoas.</h1><p>Comunique-se do seu jeito, encontre caminhos que fazem sentido para você e peça apoio quando quiser. Sem cadastro.</p></div>
+<button class="b" onclick="A('go','prefs')">Começar</button><div style="height:10px"></div><button class="b s" onclick="A('go','prefs')">♿ Preferências de acessibilidade</button>
+<div class="cd"><b>Três pilares</b><p>💬 <b>Comunicação Universal</b> — texto, voz, cartões e idiomas.</p><p>🧭 <b>Navegação Viva</b> — rotas acessíveis com beacons BLE simulados.</p><p>🤝 <b>Ajuda+</b> — apoio respeitando suas preferências.</p></div>
+<p class="mu sm">Protótipo de demonstração: tudo aqui é simulado, com dados fictícios.</p></main>`},
+prefs(){return `<main tabindex="-1">${tp('Minha Acessibilidade',1)}<p class="mu">Combine o que ajuda você. Não é preciso declarar nenhuma deficiência. Mude quando quiser em Perfil.</p>${PR.map(x=>tog(x[0])).join('')}${langSel()}<div style="height:14px"></div><button class="b" onclick="A('tab','home')">Continuar para o início</button></main>`},
+home(){const hr=new Date().getHours(),g=hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite';
+return `<main tabindex="-1"><div class="top"><div style="flex:1"><p class="mu" style="margin:0">${g}!</p><h1 style="margin:0">Como podemos ajudar hoje?</h1></div><button class="bk" aria-label="Perfil e configurações" onclick="A('go','profile')">👤</button></div>
+<label class="vh" for="hq">Pesquisar lojas e serviços</label><input id="hq" type="search" placeholder="🔍 Buscar loja, banheiro, elevador…" onkeydown="if(event.key=='Enter'){S.q=this.value;A('tab','explore')}">
+<div class="cd" style="display:flex;gap:10px;align-items:center"><span style="font-size:1.6em" aria-hidden="true">📍</span><div style="flex:1"><b>Você está em: ${P[S.loc].n}</b><br><span class="mu sm">Beacon BLE-${P[S.loc].b} (simulado) · ${P[S.loc].f}</span></div></div>
+<label for="ls">Simular outro ponto do shopping</label><select id="ls" onchange="A('loc',this.value)">${D.map(k=>`<option value="${k}" ${S.loc==k?'selected':''}>${P[k].n}</option>`).join('')}</select>
+${ctx()}<h2>Atalhos</h2><div class="g2"><button class="sc" onclick="A('tab','nav')"><span class="i" aria-hidden="true">🧭</span>Navegação Viva</button><button class="sc" onclick="A('tab','comm')"><span class="i" aria-hidden="true">💬</span>Comunicação Universal</button><button class="sc" onclick="A('tab','explore')"><span class="i" aria-hidden="true">🏬</span>Explorar</button><button class="sc" onclick="A('tab','help')"><span class="i" aria-hidden="true">🤝</span>Ajuda+</button></div><button class="b w" style="margin-top:10px" onclick="A('emerg')">🚨 Emergência: saída acessível (simulação)</button>
+${S.req&&S.req.st<2&&!S.req.x?`<div class="cd"><b>Solicitação em andamento (simulada)</b><p class="mu">${h(S.req.t)}</p><button class="b s sm" onclick="A('tab','help')">Ver acompanhamento</button></div>`:''}
+${S.p.simp?'':`<h2>Informações do shopping (fictício)</h2><div class="cd">🕙 Funcionamento: 10h às 22h<br>🌿 Espaço Tranquilo: aberto até 21h<br>🛗 Elevadores: todos em operação<br>🔇 Hora tranquila: terça, 14h às 16h</div><h2>Atalhos de preferências</h2><div>${['audio','big','hc','nost','calm'].map(k=>`<button class="ch" aria-pressed="${S.p[k]}" onclick="A('pref','${k}')">${PR.find(x=>x[0]==k)[1]} ${PR.find(x=>x[0]==k)[2]}</button>`).join('')}</div>`}<button class="b s" style="margin-top:14px" onclick="A('go','dash')">📊 Painel do shopping (visão do gestor)</button></main>`},
+explore(){const cats=['Tudo','Lojas','Alimentação','Serviços'];return `<main tabindex="-1">${tp('Explorar')}<label class="vh" for="eq">Buscar</label><input id="eq" type="search" value="${h(S.q)}" placeholder="🔍 Buscar loja, banheiro, elevador…" oninput="S.q=this.value;$('#res').innerHTML=res()"><div style="margin:8px 0">${cats.map(c=>`<button class="ch" onclick="S.q=${c=='Tudo'?"''":`'${c}'`};render()">${c}</button>`).join('')}</div><div id="res">${res()}</div></main>`},
+place(){const k=S.pl,p=P[k];return `<main tabindex="-1">${tp(p.n,1)}<div class="cd"><div style="font-size:2.4em" aria-hidden="true">${p.i}</div><p>${p.d}</p><p><span class="pill">📍 ${p.f}</span><span class="pill">Beacon BLE-${p.b}</span></p><b>Recursos disponíveis</b><div>${p.r.length?p.r.map(r=>`<span class="pill">✓ ${r}</span>`).join(''):'<span class="mu">Sem recursos cadastrados</span>'}</div></div>${map().replace(/<p class="mu sm">.*<\/p>$/,'')}<div style="height:10px"></div>${k!='ESC'?`<button class="b" onclick="A('howto','${k}')">Como chegar</button>`:''}</main>`},
+nav(){if(S.live)return H.live();if(S.done)return `<main tabindex="-1">${tp('Você chegou! 🎉')}<div class="cd"><b>${P[S.dst].n}</b><p>Percurso simulado concluído. Beacon BLE-${P[S.dst].b} reconhecido.</p></div><button class="b" onclick="S.done=false;S.R=null;render()">Nova rota</button><div style="height:10px"></div><button class="b s" onclick="A('tab','help')">Preciso de ajuda aqui</button></main>`;
+const R=S.dst?path(S.org,S.dst,S.mode):null;S.R=R;const md=[['acc','♿ Sem escadas'],['short','⚡ Mais curta'],['quiet','🌿 Menos estímulos']];
+return `<main tabindex="-1">${tp('Planejar rota')}<label for="o">Origem</label><select id="o" onchange="A('org',this.value)">${D.map(k=>`<option value="${k}" ${S.org==k?'selected':''}>${P[k].n}</option>`).join('')}</select><label for="d">Destino</label><select id="d" onchange="A('dst',this.value)"><option value="">Escolha um destino</option>${D.map(k=>`<option value="${k}" ${S.dst==k?'selected':''}>${P[k].n}</option>`).join('')}</select>
+<div style="margin:10px 0">${md.map(m=>`<button class="ch" aria-pressed="${S.mode==m[0]}" onclick="A('mode','${m[0]}')">${m[1]}</button>`).join('')}</div>${map()}
+${!S.dst?'<div class="cd mu">Escolha um destino para ver o trajeto.</div>':R?`<div class="cd"><b>${meters(R)} m · cerca de ${Math.max(1,Math.round(meters(R)/60))} min</b><p class="mu">${S.mode=='acc'?'Sem escadas nem degraus.':S.mode=='quiet'?'Evita trechos com mais movimento.':'Pode incluir degraus — não recomendada para cadeira de rodas.'}</p><ol class="sm" aria-label="Descrição textual do percurso">${R.slice(0,-1).map((_,i)=>`<li>${ins(i)}</li>`).join('')}</ol></div><button class="b" onclick="A('start')">Iniciar navegação</button>`:'<div class="cd"><b>Nenhuma rota encontrada com essas condições.</b><p class="mu">Troque o modo ou peça ajuda.</p><button class="b w" onclick="A(\'tab\',\'help\')">Pedir ajuda</button></div>'}</main>`},
+live(){const R=S.R,cur=R[S.ni],pg=Math.round(S.ni/(R.length-1)*100);
+return `<main tabindex="-1">${tp('Navegação Viva')}<div class="cd"><div style="display:flex;justify-content:space-between"><b>Rumo a ${P[S.dst].n}</b><span>${pg}%</span></div><div class="bar" role="progressbar" aria-valuenow="${pg}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pg}%"></i></div></div>
+${S.alert?`<div class="note" role="alert">${S.alert}</div>`:''}${map()}
+<div class="cd" style="border-color:var(--pr)"><p class="mu sm" style="margin:0">Beacon BLE-${P[cur].b} detectado (simulado) · ${P[cur].n}</p><p style="font-size:1.2em;font-weight:700;margin:6px 0">${ins(S.ni)}</p><button class="b s sm" onclick="say(ins(S.ni),1)">🔊 Ouvir instrução</button></div>${ctx()}
+<h2>Simular aproximação de beacon</h2><p class="mu sm">Toque em um ponto para simular que você passou por ele.</p><div>${R.slice(S.ni+1).map(k=>`<button class="ch" aria-pressed="true" onclick="A('near','${k}')">📡 ${P[k].n}</button>`).join('')}</div>
+<p class="mu sm">Fora da rota:</p><div>${D.filter(k=>!R.includes(k)).map(k=>`<button class="ch" onclick="A('near','${k}')">${P[k].n}</button>`).join('')}</div>
+<div style="height:8px"></div><button class="b w" onclick="A('obs')">🚧 Simular obstáculo no caminho</button><div style="height:8px"></div><button class="b" onclick="A('tab','help')">🤝 Pedir ajuda agora</button><div style="height:8px"></div><button class="b s" onclick="S.live=false;S.alert='';render()">Encerrar navegação</button></main>`},
+comm(){const T=[['cards','🃏 Cartões'],['chat','💬 Conversa'],['quick','⚡ Rápidas'],['lang','🌐 Idiomas'],['lib','🤟 Libras']];
+let b='';
+if(S.ct=='cards')b=`<p class="mu">Toque em um cartão para mostrar a mensagem ao atendente.</p><div class="g2">${CARDS.map(c=>`<button class="sc" aria-pressed="${S.msg==c[1]}" onclick="A('card',\`${c[1]}\`)"><span class="i" aria-hidden="true">${c[0]}</span>${c[1]}</button>`).join('')}</div>`;
+if(S.ct=='chat')b=`<p class="mu sm">Mesmo aparelho: alterne quem está falando.</p><div style="margin:6px 0"><button class="ch" aria-pressed="${S.role=='v'}" onclick="A('role','v')">🧑 Visitante</button><button class="ch" aria-pressed="${S.role=='a'}" onclick="A('role','a')">🧑‍💼 Atendente</button></div>
+<div aria-label="Mensagens" style="min-height:90px">${S.msgs.length?S.msgs.map((m,i)=>`<div class="ms ${m.w}"><b>${m.w=='v'?'Visitante':'Atendente'}</b>${h(m.t)} <button class="b s sm" style="min-height:36px" aria-label="Ouvir mensagem" onclick="say(S.msgs[${i}].t,1)">🔊</button></div>`).join(''):'<div class="cd mu">Nenhuma mensagem ainda. Escreva, fale ou use uma frase rápida.</div>'}</div>
+<label for="dr">Falando agora: ${S.role=='v'?'Visitante':'Atendente'}</label><textarea id="dr" rows="2" oninput="S.draft=this.value" placeholder="Digite a mensagem">${h(S.draft)}</textarea>
+<div class="g2" style="margin-top:8px"><button class="b" onclick="A('send')">Enviar</button><button class="b s" onclick="A('mic')">🎙️ Voz para texto</button></div><div style="height:8px"></div><button class="b s" onclick="say(S.draft||'Digite uma mensagem primeiro',1)">🔊 Ouvir o que digitei</button>${S.note?`<div class="note" role="status">${S.note}</div>`:''}`;
+if(S.ct=='quick')b=`<div>${Object.keys(QK).map(c=>`<button class="ch" aria-pressed="${S.cat==c}" onclick="S.cat='${c}';render()">${c}</button>`).join('')}</div>${QK[S.cat].map(t=>`<button class="tg" onclick="A('quick',\`${t}\`)"><b>${t}</b></button>`).join('')}<p class="mu sm">Envia para a aba Conversa como ${S.role=='v'?'Visitante':'Atendente'}.</p>`;
+if(S.ct=='lang'){const f=ML[S.cl],L=S.p.lang;b=`<p class="mu sm">Frases pré-traduzidas (não é tradução automática).</p>${ML.map((m,i)=>`<button class="tg" aria-pressed="${S.cl==i}" onclick="S.cl=${i};render()"><b>${m[LI[L]]}</b></button>`).join('')}<div class="cd">${['🇧🇷 Português','🇺🇸 English','🇪🇸 Español'].map((n,i)=>`<p><span class="mu sm">${n}</span><br><b>${f[i]}</b> <button class="b s sm" style="min-height:36px" aria-label="Ouvir em ${n}" onclick="speechLang(${i})">🔊</button></p>`).join('')}</div>`}
+if(S.ct=='lib')b=`<div class="cd"><div style="font-size:2.2em" aria-hidden="true">🤟</div><h2 style="margin-top:0">Atendimento em Libras</h2><p>Estamos preparando a integração com atendimento humano em Libras por videochamada. Nada é traduzido automaticamente pelo aplicativo.</p><p class="mu sm">Futuro: intérprete humano sob demanda, em horários definidos pelo shopping.</p><button class="b ${S.lib?'s':''}" aria-pressed="${S.lib}" onclick="S.lib=!S.lib;render()">${S.lib?'✓ Interesse registrado (simulado)':'Quero ser avisado(a)'}</button></div><button class="b s" onclick="S.ct='chat';render()">Enquanto isso, conversar por texto</button>`;
+return `<main tabindex="-1">${tp('Comunicação Universal')}<div role="tablist" aria-label="Formas de comunicação" style="overflow-x:auto;white-space:nowrap;padding-bottom:4px">${T.map(t=>`<button role="tab" class="ch" aria-selected="${S.ct==t[0]}" aria-pressed="${S.ct==t[0]}" onclick="S.ct='${t[0]}';S.note='';render()">${t[1]}</button>`).join('')}</div>
+${S.msg?`<h2>Mensagem para o atendente</h2><div class="big-msg" aria-live="polite">${h(S.msg)}</div><div class="g2" style="margin:8px 0"><button class="b" onclick="say(S.msg,1)">🔊 Ouvir</button><button class="b s" onclick="S.full=true;render()">⛶ Tela cheia</button></div>`:''}<div style="margin-top:8px">${b}</div></main>`},
+help(){if(S.req)return H.track();return `<main tabindex="-1">${tp('Ajuda+')}<p class="mu">Peça apoio só se quiser. Você decide como ser atendido(a).</p><b>O que está acontecendo?</b>${SIT.map(s=>`<button class="tg" role="radio" aria-checked="${S.sit==s}" aria-pressed="${S.sit==s}" onclick="S.sit=\`${s}\`;render()">${S.sit==s?'●':'○'} <b>${s}</b></button>`).join('')}
+<div class="cd">📍 <b>Localização informada:</b> ${P[S.loc].n}, ${P[S.loc].f}<br><span class="mu sm">Vinda do beacon BLE-${P[S.loc].b} (simulado)${S.live?' · você está navegando':''}</span></div>
+<b>Como prefere ser atendido(a)?</b><div>${['Mensagem de texto','Áudio','Atendimento presencial'].map(c=>`<button class="ch" aria-pressed="${S.ch==c}" onclick="S.ch='${c}';render()">${c}</button>`).join('')}</div>
+<label for="dt">Detalhes (opcional)</label><textarea id="dt" rows="3" oninput="S.det=this.value" placeholder="Se quiser, conte mais">${h(S.det)}</textarea>${S.alert&&S.alert.startsWith('!')?`<div class="note" role="alert">${S.alert.slice(1)}</div>`:''}<div style="height:10px"></div><button class="b" onclick="A('sub')">Enviar solicitação simulada</button></main>`},
+track(){const r=S.req,ST=['Solicitação registrada','Atendimento iniciado','Atendimento concluído'];return `<main tabindex="-1">${tp('Acompanhamento')}<div class="cd"><b>${h(r.t)}</b><p class="mu">📍 ${r.loc}<br>💬 Preferência: ${r.ch}${r.det?`<br>📝 ${h(r.det)}`:''}</p></div>
+${r.x?'<div class="cd"><b>✕ Solicitação cancelada.</b></div>':`<div class="cd" role="status">${ST.map((s,i)=>`<div class="step ${i<=r.st?'on':''}"><span class="d">${i<=r.st?'✓':i+1}</span><div><b>${s}</b>${i==r.st?'<br><span class="mu sm">Etapa atual</span>':''}</div></div>`).join('')}</div>`}
+<div class="note">Simulação para demonstração: nenhuma equipe real foi acionada.</div>
+${!r.x&&r.st<2?`<button class="b" onclick="A('adv')">Avançar etapa (demonstração)</button><div style="height:8px"></div><button class="b s" onclick="A('cancel')">Cancelar solicitação</button>`:`<button class="b" onclick="S.req=null;S.sit='';S.det='';render()">Nova solicitação</button>`}</main>`},
+emerg(){const e=S.em;if(!e||!e.R)return `<main tabindex="-1">${tp('Emergência',1)}<div class="cd"><b>Nenhuma saída acessível encontrada a partir daqui.</b><p>Procure um funcionário. Em emergência real, ligue 193.</p></div></main>`;
+const R=e.R,at=R[e.i],ex=R[R.length-1],pg=Math.round(e.i/Math.max(1,R.length-1)*100);
+return `<main tabindex="-1">${tp('Saída de emergência',1)}<div class="note" role="alert" style="border:3px solid var(--wa)"><b>⚠️ SIMULAÇÃO DE ALERTA</b><br>Mantenha a calma e siga as instruções. Sem elevadores, sem escadas.</div>
+<div class="cd"><b>Saída mais próxima: ${P[ex].n}</b> · ${meters(R)} m<br><span class="mu sm">Alerta em texto, voz e vibração ao mesmo tempo.</span><div class="bar" style="margin-top:8px" role="progressbar" aria-valuenow="${pg}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pg}%"></i></div></div>${map(R,at)}
+<div class="cd" style="border:3px solid var(--wa)"><p class="mu sm" style="margin:0">Beacon BLE-${P[at].b} (simulado) · ${P[at].n}</p><p style="font-size:1.25em;font-weight:700;margin:6px 0">${ins(e.i,R)}</p></div>
+${at==ex?`<div class="cd"><b>✅ Você chegou à saída.</b><p>Siga ao ponto de encontro externo e aguarde a equipe.</p></div><button class="b" onclick="A('tab','home')">Encerrar simulação</button>`:`<button class="b" onclick="A('enext')">📡 Cheguei ao próximo beacon</button>`}
+<div class="g2" style="margin:8px 0"><button class="b s" onclick="say(ins(S.em.i,S.em.R),1)">🔊 Ouvir</button><button class="b s" onclick="vib()">📳 Vibrar</button></div><button class="b w" onclick="S.sit='Preciso de acompanhamento';A('tab','help')">🤝 Preciso de ajuda para sair</button>
+<p class="mu sm">Simulação: não aciona alarme real nem bombeiros. Em emergência real, ligue 193.</p></main>`},
+dash(){const k=D.slice().sort((a,b)=>S.hm[b]-S.hm[a]),t=D.reduce((s,x)=>s+S.hm[x],0),mx=S.hm[k[0]]||1,ab=S.barr.filter(b=>!b.ok).length;
+return `<main tabindex="-1">${tp('Painel do shopping',1)}<p class="mu sm">Visão do gestor. Dados fictícios somados às ações desta sessão. Só contagens por local, sem dados pessoais.</p>
+<div class="g2"><div class="cd"><b style="font-size:1.8em">${t}</b><br>pedidos de ajuda hoje</div><div class="cd"><b style="font-size:1.8em">3 min 40 s</b><br>tempo médio de resposta</div><div class="cd"><b style="font-size:1.8em">${S.nr}</b><br>rotas acessíveis iniciadas</div><div class="cd"><b style="font-size:1.8em">${ab}</b><br>barreiras abertas</div></div>
+<h2>Mapa de calor dos pedidos</h2><svg viewBox="0 0 300 200" role="img" aria-label="Mapa de calor: ${k.slice(0,3).map(x=>P[x].n+' '+S.hm[x]).join(', ')}" style="width:100%;border-radius:14px;background:var(--sf);border:1.5px solid var(--bd)">${E.map(([u,v])=>`<line x1="${P[u].x}" y1="${P[u].y}" x2="${P[v].x}" y2="${P[v].y}" style="stroke:var(--bd)" stroke-width="4"/>`).join('')}${Object.keys(P).map(x=>`<circle cx="${P[x].x}" cy="${P[x].y}" r="${7+S.hm[x]*2.2}" style="fill:var(--wa);fill-opacity:.4;stroke:var(--wa)" stroke-width="2"/><text x="${P[x].x}" y="${P[x].y+4}" font-size="11" font-weight="700" text-anchor="middle" style="fill:var(--tx)">${S.hm[x]}</text>`).join('')}</svg>
+<h2>Pedidos por local</h2>${k.map(x=>`<p style="margin:8px 0 2px">${P[x].n}<b style="float:right">${S.hm[x]}</b></p><div class="bar"><i style="width:${S.hm[x]/mx*100}%"></i></div>`).join('')}
+<div class="cd"><b>💡 Sugestão</b><p>Maior concentração: ${P[k[0]].n} (${S.hm[k[0]]} pedidos). Vale reforçar sinalização e equipe ali.</p></div>
+<h2>Barreiras relatadas</h2>${S.barr.map((b,i)=>`<div class="cd" style="display:flex;gap:8px;align-items:center"><span style="flex:1">${b.ok?'✅':'🚧'} ${h(b.n)}<br><span class="mu sm">${b.ok?'Resolvida':'Aberta'}</span></span><button class="b s sm" onclick="A('fix',${i})">${b.ok?'Reabrir':'Resolver'}</button></div>`).join('')}
+<div class="cd">🚨 Simulações de emergência nesta sessão: <b>${S.emc}</b><br>📡 Beacons ativos: <b>9 de 9</b> (simulado)</div>
+<p class="mu sm">Teste: peça ajuda no Ajuda+, simule um obstáculo na navegação e volte aqui para ver os números mudarem.</p></main>`},
+profile(){return `<main tabindex="-1">${tp('Perfil e configurações',1)}<div class="cd"><b>Visitante</b><p class="mu">Você está usando o Acessa+ sem cadastro. Criar conta é opcional e não é necessária para nada aqui.</p><button class="b s sm" onclick="alert('Cadastro opcional — fora do escopo deste protótipo.')">Criar conta (opcional)</button></div><h2>Preferências de acessibilidade</h2>${PR.map(x=>tog(x[0])).join('')}${langSel()}<h2>Navegação</h2><p class="mu">Rotas sem escadas: <b>${S.p.nost?'sim':'não'}</b> · Elevadores: <b>${S.p.elv?'preferidos':'indiferente'}</b></p><h2>Comunicação</h2><button class="b s" onclick="A('tab','comm')">Abrir Central de Comunicação</button>
+<h2>Para o shopping</h2><button class="b s" onclick="A('go','dash')">📊 Painel do gestor (demo)</button><h2>Sobre</h2><div class="cd sm">Acessa+ · protótipo de hackathon · v0.1<br>Beacons BLE, mapas, rotas, atendimento e Libras são <b>simulações</b>. Sem localização real, GPS interno ou realidade aumentada. Dados fictícios.</div></main>`}};
+function speechLang(i){const L=['pt','en','es'][i];try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(ML[S.cl][i]);u.lang=LG[L];speechSynthesis.speak(u)}catch(e){}}
+function render(){const a=$('#app');a.className='app'+(S.p.big?' big':'')+(S.p.hc?' hc':'')+(S.p.calm?' calm':'');
+const m=S.sc=='main'?H[S.tab]():H[S.sc]();const tabs=[['home','🏠','Início'],['explore','🏬','Explorar'],['nav','🧭','Navegar'],['comm','💬','Comunicar'],['help','🤝','Ajuda']];
+a.innerHTML=m+(S.full?`<div class="fs" role="dialog" aria-label="Mensagem em tela cheia"><div class="big-msg">${h(S.msg)}</div><button class="b" onclick="say(S.msg,1)">🔊 Ouvir</button><button class="b s" onclick="S.full=false;render()">Fechar</button></div>`:'')+(S.sc=='welcome'?'':`<nav aria-label="Principal">${tabs.map(t=>`<button ${S.sc=='main'&&S.tab==t[0]?'aria-current="page"':''} onclick="A('tab','${t[0]}')"><span class="i" aria-hidden="true">${t[1]}</span>${t[2]}</button>`).join('')}</nav>`)}
+function A(a,v){switch(a){
+case'go':S.st.push(S.sc);S.sc=v;S.alert='';break;
+case'back':S.sc=S.st.pop()||'main';break;
+case'tab':S.sc='main';S.tab=v;S.st=[];S.alert=S.alert&&S.alert[0]=='!'?'':S.alert;if(v=='comm'&&S.p.text&&!S.msgs.length&&S.ct=='cards')S.ct='chat';if(v=='nav'&&!S.live&&!S.done&&!S.dst)S.org=S.loc;break;
+case'pref':S.p[v]=!S.p[v];if(v=='nost'&&S.p.nost)S.mode='acc';break;
+case'lang':S.p.lang=v;break;
+case'loc':S.loc=v;break;
+case'place':S.pl=v;S.st.push(S.sc=='main'?'main':S.sc);S.sc='place';break;
+case'howto':S.dst=v;S.org=S.loc;S.mode=S.p.nost?'acc':'short';S.live=false;S.done=false;S.sc='main';S.tab='nav';S.st=[];break;
+case'mode':S.mode=v;break;
+case'org':S.org=v;break;
+case'dst':S.dst=v;break;
+case'start':if(!S.R)break;S.nr++;S.live=true;S.ni=0;S.bl=[];S.alert='';S.loc=S.R[0];say(ins(0));ann(ins(0));break;
+case'near':{const R=S.R,i=R.indexOf(v);S.loc=v;S.alert='';
+if(v==S.dst){S.live=false;S.done=true;say('Você chegou ao destino.');break}
+if(i>=0){S.ni=i;say(ins(i));ann(ins(i))}else{const r=path(v,S.dst,S.mode);if(r){S.R=r;S.ni=0;S.alert='Você saiu da rota. Recalculamos o trajeto a partir de '+P[v].n+'.';say(S.alert)}else S.alert='Não encontramos caminho a partir daqui. Use o botão de ajuda.'}break}
+case'obs':{const R=S.R,u=R[S.ni],n=R[S.ni+1];if(!n)break;S.bl.push(u+'-'+n);S.barr.unshift({n:'Trecho '+P[u].n+' → '+P[n].n+' (reportado na navegação)',ok:false});const r=path(u,S.dst,S.mode);
+if(r){S.R=r;S.ni=0;S.alert='🚧 Obstáculo simulado entre '+P[u].n+' e '+P[n].n+'. Rota alternativa cadastrada aplicada ('+meters(r)+' m).'}else S.alert='🚧 Obstáculo simulado e não há rota alternativa cadastrada. Peça ajuda.';say(S.alert);ann(S.alert);break}
+case'card':S.msg=v;say(v);break;
+case'role':S.role=v;break;
+case'send':{const t=S.draft.trim();if(!t){S.note='Digite uma mensagem para enviar.';break}S.msgs.push({w:S.role,t});S.msg=t;S.draft='';S.note='';break}
+case'quick':S.msgs.push({w:S.role,t:v});S.msg=v;S.ct='chat';break;
+case'mic':{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){S.note='Seu navegador não oferece transcrição de voz. Digite sua mensagem no campo acima.';break}
+const r=new SR();r.lang=LG[S.p.lang];r.onresult=e=>{S.draft=e.results[0][0].transcript;S.note='Transcrição pronta. Revise e envie.';render()};r.onerror=()=>{S.note='Não foi possível usar o microfone (permissão negada ou indisponível). Digite sua mensagem.';render()};try{r.start();S.note='Ouvindo… fale agora.'}catch(e){S.note='Microfone indisponível. Digite sua mensagem.'}break}
+case'sub':if(!S.sit){S.alert='!Escolha a situação que melhor descreve o que está acontecendo.';break}S.alert='';S.hm[S.loc]++;S.req={t:S.sit,ch:S.ch,det:S.det,loc:P[S.loc].n+', '+P[S.loc].f,st:0,x:false};break;
+case'adv':if(S.req.st<2)S.req.st++;ann(['Solicitação registrada','Atendimento iniciado','Atendimento concluído'][S.req.st]);break;
+case'cancel':S.req.x=true;break;
+case'fix':S.barr[v].ok=!S.barr[v].ok;break;
+case'ctx':{const c=CTX[S.loc].a[v];if(c.calm){S.p.calm=true;ann('Redução de estímulos ativada');break}S.msg=c.m;say(c.m);S.sc='main';S.tab='comm';S.ct='cards';S.st=[];ann('Mensagem pronta na Central de Comunicação');break}
+case'emerg':{S.emc++;const c=['ENT','EST'].map(x=>path(S.loc,x,'emg')).filter(Boolean).sort((a,b)=>meters(a)-meters(b))[0];S.em={R:c||null,i:0};S.st=[];S.sc='emerg';if(c){const t='Alerta de emergência simulado. '+ins(0,c);say(t,1);vib();ann(t)}break}
+case'enext':{const e=S.em;if(e.i<e.R.length-1)e.i++;S.loc=e.R[e.i];const t=ins(e.i,e.R);say(t,1);vib();ann(t);break}}
+render();const m=$('main');if(m&&['go','back','tab','place','howto','start'].includes(a)){m.focus();m.scrollTop=0}}
+render();
+</script></body></html>
