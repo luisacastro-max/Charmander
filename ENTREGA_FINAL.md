@@ -19,8 +19,9 @@ A versão entregue é o aplicativo Flutter, não o protótipo HTML. O código es
 ## O que demonstrar no MVP
 
 - Preferências locais: texto ampliado, alto contraste, redução de estímulos e mobilidade.
-- Pesquisa de destino, escolha da origem simulada e rota com até cinco paradas.
-- Instruções e mapa por piso, progresso e chegada por eventos BLE simulados.
+- **Criação e execução de rotas simuladas:** escolher o ponto de origem e o destino, calcular o percurso e adicionar, reordenar ou remover até cinco paradas.
+- **Navegação simulada pelo shopping:** iniciar a rota, acompanhar o mapa e as instruções por piso e usar “Simular chegada” para avançar pelos pontos de referência, representando eventos de beacons BLE, até chegar ao destino.
+- **Rotas adaptadas às preferências:** demonstrar um percurso sem escadas e com uso de elevador, quando disponível, e a mensagem de incompatibilidade quando não existir caminho que respeite as restrições.
 - Cartão de comunicação com frases traduzidas, respostas e modo frente a frente.
 - Ajuda+: necessidade, local, revisão, confirmação, estados demonstrativos e cancelamento.
 - Interface em português, inglês e espanhol nos textos cadastrados, com retorno ao português quando não houver tradução.
@@ -61,8 +62,8 @@ O servidor usa JSON local e é de demonstração, sem autenticação ou moderaç
 ## Ordem sugerida para a banca
 
 1. Ajustar acessibilidade e idioma.
-2. Buscar a Praça de Alimentação e iniciar uma rota sem escadas.
-3. Adicionar uma parada e simular chegadas.
+2. Escolher a origem simulada, buscar a Praça de Alimentação e calcular uma rota sem escadas.
+3. Adicionar uma parada antes de iniciar a navegação e executar o percurso simulado: avançar com “Simular chegada”, conferir a mudança de piso, confirmar a parada intermediária e concluir no destino.
 4. Mostrar cartão e resposta de outra pessoa.
 5. Pedir ajuda, revisar e acompanhar a simulação.
 6. Registrar ocorrência e verificar o modo local/compartilhado.
