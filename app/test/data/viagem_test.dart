@@ -120,4 +120,17 @@ void main() {
     }
     expect(curva(null, r.etapas.first), isNull);
   });
+
+  test('manobra do banner: troca de piso e curvas', () {
+    final r = motor.calcular('ENT_P', 'PA', semEscadas) as Rota;
+    final elev = r.etapas.indexWhere(
+      (e) => e.trecho.trocaPiso == TrocaPiso.elevador,
+    );
+    expect(manobra(r.etapas[elev - 1], r.etapas[elev]), Manobra.elevador);
+    expect(manobra(null, r.etapas.first), Manobra.siga);
+    final s = EstadoNavegacao(
+      motor.calcularViagem('ENT_P', ['PA'], semEscadas) as Viagem,
+    );
+    expect(s.etapaSeguinte, same(s.rota.etapas[1]));
+  });
 }

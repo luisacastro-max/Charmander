@@ -102,21 +102,55 @@ double direcaoNoMapa(PontoReferencia de, PontoReferencia para) {
   return (g + 360) % 360;
 }
 
-/// Orientação curta em relação ao trecho anterior ("Vire à direita").
-/// `null` quando não há trecho anterior no mesmo piso para comparar.
-String? curva(EtapaRota? anterior, EtapaRota atual) {
-  if (anterior == null ||
-      anterior.trecho.trocaPiso != null ||
-      atual.trecho.trocaPiso != null) {
-    return null;
+/// Manobra da etapa, como no banner de um GPS.
+enum Manobra {
+  siga,
+  frente,
+  direita,
+  esquerda,
+  retorno,
+  elevador,
+  escadaRolante,
+  escada,
+  rampa,
+}
+
+/// Manobra de [atual] em relação ao trecho anterior. Sem trecho anterior
+/// no mesmo piso, é só [Manobra.siga].
+Manobra manobra(EtapaRota? anterior, EtapaRota atual) {
+  switch (atual.trecho.trocaPiso) {
+    case TrocaPiso.elevador:
+      return Manobra.elevador;
+    case TrocaPiso.escadaRolante:
+      return Manobra.escadaRolante;
+    case TrocaPiso.escada:
+      return Manobra.escada;
+    case TrocaPiso.rampa:
+      return Manobra.rampa;
+    case null:
+      break;
+  }
+  if (anterior == null || anterior.trecho.trocaPiso != null) {
+    return Manobra.siga;
   }
   final a = direcaoNoMapa(anterior.de, anterior.para);
   final b = direcaoNoMapa(atual.de, atual.para);
   final d = ((b - a + 540) % 360) - 180; // -180..180
-  if (d.abs() < 35) return 'Siga em frente';
-  if (d.abs() > 145) return 'Volte no sentido contrário';
-  return d > 0 ? 'Vire à direita' : 'Vire à esquerda';
+  if (d.abs() < 35) return Manobra.frente;
+  if (d.abs() > 145) return Manobra.retorno;
+  return d > 0 ? Manobra.direita : Manobra.esquerda;
 }
+
+/// Orientação curta em relação ao trecho anterior ("Vire à direita").
+/// `null` quando não há trecho anterior no mesmo piso para comparar.
+String? curva(EtapaRota? anterior, EtapaRota atual) =>
+    switch (manobra(anterior, atual)) {
+      Manobra.frente => 'Siga em frente',
+      Manobra.retorno => 'Volte no sentido contrário',
+      Manobra.direita => 'Vire à direita',
+      Manobra.esquerda => 'Vire à esquerda',
+      _ => null,
+    };
 
 /// Estado da navegação passo a passo. Imutável: cada chegada a um beacon
 /// (simulada) gera um novo estado.
@@ -147,6 +181,10 @@ class EstadoNavegacao {
   EtapaRota? get etapaAtual => naParada ? null : rota.etapas[passo];
   EtapaRota? get etapaAnterior => passo == 0 ? null : rota.etapas[passo - 1];
   PontoReferencia? get proximoPonto => etapaAtual?.para;
+
+  /// Etapa depois da atual na mesma perna ("Depois: …" do GPS).
+  EtapaRota? get etapaSeguinte =>
+      passo + 1 < rota.etapas.length ? rota.etapas[passo + 1] : null;
 
   PontoReferencia? get proximaParada =>
       ultimaPerna ? null : viagem.paradas[perna + 1];
