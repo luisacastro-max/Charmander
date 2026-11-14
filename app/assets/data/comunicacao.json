@@ -1,0 +1,246 @@
+{
+  "versao": 2,
+  "aviso": "Frases prontas e traduções feitas previamente. Não é tradução automática.",
+  "cartoes": [
+    {
+      "id": "C01",
+      "icone": "ajuda",
+      "texto": "Preciso de ajuda"
+    },
+    {
+      "id": "C02",
+      "icone": "ouvir",
+      "texto": "Não consigo ouvir"
+    },
+    {
+      "id": "C03",
+      "icone": "falar",
+      "texto": "Não consigo falar"
+    },
+    {
+      "id": "C04",
+      "icone": "agua",
+      "texto": "Gostaria de água"
+    },
+    {
+      "id": "C05",
+      "icone": "banheiro",
+      "texto": "Onde fica o banheiro?"
+    },
+    {
+      "id": "C06",
+      "icone": "elevador",
+      "texto": "Preciso de um elevador"
+    },
+    {
+      "id": "C07",
+      "icone": "escrita",
+      "texto": "Gostaria de atendimento por escrito"
+    },
+    {
+      "id": "C08",
+      "icone": "devagar",
+      "texto": "Por favor, fale devagar"
+    }
+  ],
+  "mensagensRapidas": [
+    {
+      "categoria": "Informações",
+      "frases": [
+        "Qual o horário de funcionamento?",
+        "Onde posso ver o mapa?"
+      ]
+    },
+    {
+      "categoria": "Localização",
+      "frases": [
+        "Onde estou agora?",
+        "Pode me levar até a saída?"
+      ]
+    },
+    {
+      "categoria": "Atendimento",
+      "frases": [
+        "Preciso de atendimento por escrito.",
+        "Pode repetir mais devagar?"
+      ]
+    },
+    {
+      "categoria": "Compras",
+      "frases": [
+        "Esta loja tem provador acessível?",
+        "Qual o valor deste produto?"
+      ]
+    },
+    {
+      "categoria": "Alimentação",
+      "frases": [
+        "Há opções sem glúten?",
+        "Pode ler o cardápio para mim?"
+      ]
+    },
+    {
+      "categoria": "Acessibilidade",
+      "frases": [
+        "Preciso de uma rota sem escadas.",
+        "Preciso de um lugar tranquilo."
+      ]
+    }
+  ],
+  "frasesTraduzidas": [
+    {
+      "id": "F01",
+      "pt": "Olá, preciso de ajuda.",
+      "en": "Hello, I need help.",
+      "es": "Hola, necesito ayuda."
+    },
+    {
+      "id": "F02",
+      "pt": "Onde fica o banheiro?",
+      "en": "Where is the restroom?",
+      "es": "¿Dónde está el baño?"
+    },
+    {
+      "id": "F03",
+      "pt": "Preciso de um elevador.",
+      "en": "I need an elevator.",
+      "es": "Necesito un ascensor."
+    },
+    {
+      "id": "F04",
+      "pt": "Obrigado(a) pela ajuda.",
+      "en": "Thank you for your help.",
+      "es": "Gracias por su ayuda."
+    },
+    {
+      "id": "F05",
+      "pt": "Pode escrever, por favor?",
+      "en": "Could you write it down, please?",
+      "es": "¿Puede escribirlo, por favor?"
+    },
+    {
+      "id": "F06",
+      "pt": "Onde fica a praça de alimentação?",
+      "en": "Where is the food court?",
+      "es": "¿Dónde está la zona de comida?"
+    }
+  ],
+  "sugestoesPorPonto": [
+    {
+      "pontoId": "ENT_P",
+      "titulo": "Entrada Principal",
+      "acoes": [
+        {
+          "titulo": "Pedir um mapa tátil",
+          "mensagem": "Gostaria de um mapa tátil, por favor."
+        }
+      ]
+    },
+    {
+      "pontoId": "INF",
+      "titulo": "Balcão de Informações",
+      "acoes": [
+        {
+          "titulo": "Atendimento por escrito",
+          "mensagem": "Gostaria de atendimento por escrito."
+        },
+        {
+          "titulo": "Pedir acompanhante",
+          "mensagem": "Preciso de acompanhamento até meu destino."
+        }
+      ]
+    },
+    {
+      "pontoId": "PNE_T",
+      "titulo": "Banheiro acessível do Térreo",
+      "acoes": [
+        {
+          "titulo": "Pedir ajuda neste local",
+          "mensagem": "Preciso de ajuda no banheiro acessível."
+        }
+      ]
+    },
+    {
+      "pontoId": "EST",
+      "titulo": "Estacionamento acessível",
+      "acoes": [
+        {
+          "titulo": "Pedir ajuda com a vaga",
+          "mensagem": "Preciso de ajuda perto do estacionamento."
+        }
+      ]
+    },
+    {
+      "pontoId": "ESC_N",
+      "titulo": "Escada Norte (evite em rotas acessíveis)",
+      "acoes": [
+        {
+          "titulo": "Preciso de um elevador",
+          "mensagem": "Preciso de um elevador."
+        }
+      ]
+    },
+    {
+      "pontoId": "ELV_T",
+      "titulo": "Elevadores com braille e aviso sonoro",
+      "acoes": [
+        {
+          "titulo": "Ajuda para usar o elevador",
+          "mensagem": "Preciso de ajuda para usar o elevador."
+        }
+      ]
+    },
+    {
+      "pontoId": "LJ1",
+      "titulo": "Vitrine Moda",
+      "acoes": [
+        {
+          "titulo": "Pedir provador acessível",
+          "mensagem": "Gostaria de usar o provador acessível."
+        },
+        {
+          "titulo": "Atendimento por escrito",
+          "mensagem": "Gostaria de atendimento por escrito."
+        }
+      ]
+    },
+    {
+      "pontoId": "PA",
+      "titulo": "Praça de Alimentação",
+      "acoes": [
+        {
+          "titulo": "Cardápio ampliado",
+          "mensagem": "Gostaria do cardápio em letras grandes."
+        },
+        {
+          "titulo": "Informar alergia",
+          "mensagem": "Tenho alergia alimentar. Pode me ajudar a escolher?"
+        },
+        {
+          "titulo": "Pedir água",
+          "mensagem": "Gostaria de água."
+        }
+      ]
+    },
+    {
+      "pontoId": "ET",
+      "titulo": "Espaço Tranquilo",
+      "acoes": [
+        {
+          "titulo": "Ativar redução de estímulos",
+          "ativarPreferencia": "calm"
+        }
+      ]
+    },
+    {
+      "pontoId": "FAM",
+      "titulo": "Espaço Família",
+      "acoes": [
+        {
+          "titulo": "Pedir ajuda neste local",
+          "mensagem": "Preciso de ajuda no Espaço Família."
+        }
+      ]
+    }
+  ]
+}

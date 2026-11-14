@@ -66,6 +66,39 @@ class Preferences {
     );
   }
 
+  /// Formato salvo no aparelho. Só escolhas de recursos e idioma —
+  /// nenhum dado pessoal ou de saúde (RNF11, RNF13).
+  Map<String, Object> toMap() => {
+    'largeText': largeText,
+    'highContrast': highContrast,
+    'audioGuidance': audioGuidance,
+    'textCommunication': textCommunication,
+    'quickMessages': quickMessages,
+    'avoidStairs': avoidStairs,
+    'preferElevators': preferElevators,
+    'simplified': simplified,
+    'calm': calm,
+    'language': language.name,
+  };
+
+  /// Lê o formato salvo. Chaves ausentes ou inválidas voltam ao padrão.
+  factory Preferences.fromMap(Map<String, Object?> m) {
+    bool b(String k) => m[k] is bool && m[k] as bool;
+    final lang = AppLanguage.values.where((l) => l.name == m['language']);
+    return Preferences(
+      largeText: b('largeText'),
+      highContrast: b('highContrast'),
+      audioGuidance: b('audioGuidance'),
+      textCommunication: b('textCommunication'),
+      quickMessages: b('quickMessages'),
+      avoidStairs: b('avoidStairs'),
+      preferElevators: b('preferElevators'),
+      simplified: b('simplified'),
+      calm: b('calm'),
+      language: lang.isEmpty ? AppLanguage.pt : lang.first,
+    );
+  }
+
   int get activeCount => [
     largeText,
     highContrast,

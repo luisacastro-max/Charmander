@@ -9,7 +9,7 @@ import '../../core/widgets/entrance.dart';
 import '../../core/widgets/preference_toggle.dart';
 import '../../core/widgets/sticker_button.dart';
 import '../../core/widgets/sticker_card.dart';
-import 'next_step_screen.dart';
+import '../destino/destino_screen.dart';
 import 'preferences.dart';
 import 'preferences_scope.dart';
 
@@ -18,7 +18,11 @@ import 'preferences_scope.dart';
 /// Organizada por necessidade, não por diagnóstico. Texto ampliado,
 /// alto contraste e redução de estímulos mudam a tela na hora.
 class PreferencesScreen extends StatelessWidget {
-  const PreferencesScreen({super.key});
+  const PreferencesScreen({super.key, this.continuarParaDestino = true});
+
+  /// No primeiro uso, "Continuar" leva a "Para onde você quer ir?".
+  /// Quando aberta de outra tela (ex.: revisar rota), só volta.
+  final bool continuarParaDestino;
 
   @override
   Widget build(BuildContext context) {
@@ -197,21 +201,34 @@ class PreferencesScreen extends StatelessWidget {
             Entrance(
               index: i++,
               child: StickerButton(
-                label: 'Continuar',
-                icon: Icons.arrow_forward,
-                onPressed: () =>
-                    Navigator.of(context)
-                        .push(acessaRoute(const NextStepScreen())),
+                label: continuarParaDestino ? 'Continuar' : 'Voltar',
+                icon: continuarParaDestino
+                    ? Icons.arrow_forward
+                    : Icons.arrow_back,
+                onPressed: () => continuarParaDestino
+                    ? Navigator.of(context)
+                          .push(acessaRoute(const DestinoScreen()))
+                    : Navigator.of(context).maybePop(),
               ),
             ),
             const SizedBox(height: AcessaSpacing.md),
             Entrance(
               index: i++,
               child: StickerButton(
-                label: 'Desativar todas',
+                label: 'Apagar minhas preferências',
                 kind: StickerButtonKind.secondary,
-                icon: Icons.restart_alt,
-                onPressed: p.activeCount == 0 ? null : ctrl.reset,
+                icon: Icons.delete_outline,
+                semanticHint: 'Apaga as escolhas salvas neste aparelho. Pede confirmação.',
+                onPressed: () => _confirmErase(context, ctrl),
+              ),
+            ),
+            const SizedBox(height: AcessaSpacing.sm),
+            Entrance(
+              index: i++,
+              child: Text(
+                'Suas escolhas ficam salvas só neste aparelho. Nada é '
+                'enviado para fora.',
+                style: text.bodyMedium?.copyWith(color: c.inkMuted),
               ),
             ),
           ],
@@ -503,4 +520,53 @@ class _LivePreview extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Confirma antes de apagar (ação irreversível) e avisa o resultado
+/// em texto, que também é lido por leitores de tela.
+Future<void> _confirmErase(
+  BuildContext context,
+  PreferencesController ctrl,
+) async {
+  final c = AcessaTheme.of(context).colors;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: c.surface,
+      title: Text(
+        'Apagar suas preferências?',
+        style: Theme.of(ctx).textTheme.titleLarge,
+      ),
+      content: Text(
+        'As escolhas salvas neste aparelho serão apagadas e o app volta '
+        'ao padrão. Dá para escolher de novo quando quiser.',
+        style: Theme.of(ctx).textTheme.bodyLarge,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          style: TextButton.styleFrom(
+            foregroundColor: c.ink,
+            minimumSize: const Size(64, AcessaSpacing.minTouch),
+          ),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          style: FilledButton.styleFrom(
+            backgroundColor: c.primary,
+            foregroundColor: c.onPrimary,
+            minimumSize: const Size(64, AcessaSpacing.minTouch),
+          ),
+          child: const Text('Apagar'),
+        ),
+      ],
+    ),
+  );
+  if (ok != true || !context.mounted) return;
+  await ctrl.eraseStored();
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Preferências apagadas deste aparelho.')),
+  );
 }

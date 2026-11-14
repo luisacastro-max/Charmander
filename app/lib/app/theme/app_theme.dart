@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../features/welcome_preferences/preferences.dart';
 import 'tokens.dart';
@@ -37,29 +36,32 @@ AcessaColors colorsFor(Preferences p) {
 /// - Texto: Atkinson Hyperlegible — criada pelo Braille Institute para
 ///   facilitar a leitura por pessoas com baixa visão (já usada no protótipo).
 ///
-/// Etapa 1 carrega as fontes pelo pacote google_fonts. Para o app funcionar
-/// offline (princípio "funciona no dispositivo"), as fontes serão
-/// empacotadas em assets/ na Etapa 2.
-/// Desligado nos testes automatizados, que não acessam a internet.
-bool useBrandFonts = true;
+/// Desde a Etapa 2 as fontes ficam empacotadas no app (assets/fonts),
+/// sem depender de internet. Licença: SIL Open Font License 1.1.
+const fontDisplay = 'Fredoka';
+const fontBody = 'AtkinsonHyperlegible';
 
 ThemeData buildTheme(Preferences prefs) {
   final c = colorsFor(prefs);
 
-  TextStyle display(double size, {FontWeight w = FontWeight.w700}) {
-    final s = TextStyle(fontSize: size, fontWeight: w, height: 1.08);
-    return useBrandFonts ? GoogleFonts.fredoka(textStyle: s) : s;
-  }
+  // Fredoka é uma fonte variável: o peso vem do eixo "wght".
+  TextStyle display(double size, {FontWeight w = FontWeight.w700}) => TextStyle(
+    fontFamily: fontDisplay,
+    fontSize: size,
+    fontWeight: w,
+    fontVariations: [FontVariation.weight(w.value.toDouble())],
+    height: 1.08,
+  );
 
-  TextStyle body(double size, {FontWeight? w, double? height}) {
-    final s = TextStyle(fontSize: size, fontWeight: w, height: height);
-    return useBrandFonts ? GoogleFonts.atkinsonHyperlegible(textStyle: s) : s;
-  }
+  TextStyle body(double size, {FontWeight? w, double? height}) => TextStyle(
+    fontFamily: fontBody,
+    fontSize: size,
+    fontWeight: w,
+    height: height,
+  );
 
   final TextTheme base = ThemeData.light().textTheme.apply(
-    fontFamily: useBrandFonts
-        ? GoogleFonts.atkinsonHyperlegible().fontFamily
-        : null,
+    fontFamily: fontBody,
   );
 
   final text = base

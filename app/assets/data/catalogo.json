@@ -1,0 +1,671 @@
+{
+  "versao": 2,
+  "aviso": "Shopping fictício do Acessa+. Formato geral inspirado numa planta de 2 pisos; nomes, lojas e medidas são inventados. Não inclui áreas técnicas ou de segurança.",
+  "mapa": {
+    "largura": 400,
+    "altura": 260
+  },
+  "pisos": [
+    "Térreo",
+    "Mezanino",
+    "2º piso"
+  ],
+  "pontos": [
+    {
+      "id": "ENT_P",
+      "nome": "Entrada Principal",
+      "piso": "Térreo",
+      "beacon": "BLE-01",
+      "x": 40,
+      "y": 200,
+      "tipo": "entrada",
+      "saidaEmergencia": true
+    },
+    {
+      "id": "EST",
+      "nome": "Estacionamento acessível",
+      "piso": "Térreo",
+      "beacon": "BLE-02",
+      "x": 40,
+      "y": 245,
+      "tipo": "servico",
+      "saidaEmergencia": true
+    },
+    {
+      "id": "ENT_L",
+      "nome": "Entrada Leste",
+      "piso": "Térreo",
+      "beacon": "BLE-03",
+      "x": 370,
+      "y": 40,
+      "tipo": "entrada",
+      "saidaEmergencia": true
+    },
+    {
+      "id": "INF",
+      "nome": "Balcão de Informações",
+      "piso": "Térreo",
+      "beacon": "BLE-04",
+      "x": 95,
+      "y": 180,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "COR_O",
+      "nome": "Corredor Oeste",
+      "piso": "Térreo",
+      "beacon": "BLE-05",
+      "x": 85,
+      "y": 110,
+      "tipo": "corredor",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "COR_C",
+      "nome": "Corredor Central",
+      "piso": "Térreo",
+      "beacon": "BLE-06",
+      "x": 175,
+      "y": 100,
+      "tipo": "corredor",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "COR_L",
+      "nome": "Corredor Leste",
+      "piso": "Térreo",
+      "beacon": "BLE-07",
+      "x": 290,
+      "y": 120,
+      "tipo": "corredor",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "PEV",
+      "nome": "Praça de Eventos",
+      "piso": "Térreo",
+      "beacon": "BLE-08",
+      "x": 175,
+      "y": 160,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "LJ1",
+      "nome": "Vitrine Moda",
+      "piso": "Térreo",
+      "beacon": "BLE-09",
+      "x": 55,
+      "y": 60,
+      "tipo": "loja",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "LJ2",
+      "nome": "Casa & Conforto",
+      "piso": "Térreo",
+      "beacon": "BLE-10",
+      "x": 125,
+      "y": 55,
+      "tipo": "loja",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "LJ3",
+      "nome": "Óculos Lumi",
+      "piso": "Térreo",
+      "beacon": "BLE-11",
+      "x": 215,
+      "y": 55,
+      "tipo": "loja",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "LJ4",
+      "nome": "Livraria Página",
+      "piso": "Térreo",
+      "beacon": "BLE-12",
+      "x": 330,
+      "y": 105,
+      "tipo": "loja",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "BAN_T",
+      "nome": "Banheiros do Térreo",
+      "piso": "Térreo",
+      "beacon": "BLE-13",
+      "x": 255,
+      "y": 175,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "PNE_T",
+      "nome": "Banheiro acessível do Térreo",
+      "piso": "Térreo",
+      "beacon": "BLE-14",
+      "x": 285,
+      "y": 175,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "FAM",
+      "nome": "Espaço Família",
+      "piso": "Térreo",
+      "beacon": "BLE-15",
+      "x": 225,
+      "y": 210,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "ET",
+      "nome": "Espaço Tranquilo",
+      "piso": "Térreo",
+      "beacon": "BLE-16",
+      "x": 345,
+      "y": 180,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "ELV_T",
+      "nome": "Elevadores — Térreo",
+      "piso": "Térreo",
+      "beacon": "BLE-17",
+      "x": 215,
+      "y": 120,
+      "tipo": "elevador",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "ESR_T",
+      "nome": "Escada rolante — Térreo",
+      "piso": "Térreo",
+      "beacon": "BLE-18",
+      "x": 140,
+      "y": 85,
+      "tipo": "escada",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "ESC_N",
+      "nome": "Escada Norte — Térreo",
+      "piso": "Térreo",
+      "beacon": "BLE-19",
+      "x": 300,
+      "y": 55,
+      "tipo": "escada",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "ESC_M",
+      "nome": "Escada do Mezanino",
+      "piso": "Térreo",
+      "beacon": "BLE-20",
+      "x": 120,
+      "y": 140,
+      "tipo": "escada",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "MEZ",
+      "nome": "Galeria do Mezanino",
+      "piso": "Mezanino",
+      "beacon": "BLE-21",
+      "x": 120,
+      "y": 200,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "ELV_2",
+      "nome": "Elevadores — 2º piso",
+      "piso": "2º piso",
+      "beacon": "BLE-22",
+      "x": 215,
+      "y": 120,
+      "tipo": "elevador",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "ESR_2",
+      "nome": "Escada rolante — 2º piso",
+      "piso": "2º piso",
+      "beacon": "BLE-23",
+      "x": 140,
+      "y": 85,
+      "tipo": "escada",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "ESC_N2",
+      "nome": "Escada Norte — 2º piso",
+      "piso": "2º piso",
+      "beacon": "BLE-24",
+      "x": 300,
+      "y": 55,
+      "tipo": "escada",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "COR_2",
+      "nome": "Corredor do 2º piso",
+      "piso": "2º piso",
+      "beacon": "BLE-25",
+      "x": 165,
+      "y": 125,
+      "tipo": "corredor",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "PA",
+      "nome": "Praça de Alimentação",
+      "piso": "2º piso",
+      "beacon": "BLE-26",
+      "x": 245,
+      "y": 80,
+      "tipo": "alimentacao",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "RES1",
+      "nome": "Sabor da Terra",
+      "piso": "2º piso",
+      "beacon": "BLE-27",
+      "x": 180,
+      "y": 45,
+      "tipo": "alimentacao",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "RES2",
+      "nome": "Forno Bom Pizzaria",
+      "piso": "2º piso",
+      "beacon": "BLE-28",
+      "x": 300,
+      "y": 115,
+      "tipo": "alimentacao",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "BAN_2",
+      "nome": "Banheiros do 2º piso",
+      "piso": "2º piso",
+      "beacon": "BLE-29",
+      "x": 95,
+      "y": 100,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "PNE_2",
+      "nome": "Banheiro acessível do 2º piso",
+      "piso": "2º piso",
+      "beacon": "BLE-30",
+      "x": 95,
+      "y": 135,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    },
+    {
+      "id": "IMR",
+      "nome": "Espaço Imersivo",
+      "piso": "2º piso",
+      "beacon": "BLE-31",
+      "x": 340,
+      "y": 170,
+      "tipo": "servico",
+      "saidaEmergencia": false
+    }
+  ],
+  "locais": [
+    {
+      "id": "INF",
+      "pontoId": "INF",
+      "nome": "Balcão de Informações",
+      "categoria": "Serviços",
+      "icone": "info",
+      "descricao": "Balcão rebaixado. Aceita conversa por escrito.",
+      "recursos": [
+        "Balcão rebaixado",
+        "Atendimento por escrito",
+        "Piso tátil"
+      ],
+      "palavrasChave": [
+        "ajuda",
+        "atendimento",
+        "informação"
+      ]
+    },
+    {
+      "id": "EST",
+      "pontoId": "EST",
+      "nome": "Estacionamento acessível",
+      "categoria": "Serviços",
+      "icone": "estacionamento",
+      "descricao": "Vagas largas perto da Entrada Principal.",
+      "recursos": [
+        "Vagas largas",
+        "Piso nivelado"
+      ],
+      "palavrasChave": [
+        "carro",
+        "vaga",
+        "saída"
+      ]
+    },
+    {
+      "id": "ENT_P",
+      "pontoId": "ENT_P",
+      "nome": "Entrada Principal",
+      "categoria": "Saídas",
+      "icone": "saida",
+      "descricao": "Porta automática e piso tátil.",
+      "recursos": [
+        "Porta automática",
+        "Piso tátil"
+      ],
+      "palavrasChave": [
+        "saída",
+        "entrada",
+        "porta"
+      ]
+    },
+    {
+      "id": "ENT_L",
+      "pontoId": "ENT_L",
+      "nome": "Entrada Leste",
+      "categoria": "Saídas",
+      "icone": "saida",
+      "descricao": "Acesso pela avenida lateral.",
+      "palavrasChave": [
+        "saída",
+        "entrada",
+        "porta"
+      ]
+    },
+    {
+      "id": "PEV",
+      "pontoId": "PEV",
+      "nome": "Praça de Eventos",
+      "categoria": "Lazer",
+      "icone": "eventos",
+      "descricao": "Área aberta para eventos. Pode ter muito movimento e som.",
+      "recursos": [
+        "Espaço amplo"
+      ],
+      "palavrasChave": [
+        "evento",
+        "praça"
+      ]
+    },
+    {
+      "id": "LJ1",
+      "pontoId": "LJ1",
+      "nome": "Vitrine Moda",
+      "categoria": "Lojas",
+      "icone": "loja",
+      "descricao": "Loja de departamento fictícia.",
+      "recursos": [
+        "Corredores largos",
+        "Provador acessível"
+      ],
+      "palavrasChave": [
+        "roupa",
+        "moda",
+        "departamento"
+      ]
+    },
+    {
+      "id": "LJ2",
+      "pontoId": "LJ2",
+      "nome": "Casa & Conforto",
+      "categoria": "Lojas",
+      "icone": "loja",
+      "descricao": "Utilidades para casa.",
+      "palavrasChave": [
+        "casa",
+        "decoração"
+      ]
+    },
+    {
+      "id": "LJ3",
+      "pontoId": "LJ3",
+      "nome": "Óculos Lumi",
+      "categoria": "Lojas",
+      "icone": "loja",
+      "descricao": "Ótica fictícia.",
+      "recursos": [
+        "Atendimento por escrito"
+      ],
+      "palavrasChave": [
+        "óculos",
+        "ótica"
+      ]
+    },
+    {
+      "id": "LJ4",
+      "pontoId": "LJ4",
+      "nome": "Livraria Página",
+      "categoria": "Lojas",
+      "icone": "loja",
+      "descricao": "Livros e papelaria. Tem livros em braille.",
+      "recursos": [
+        "Livros em braille",
+        "Assentos"
+      ],
+      "palavrasChave": [
+        "livro",
+        "papelaria",
+        "braille"
+      ]
+    },
+    {
+      "id": "BAN_T",
+      "pontoId": "BAN_T",
+      "nome": "Banheiros do Térreo",
+      "categoria": "Banheiros",
+      "icone": "banheiro",
+      "descricao": "Feminino e masculino.",
+      "palavrasChave": [
+        "banheiro",
+        "sanitário",
+        "wc"
+      ]
+    },
+    {
+      "id": "PNE_T",
+      "pontoId": "PNE_T",
+      "nome": "Banheiro acessível do Térreo",
+      "categoria": "Banheiros",
+      "icone": "banheiro_acessivel",
+      "descricao": "Cabine ampla com barras de apoio.",
+      "recursos": [
+        "Barras de apoio",
+        "Espaço para giro de cadeira",
+        "Pia acessível"
+      ],
+      "acessivel": true,
+      "palavrasChave": [
+        "banheiro",
+        "acessível",
+        "pne",
+        "cadeira"
+      ]
+    },
+    {
+      "id": "FAM",
+      "pontoId": "FAM",
+      "nome": "Espaço Família",
+      "categoria": "Serviços",
+      "icone": "familia",
+      "descricao": "Fraldário e área de amamentação.",
+      "recursos": [
+        "Trocador",
+        "Poltrona"
+      ],
+      "palavrasChave": [
+        "fraldário",
+        "bebê",
+        "amamentação"
+      ]
+    },
+    {
+      "id": "ET",
+      "pontoId": "ET",
+      "nome": "Espaço Tranquilo",
+      "categoria": "Serviços",
+      "icone": "tranquilo",
+      "descricao": "Sala com pouca luz e sem música, para pausar de ruídos.",
+      "recursos": [
+        "Baixo estímulo",
+        "Sem música",
+        "Assentos"
+      ],
+      "horario": "Até 21h",
+      "palavrasChave": [
+        "calmo",
+        "silêncio",
+        "sensorial",
+        "tranquilo"
+      ]
+    },
+    {
+      "id": "ELV_T",
+      "pontoId": "ELV_T",
+      "nome": "Elevadores — Térreo",
+      "categoria": "Circulação",
+      "icone": "elevador",
+      "descricao": "Botões em braille e aviso sonoro de andar.",
+      "recursos": [
+        "Braille",
+        "Aviso sonoro"
+      ],
+      "palavrasChave": [
+        "elevador"
+      ]
+    },
+    {
+      "id": "ELV_2",
+      "pontoId": "ELV_2",
+      "nome": "Elevadores — 2º piso",
+      "categoria": "Circulação",
+      "icone": "elevador",
+      "descricao": "Botões em braille e aviso sonoro de andar.",
+      "recursos": [
+        "Braille",
+        "Aviso sonoro"
+      ],
+      "palavrasChave": [
+        "elevador"
+      ]
+    },
+    {
+      "id": "MEZ",
+      "pontoId": "MEZ",
+      "nome": "Galeria do Mezanino",
+      "categoria": "Lazer",
+      "icone": "galeria",
+      "descricao": "Exposição de arte. Acesso somente por escada.",
+      "palavrasChave": [
+        "arte",
+        "galeria",
+        "exposição"
+      ]
+    },
+    {
+      "id": "PA",
+      "pontoId": "PA",
+      "nome": "Praça de Alimentação",
+      "categoria": "Alimentação",
+      "icone": "alimentacao",
+      "descricao": "Mesas com espaço para cadeira de rodas e cardápio ampliado.",
+      "recursos": [
+        "Mesas adaptadas",
+        "Cardápio ampliado"
+      ],
+      "horario": "10h às 22h",
+      "palavrasChave": [
+        "comida",
+        "comer",
+        "lanche",
+        "almoço"
+      ]
+    },
+    {
+      "id": "RES1",
+      "pontoId": "RES1",
+      "nome": "Sabor da Terra",
+      "categoria": "Alimentação",
+      "icone": "alimentacao",
+      "descricao": "Restaurante de comida regional (fictício).",
+      "recursos": [
+        "Cardápio ampliado"
+      ],
+      "palavrasChave": [
+        "restaurante",
+        "comida"
+      ]
+    },
+    {
+      "id": "RES2",
+      "pontoId": "RES2",
+      "nome": "Forno Bom Pizzaria",
+      "categoria": "Alimentação",
+      "icone": "alimentacao",
+      "descricao": "Pizzaria fictícia.",
+      "palavrasChave": [
+        "pizza",
+        "restaurante"
+      ]
+    },
+    {
+      "id": "BAN_2",
+      "pontoId": "BAN_2",
+      "nome": "Banheiros do 2º piso",
+      "categoria": "Banheiros",
+      "icone": "banheiro",
+      "descricao": "Feminino e masculino.",
+      "palavrasChave": [
+        "banheiro",
+        "sanitário",
+        "wc"
+      ]
+    },
+    {
+      "id": "PNE_2",
+      "pontoId": "PNE_2",
+      "nome": "Banheiro acessível do 2º piso",
+      "categoria": "Banheiros",
+      "icone": "banheiro_acessivel",
+      "descricao": "Cabine ampla com barras de apoio.",
+      "recursos": [
+        "Barras de apoio",
+        "Espaço para giro de cadeira"
+      ],
+      "acessivel": true,
+      "palavrasChave": [
+        "banheiro",
+        "acessível",
+        "pne",
+        "cadeira"
+      ]
+    },
+    {
+      "id": "IMR",
+      "pontoId": "IMR",
+      "nome": "Espaço Imersivo",
+      "categoria": "Lazer",
+      "icone": "imersivo",
+      "descricao": "Experiência com luzes e sons. Pode ter estímulos intensos.",
+      "palavrasChave": [
+        "imersivo",
+        "experiência"
+      ]
+    }
+  ]
+}

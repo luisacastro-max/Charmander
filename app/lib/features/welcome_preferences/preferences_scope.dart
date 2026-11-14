@@ -1,16 +1,31 @@
 import 'package:flutter/widgets.dart';
 
 import 'preferences.dart';
+import 'preferences_store.dart';
 
 /// Controlador de preferências.
 ///
-/// Etapa 1: só em memória. Etapa 2: persistência local (RF44, RF47, RNF11).
-/// Usa apenas ChangeNotifier do Flutter para não antecipar a decisão
-/// pendente sobre gerenciador de estado; migra fácil para Provider/Riverpod.
+/// Toda mudança é salva no aparelho (RF44, RF47, RNF11). Usa só
+/// ChangeNotifier do Flutter (decisão da Etapa 2); migra fácil para
+/// Provider/Riverpod se a equipe preferir.
 class PreferencesController extends ChangeNotifier {
-  PreferencesController([Preferences initial = const Preferences()])
-    : _prefs = initial;
+  PreferencesController([
+    Preferences initial = const Preferences(),
+    PreferencesStore? store,
+  ]) : _prefs = initial,
+       _store = store ?? MemoryPreferencesStore();
 
+  /// Cria o controlador já com as preferências salvas no aparelho.
+  /// Se a leitura falhar, começa com o padrão — o app nunca trava por isso.
+  static Future<PreferencesController> restore(PreferencesStore store) async {
+    try {
+      return PreferencesController(await store.load(), store);
+    } catch (_) {
+      return PreferencesController(const Preferences(), store);
+    }
+  }
+
+  final PreferencesStore _store;
   Preferences _prefs;
   Preferences get prefs => _prefs;
 
@@ -19,11 +34,15 @@ class PreferencesController extends ChangeNotifier {
     if (identical(next, _prefs)) return;
     _prefs = next;
     notifyListeners();
+    _store.save(next).ignore();
   }
 
-  void reset() {
+  /// Apaga as preferências salvas neste aparelho e volta ao padrão
+  /// (RNF13, CA14).
+  Future<void> eraseStored() async {
     _prefs = const Preferences();
     notifyListeners();
+    await _store.clear();
   }
 }
 

@@ -1,0 +1,330 @@
+{
+  "versao": 2,
+  "aviso": "Trechos fictícios entre pontos de referência. Distâncias estimadas a partir do mapa ilustrativo.",
+  "trechos": [
+    {
+      "id": "T01",
+      "de": "ENT_P",
+      "para": "INF",
+      "distanciaM": 29,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T02",
+      "de": "ENT_P",
+      "para": "EST",
+      "distanciaM": 23,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T03",
+      "de": "INF",
+      "para": "COR_O",
+      "distanciaM": 35,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T04",
+      "de": "INF",
+      "para": "PEV",
+      "distanciaM": 41,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "alto"
+    },
+    {
+      "id": "T05",
+      "de": "COR_O",
+      "para": "LJ1",
+      "distanciaM": 29,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T06",
+      "de": "COR_O",
+      "para": "LJ2",
+      "distanciaM": 34,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T07",
+      "de": "COR_O",
+      "para": "COR_C",
+      "distanciaM": 45,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T08",
+      "de": "COR_O",
+      "para": "ESC_M",
+      "distanciaM": 23,
+      "escada": true,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T09",
+      "de": "COR_C",
+      "para": "LJ3",
+      "distanciaM": 30,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T10",
+      "de": "COR_C",
+      "para": "ESR_T",
+      "distanciaM": 19,
+      "escada": true,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T11",
+      "de": "COR_C",
+      "para": "ELV_T",
+      "distanciaM": 22,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T12",
+      "de": "COR_C",
+      "para": "PEV",
+      "distanciaM": 30,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "alto"
+    },
+    {
+      "id": "T13",
+      "de": "PEV",
+      "para": "BAN_T",
+      "distanciaM": 41,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "alto"
+    },
+    {
+      "id": "T14",
+      "de": "PEV",
+      "para": "FAM",
+      "distanciaM": 35,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T15",
+      "de": "BAN_T",
+      "para": "PNE_T",
+      "distanciaM": 15,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T16",
+      "de": "BAN_T",
+      "para": "FAM",
+      "distanciaM": 23,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T17",
+      "de": "ELV_T",
+      "para": "COR_L",
+      "distanciaM": 38,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T18",
+      "de": "COR_L",
+      "para": "LJ4",
+      "distanciaM": 21,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T19",
+      "de": "COR_L",
+      "para": "ESC_N",
+      "distanciaM": 33,
+      "escada": true,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T20",
+      "de": "COR_L",
+      "para": "ENT_L",
+      "distanciaM": 57,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T21",
+      "de": "COR_L",
+      "para": "ET",
+      "distanciaM": 41,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T22",
+      "de": "COR_L",
+      "para": "PNE_T",
+      "distanciaM": 28,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T23",
+      "de": "ELV_T",
+      "para": "ELV_2",
+      "distanciaM": 12,
+      "escada": false,
+      "trocaPiso": "elevador",
+      "movimento": "normal"
+    },
+    {
+      "id": "T24",
+      "de": "ESR_T",
+      "para": "ESR_2",
+      "distanciaM": 10,
+      "escada": true,
+      "trocaPiso": "escadaRolante",
+      "movimento": "alto"
+    },
+    {
+      "id": "T25",
+      "de": "ESC_N",
+      "para": "ESC_N2",
+      "distanciaM": 10,
+      "escada": true,
+      "trocaPiso": "escada",
+      "movimento": "normal"
+    },
+    {
+      "id": "T26",
+      "de": "ESC_M",
+      "para": "MEZ",
+      "distanciaM": 8,
+      "escada": true,
+      "trocaPiso": "escada",
+      "movimento": "normal"
+    },
+    {
+      "id": "T27",
+      "de": "ELV_2",
+      "para": "COR_2",
+      "distanciaM": 25,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T28",
+      "de": "ELV_2",
+      "para": "PA",
+      "distanciaM": 25,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "alto"
+    },
+    {
+      "id": "T29",
+      "de": "COR_2",
+      "para": "ESR_2",
+      "distanciaM": 24,
+      "escada": true,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T30",
+      "de": "COR_2",
+      "para": "PNE_2",
+      "distanciaM": 35,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T31",
+      "de": "PNE_2",
+      "para": "BAN_2",
+      "distanciaM": 18,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T32",
+      "de": "ESR_2",
+      "para": "RES1",
+      "distanciaM": 28,
+      "escada": true,
+      "trocaPiso": null,
+      "movimento": "alto"
+    },
+    {
+      "id": "T33",
+      "de": "RES1",
+      "para": "PA",
+      "distanciaM": 37,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "alto"
+    },
+    {
+      "id": "T34",
+      "de": "PA",
+      "para": "RES2",
+      "distanciaM": 33,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "alto"
+    },
+    {
+      "id": "T35",
+      "de": "PA",
+      "para": "ESC_N2",
+      "distanciaM": 30,
+      "escada": true,
+      "trocaPiso": null,
+      "movimento": "normal"
+    },
+    {
+      "id": "T36",
+      "de": "RES2",
+      "para": "IMR",
+      "distanciaM": 34,
+      "escada": false,
+      "trocaPiso": null,
+      "movimento": "normal"
+    }
+  ]
+}
