@@ -1,5 +1,21 @@
 # Instalação, configuração e execução
 
+## Acessar diretamente pela Vercel
+
+Para usar e avaliar o Acessa+, basta clicar no link da versão publicada na Vercel. O aplicativo abre diretamente no navegador do celular ou computador, sem instalar Flutter, baixar o código-fonte ou executar comandos.
+
+**Link do aplicativo na Vercel:** a ser informado pela equipe.
+
+1. Abra o link do aplicativo.
+2. Ajuste as preferências de acessibilidade e o idioma, se desejar.
+3. Explore as funcionalidades do MVP.
+
+É necessário acesso à internet para abrir a versão hospedada. A disponibilidade da voz depende do navegador e do dispositivo.
+
+## Executar o código localmente
+
+As instruções abaixo são destinadas a quem deseja instalar o ambiente e reproduzir a execução do código-fonte. Para apenas utilizar o aplicativo publicado, basta acessar o link da Vercel.
+
 ## 1. Pré-requisitos
 
 | Ferramenta | Necessidade |
