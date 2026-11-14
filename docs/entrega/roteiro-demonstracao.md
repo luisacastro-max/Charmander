@@ -1,28 +1,18 @@
 # Roteiro de demonstração
 
-## Preparação
+Base: edbc8e9, integrada à main por 4cb0ea1. Consulte o [guia de avaliação](guia-avaliacao.md).
 
-Informar commit do build, conferir aparelho e executar o fluxo previamente. Limpar preferências se a intenção for mostrar primeira utilização.
+1. Apresentar as barreiras de comunicação e mobilidade e os três pilares do Acessa+.
+2. Ajustar texto ampliado, contraste e rotas sem escadas.
+3. Buscar destino e explicar o ponto atual como beacon simulado.
+4. Adicionar, reordenar ou remover paradas e iniciar.
+5. Alternar visualização, simular chegadas e confirmar parada intermediária.
+6. Abrir o cartão de ajuda, escolher frase e idioma, usar frente a frente e responder por toque.
+7. Abrir Ajuda+, conferir local e categoria, revisar e confirmar o pedido demonstrativo.
+8. Avançar estados, cancelar quando permitido ou concluir e retomar o percurso.
+9. Ao chegar, mostrar o último metro com cena e direção simuladas.
+10. Demonstrar incompatibilidade do Mezanino quando escadas estão proibidas.
 
-## Sequência
+Não há câmera real, GPS interno, beacons conectados, tradução livre ou funcionários acionados. Voz e traduções ampliadas só devem ser demonstradas se estiverem na revisão apresentada e validadas no aparelho.
 
-1. Apresentar barreiras de comunicação e mobilidade no shopping.
-2. Mostrar boas-vindas e explicar os três pilares.
-3. Ativar texto ampliado ou alto contraste e rotas sem escadas, sem declarar diagnóstico.
-4. Continuar para destino; mostrar ponto atual e aviso de beacon simulado.
-5. Buscar banheiro ou Praça de Alimentação e conferir piso e rota.
-6. Demonstrar adicionar, reordenar e remover paradas.
-7. Iniciar navegação, alternar bússola/mapa e explicar a direção baseada no desenho.
-8. Acionar chegadas simuladas, confirmar parada intermediária e concluir.
-9. Mostrar Mezanino incompatível com “sem escadas”, preservando a preferência.
-
-## Comunicação e assistência
-
-Ainda planejadas no Flutter desta base. Se usar HTML, anunciar a troca para protótipo de referência. Não apresentar recursos HTML como funcionalidades do build Flutter.
-
-## Limites a explicar
-
-Shopping, medidas e localização são fictícios. Não há GPS interno, beacons conectados, funcionários acionados ou tradução automática de Libras. JSON e armazenamento são locais; API/banco são evolução. Acessibilidade requer validação assistiva e com usuários.
-
-Não anunciar hospedagem sem verificar o endereço. Este documento não publica o aplicativo.
-
+Registrar o commit e testar o fluxo antes da banca. Não anunciar hospedagem ou testes aprovados sem verificar. O HTML é uma referência separada.

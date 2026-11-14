@@ -1,57 +1,44 @@
 # Arquitetura implementada
 
-Base: `2a05442`, revisão em 14/11/2026. Complementa a proposta Word.
+Revisão de 14/11/2026 sobre edbc8e9, integrado à main por 4cb0ea1. [Documento consolidado](../documentacao-tecnica.md).
 
-## Módulos
+## Estrutura e responsabilidades
 
-| Pasta em app/lib/ | Responsabilidade |
+| Local em app/lib/ | Responsabilidade |
 |---|---|
-| app/ | MaterialApp, rotas, tema, tokens e movimento |
-| core/widgets/ | Componentes reutilizáveis e semântica |
+| app/ | Aplicação, rotas, tema, tokens e movimento |
+| core/widgets/ | Componentes e semântica compartilhados |
 | domain/models/ | Pontos, locais, trechos e conteúdos de comunicação |
-| domain/rules/ | Informação desconhecida, rotas e viagens |
-| data/ | Carregamento e DadosScope |
-| data/repositories/ | Interfaces e implementações JSON |
-| features/welcome_preferences/ | Boas-vindas, preferências, controlador e armazenamento |
-| features/destino/ | Busca e resumo/edição das paradas |
-| features/navegacao/ | Etapas, bússola e mapa |
+| domain/rules/ | Rotas, viagens, procura e assistência |
+| data/repositories/ | Contratos e implementações JSON |
+| data/shopping_data.dart | Carga e DadosScope |
+| features/welcome_preferences/ | Boas-vindas, ajustes e armazenamento |
+| features/destino/ | Pesquisa, origem e paradas |
+| features/navegacao/ | Progresso e mapa |
+| features/comunicacao/ | Cartão de frases e respostas |
+| features/ajuda/ | Pedido, revisão e acompanhamento |
+| features/ultimo_metro/ | Procura em cena fictícia |
 
 ## Inicialização e estado
 
-O main restaura preferências e carrega dados antes de abrir AcessaApp. Falha de leitura de preferências volta ao padrão. Falha inicial dos dados permite abrir o app sem dados pré-carregados.
+main restaura preferências e carrega dados. AcessaApp aplica o tema e os escopos. Preferências usam ChangeNotifier, InheritedNotifier e shared_preferences. DadosScope expõe o shopping. Estado local de widgets coordena busca, paradas, cartão e pedido; não há Provider, Riverpod ou Bloc.
 
-Preferências usam ChangeNotifier, InheritedNotifier e shared_preferences. Dados são expostos por DadosScope. Busca, paradas e navegação mantêm estado nas telas. Ainda não existe coordenação central para retomada de percurso, conversa ou assistência.
+EstadoNavegacao representa progresso imutável. PedidoAjuda contém categoria, local, preferência e estados demonstrativos. Voltar de ajuda ao percurso preserva a tela na pilha; fechar o app não restaura viagem ou pedido.
 
-EstadoNavegacao é imutável e substituído a cada chegada simulada. Percurso ativo não é persistido entre sessões.
+## Regras
 
-## Rotas
+Dijkstra calcula menor custo no grafo bidirecional. Sem escadas remove trechos; preferência por elevador multiplica por seis o custo de escada/escada rolante entre pisos; caminho tranquilo multiplica por três trechos de movimento alto. Metros exibidos são a distância física cadastrada, não o custo.
 
-O grafo usa pontos e trechos bidirecionais do JSON. Dijkstra encontra o menor custo:
+Viagens calculam uma perna por parada na ordem escolhida. O limite da interface é cinco. Não há otimização automática da ordem.
 
-- Sem escadas elimina trechos marcados com escada.
-- Preferir elevador multiplica por seis o custo das trocas de piso por escada/escada rolante.
-- Redução de estímulos multiplica por três o custo de trechos com movimento alto cadastrado.
+A direção usa coordenadas do desenho, não sensores físicos. Último metro calcula objetos visíveis em cena fixa; não usa câmera.
 
-As duas últimas opções são preferências de custo, não exclusões absolutas. A distância exibida soma metros, não custo ponderado. Tempo estimado: 50 metros/minuto, mínimo de um minuto.
+## Fontes de dados e extensão
 
-A viagem calcula uma rota por parada na ordem definida pelo visitante. A interface limita a cinco paradas; não otimiza a ordem automaticamente. Uma perna incompatível é identificada sem remover restrições.
+JSON empacotado e interfaces CatalogoRepository, PercursoRepository e ComunicacaoRepository. Substituir fontes por API no futuro também exigirá contratos, falhas, sincronização e autenticação, quando aplicáveis.
 
-## Mapa e localização
+## Limitações
 
-Coordenadas são ilustrativas. A direção vem dos pontos do mapa, não do magnetômetro. O modo visual semelhante a GPS segue a etapa simulada, sem rastreamento físico. Chegadas são acionadas por botão; paradas intermediárias aguardam confirmação.
+Modelos de comunicação dependem do enum de idioma da feature de preferências. Escritas de preferências não aguardam conclusão e ignoram falhas. Cache de carga pode conservar Future com erro. Escada rolante usa “Suba” sem distinguir descida. Consulte [pendências](../backlog/pendencias.md).
 
-## Dados e integrações
-
-JSON e fontes são assets locais. Apenas preferências e idioma persistem. Não há API própria, banco remoto, autenticação, serviço BLE operacional ou assistência real.
-
-Interfaces de repositório permitem evolução para outras fontes; autenticação, sincronização, contratos e falhas remotas ainda precisarão ser implementados.
-
-## Limitações identificadas
-
-- Modelos de comunicação importam idioma da feature de preferências, criando dependência do domínio com a apresentação.
-- Escritas de preferências não aguardam conclusão e ignoram falhas.
-- O Future de dados fica em cache inclusive quando falha; nova chamada pode reutilizar o erro.
-- Instrução de escada rolante usa “Suba” sem distinguir descida.
-
-Consulte as [pendências](../backlog/pendencias.md). A documentação não corrige essas implementações.
-
+Voz e internacionalização ampliada estavam em alterações locais, fora da base publicada desta revisão.
