@@ -16,3 +16,6 @@ Thumbs.db
 # Temporários Microsoft Office
 ~$*
 
+
+# Dados do servidor de demonstração de alertas (gerados em execução)
+/.claude/dados/

@@ -9,6 +9,9 @@ class CriteriosRota {
     this.semEscadas = false,
     this.preferirElevador = false,
     this.caminhoTranquilo = false,
+    this.indisponiveis = const <String>{},
+    this.bloqueadosPorAlerta = const <String>{},
+    this.penalidades = const <String, double>{},
   });
 
   /// RN03: nenhum trecho com escada (inclui escada rolante).
@@ -19,6 +22,81 @@ class CriteriosRota {
 
   /// Evita trechos cadastrados com muito movimento (RN10).
   final bool caminhoTranquilo;
+
+  /// Ids de trechos fora de uso (ex.: elevador em manutenção). No MVP é
+  /// sempre **simulado** pela demonstração; não vem de sistema real.
+  /// Nenhuma rota usa estes trechos.
+  final Set<String> indisponiveis;
+
+  /// Ids de trechos bloqueados por alertas da comunidade ativos (passagem
+  /// interditada, elevador fora de serviço, rampa bloqueada). São relatos,
+  /// não verificação oficial; ver `domain/rules/ocorrencias.dart`.
+  final Set<String> bloqueadosPorAlerta;
+
+  /// Multiplicador de custo por trecho, vindo de alertas que pedem cuidado
+  /// (piso molhado, obstáculo, local cheio…). A rota evita o trecho quando
+  /// existe alternativa razoável, mas ainda pode usá-lo (com aviso).
+  final Map<String, double> penalidades;
+
+  /// Alguma preferência pessoal muda o cálculo da rota.
+  bool get temRestricao => semEscadas || preferirElevador || caminhoTranquilo;
+
+  /// Critérios da rota "mais usada": sem preferências pessoais, mas com os
+  /// mesmos trechos indisponíveis (a manutenção vale para todo mundo).
+  CriteriosRota get semPreferencias => CriteriosRota(
+    indisponiveis: indisponiveis,
+    bloqueadosPorAlerta: bloqueadosPorAlerta,
+    penalidades: penalidades,
+  );
+
+  /// Mesmos critérios, sem considerar alertas da comunidade (para mostrar
+  /// o que a rota desviou por causa deles).
+  CriteriosRota get semAlertas => CriteriosRota(
+    semEscadas: semEscadas,
+    preferirElevador: preferirElevador,
+    caminhoTranquilo: caminhoTranquilo,
+    indisponiveis: indisponiveis,
+  );
+
+  /// Algum alerta da comunidade muda o cálculo.
+  bool get temAlertas =>
+      bloqueadosPorAlerta.isNotEmpty || penalidades.isNotEmpty;
+
+  CriteriosRota copyWith({
+    bool? semEscadas,
+    bool? preferirElevador,
+    bool? caminhoTranquilo,
+    Set<String>? indisponiveis,
+    Set<String>? bloqueadosPorAlerta,
+    Map<String, double>? penalidades,
+  }) => CriteriosRota(
+    semEscadas: semEscadas ?? this.semEscadas,
+    preferirElevador: preferirElevador ?? this.preferirElevador,
+    caminhoTranquilo: caminhoTranquilo ?? this.caminhoTranquilo,
+    indisponiveis: indisponiveis ?? this.indisponiveis,
+    bloqueadosPorAlerta: bloqueadosPorAlerta ?? this.bloqueadosPorAlerta,
+    penalidades: penalidades ?? this.penalidades,
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is CriteriosRota &&
+      other.semEscadas == semEscadas &&
+      other.preferirElevador == preferirElevador &&
+      other.caminhoTranquilo == caminhoTranquilo &&
+      setEquals(other.indisponiveis, indisponiveis) &&
+      setEquals(other.bloqueadosPorAlerta, bloqueadosPorAlerta) &&
+      mapEquals(other.penalidades, penalidades);
+
+  @override
+  int get hashCode => Object.hash(
+    semEscadas,
+    preferirElevador,
+    caminhoTranquilo,
+    Object.hashAllUnordered(indisponiveis),
+    Object.hashAllUnordered(bloqueadosPorAlerta),
+    Object.hashAllUnordered(penalidades.entries.map((e) => (e.key, e.value))),
+  );
 }
 
 /// Uma etapa do percurso, com instrução em texto (RF18).
@@ -63,6 +141,14 @@ class Rota extends ResultadoRota {
   bool get usaElevador =>
       etapas.any((e) => e.trecho.trocaPiso == TrocaPiso.elevador);
 
+  /// Trechos de elevador usados por esta rota, na ordem. Serve para a UI
+  /// oferecer "Simular elevador em manutenção" (ids vão em
+  /// [CriteriosRota.indisponiveis]).
+  List<Trecho> get trechosDeElevador => [
+    for (final e in etapas)
+      if (e.trecho.trocaPiso == TrocaPiso.elevador) e.trecho,
+  ];
+
   /// Pisos na ordem em que aparecem no caminho.
   List<String> get pisos {
     final r = <String>[];
@@ -78,9 +164,23 @@ class Rota extends ResultadoRota {
 /// oferece alternativas, sem tirar restrições por conta própria.
 @immutable
 class SemRota extends ResultadoRota {
-  const SemRota({required this.motivo, this.existeComEscada = false});
+  const SemRota({
+    required this.motivo,
+    this.existeComEscada = false,
+    this.bloqueios = const [],
+    this.bloqueiosPorAlerta = const [],
+  });
 
   final String motivo;
+
+  /// Trechos indisponíveis ([CriteriosRota.indisponiveis]) que a rota
+  /// usaria se estivessem funcionando. Vazio quando a falta de rota não
+  /// tem relação com manutenção.
+  final List<Trecho> bloqueios;
+
+  /// Trechos bloqueados por alertas da comunidade
+  /// ([CriteriosRota.bloqueadosPorAlerta]) que a rota usaria sem eles.
+  final List<Trecho> bloqueiosPorAlerta;
 
   /// Existe caminho se o visitante decidir aceitar escadas. O app só
   /// informa — a decisão de mudar a preferência é sempre do visitante.
@@ -106,23 +206,54 @@ class MotorRotas {
     if (caminho != null) return _montar(origem, caminho, c);
 
     final comEscada = c.semEscadas
-        ? _dijkstra(
-                origem,
-                destino,
-                CriteriosRota(
-                  preferirElevador: c.preferirElevador,
-                  caminhoTranquilo: c.caminhoTranquilo,
-                ),
-              ) !=
-              null
+        ? _dijkstra(origem, destino, c.copyWith(semEscadas: false)) != null
         : false;
+
+    // Algum trecho em manutenção ou bloqueado por alerta explica a falta
+    // de rota?
+    final bloqueios = <Trecho>[];
+    final porAlerta = <Trecho>[];
+    if (c.indisponiveis.isNotEmpty || c.bloqueadosPorAlerta.isNotEmpty) {
+      final livre = _dijkstra(
+        origem,
+        destino,
+        c.copyWith(
+          indisponiveis: const <String>{},
+          bloqueadosPorAlerta: const <String>{},
+        ),
+      );
+      for (final t in livre ?? const <Trecho>[]) {
+        if (c.indisponiveis.contains(t.id)) bloqueios.add(t);
+        if (c.bloqueadosPorAlerta.contains(t.id)) porAlerta.add(t);
+      }
+    }
+
+    final nome = ponto(destino).nome;
+    var motivo = c.semEscadas
+        ? 'Não há caminho sem escadas até $nome.'
+        : 'Não encontramos caminho cadastrado até $nome.';
+    if (bloqueios.isNotEmpty) {
+      motivo +=
+          ' Em manutenção: ${bloqueios.map(nomeDoTrecho).toSet().join(', ')}.';
+    }
+    if (porAlerta.isNotEmpty) {
+      motivo +=
+          ' Bloqueado por alerta da comunidade: '
+          '${porAlerta.map(nomeDoTrecho).toSet().join(', ')}.';
+    }
     return SemRota(
-      motivo: comEscada
-          ? 'Não há caminho sem escadas até ${ponto(destino).nome}.'
-          : 'Não encontramos caminho cadastrado até ${ponto(destino).nome}.',
+      motivo: motivo,
       existeComEscada: comEscada,
+      bloqueios: bloqueios,
+      bloqueiosPorAlerta: porAlerta,
     );
   }
+
+  /// Nome curto de um trecho para avisos: na troca de piso, o nome do ponto
+  /// de saída (ex.: "Elevadores — Térreo"); senão, "A → B".
+  String nomeDoTrecho(Trecho t) => t.trocaPiso != null
+      ? ponto(t.de).nome
+      : '${ponto(t.de).nome} → ${ponto(t.para).nome}';
 
   double _custo(Trecho t, CriteriosRota c) {
     var d = t.distanciaM.toDouble();
@@ -132,11 +263,16 @@ class MotorRotas {
       d *= 6;
     }
     if (c.caminhoTranquilo && t.movimento == Movimento.alto) d *= 3;
-    return d;
+    return d * (c.penalidades[t.id] ?? 1);
   }
 
   List<Trecho>? _dijkstra(String origem, String destino, CriteriosRota c) {
-    final permitidos = trechos.where((t) => !(c.semEscadas && t.escada));
+    final permitidos = trechos.where(
+      (t) =>
+          !(c.semEscadas && t.escada) &&
+          !c.indisponiveis.contains(t.id) &&
+          !c.bloqueadosPorAlerta.contains(t.id),
+    );
     final viz = <String, List<Trecho>>{};
     for (final t in permitidos) {
       (viz[t.de] ??= []).add(t);

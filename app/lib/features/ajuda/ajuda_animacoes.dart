@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
 import '../../app/theme/tokens.dart';
@@ -449,7 +450,7 @@ class ProgressoEtapas extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final motion = Motion.of(context);
     return Semantics(
-      label: 'Passo ${atual + 1} de 3: ${_nomes[atual]}',
+      label: tr(context, 'Passo ${atual + 1} de 3: ${_nomes[atual]}'),
       excludeSemantics: true,
       child: TweenAnimationBuilder<double>(
         tween: Tween(end: atual.toDouble()),
@@ -508,7 +509,7 @@ class ProgressoEtapas extends StatelessWidget {
                 for (var i = 0; i < 3; i++)
                   Expanded(
                     child: Text(
-                      _nomes[i],
+                      tr(context, _nomes[i]),
                       textAlign: TextAlign.center,
                       style: text.bodyMedium?.copyWith(
                         color: i == atual ? c.ink : c.inkMuted,
@@ -720,7 +721,7 @@ class _LinhaDoTempoState extends State<LinhaDoTempo>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        e.texto,
+                        tr(context, e.texto),
                         style: text.titleMedium?.copyWith(
                           fontWeight: e == atual ? FontWeight.w700 : null,
                           color: e.index <= atual.index ? c.ink : c.inkMuted,
@@ -731,7 +732,7 @@ class _LinhaDoTempoState extends State<LinhaDoTempo>
                           key: ValueKey(e),
                           index: 3,
                           child: Text(
-                            'Etapa atual',
+                            tr(context, 'Etapa atual'),
                             style: text.bodyMedium?.copyWith(color: c.inkMuted),
                           ),
                         ),

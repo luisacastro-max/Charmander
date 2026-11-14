@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/theme/app_theme.dart';
 import 'entrance.dart';
 
@@ -24,7 +25,7 @@ class BrandLogo extends StatelessWidget {
         type: MaterialType.transparency,
         child: Semantics(
           header: true,
-          label: 'Acessa mais',
+          label: tr(context, 'Acessa mais'),
           excludeSemantics: true,
           child: Row(
             mainAxisSize: MainAxisSize.min,

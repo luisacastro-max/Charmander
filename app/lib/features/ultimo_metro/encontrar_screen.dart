@@ -5,15 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/routes.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
 import '../../app/theme/tokens.dart';
+import '../../core/voz/voz.dart';
 import '../../core/widgets/entrance.dart';
 import '../../core/widgets/sticker_button.dart';
 import '../../core/widgets/sticker_card.dart';
 import '../../domain/rules/procura.dart';
 import '../comunicacao/cartao_ajuda_screen.dart';
+import '../comunicacao/mensagens_rapidas.dart';
+import '../welcome_preferences/preferences.dart';
+import '../welcome_preferences/preferences_scope.dart';
 import 'visor_radar.dart';
 
 /// "Último metro": depois de chegar ao destino, a câmera ajuda a achar a
@@ -49,9 +54,14 @@ class EncontrarScreen extends StatefulWidget {
     this.alvoInicial = Alvo.porta,
     this.cena = cenaDemonstracao,
     this.vibrar = true,
+    this.destino,
   });
 
   final Alvo alvoInicial;
+
+  /// Destino da rota, se houver: o cartão de ajuda e as mensagens rápidas
+  /// já oferecem "Pode me levar até…".
+  final String? destino;
   final List<ObjetoCena> cena;
 
   /// Desligado nos testes de tela para não deixar o relógio de pulsos
@@ -65,7 +75,10 @@ class EncontrarScreen extends StatefulWidget {
 class _EncontrarScreenState extends State<EncontrarScreen> {
   late Alvo _alvo = widget.alvoInicial;
   double _direcao = 0;
-  String _aviso = '';
+
+  /// Aviso atual, em português e frase a frase: cada frase é traduzida à
+  /// parte ("O que tem aqui?" junta várias descrições).
+  List<String> _aviso = const [];
   bool _estavaCentralizado = false;
   Timer? _pulso;
 
@@ -79,7 +92,7 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
   @override
   void initState() {
     super.initState();
-    _aviso = _instrucaoInicial();
+    _aviso = [_instrucaoInicial()];
     WidgetsBinding.instance.addPostFrameCallback((_) => _anunciar(_aviso));
     if (widget.vibrar) _agendarPulso();
   }
@@ -110,22 +123,39 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
     });
   }
 
-  void _anunciar(String frase) {
+  /// [frases] em português. Mostra no cartão, avisa o leitor de tela e,
+  /// com "Orientações por áudio" ligado, fala — sempre no idioma do
+  /// visitante.
+  void _anunciar(List<String> frases) {
     if (!mounted) return;
-    setState(() => _aviso = frase);
+    setState(() => _aviso = frases);
+    if (frases.length == 1) {
+      anunciar(context, frases.single);
+      return;
+    }
+    // Várias frases: traduz uma a uma e fala tudo de uma vez (uma fala
+    // nova interromperia a anterior).
+    final idioma = idiomaDe(context);
+    final texto = _emIdioma(frases, idioma);
     SemanticsService.sendAnnouncement(
       View.of(context),
-      frase,
+      texto,
       TextDirection.ltr,
     );
+    if (PreferencesScope.maybeOf(context)?.prefs.audioGuidance ?? false) {
+      Voz.instancia.falarNoIdioma(texto, idioma);
+    }
   }
+
+  static String _emIdioma(List<String> frases, AppLanguage idioma) =>
+      frases.map((f) => traduzir(f, idioma)).join(' ');
 
   void _girar(double graus) {
     setState(() => _direcao = graus);
     final s = _sinal;
     if (s.centralizado && !_estavaCentralizado) {
       HapticFeedback.heavyImpact();
-      _anunciar(descrever(s.deteccao!));
+      _anunciar([descrever(s.deteccao!)]);
     }
     _estavaCentralizado = s.centralizado;
   }
@@ -139,23 +169,30 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
     });
     HapticFeedback.selectionClick();
     _estavaCentralizado = _sinal.centralizado;
-    _anunciar(
+    _anunciar([
       _estavaCentralizado
           ? descrever(_sinal.deteccao!)
           : 'Procurando: ${_alvo.nome}. Gire devagar.',
-    );
+    ]);
   }
 
   void _repetir() {
     final s = _sinal;
-    _anunciar(
+    _anunciar([
       s.encontrado
           ? descrever(s.deteccao!)
           : '${_alvo.nome} não está à frente. Continue girando.',
-    );
+    ]);
   }
 
-  void _oQueTemAqui() => _anunciar(descreverCena(_vistos));
+  /// Mesmo texto de [descreverCena], mas separado por objeto para que
+  /// cada descrição seja traduzida inteira.
+  void _oQueTemAqui() {
+    final vistos = _vistos;
+    _anunciar(
+      vistos.isEmpty ? [descreverCena(vistos)] : vistos.map(descrever).toList(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +204,9 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
     final todos = Alvo.values;
     final anterior = todos[(todos.indexOf(_alvo) - 1) % todos.length];
     final proximo = todos[(todos.indexOf(_alvo) + 1) % todos.length];
+    String nome(Alvo a) => tr(context, a.nome);
+    final mensagensRapidas =
+        PreferencesScope.maybeOf(context)?.prefs.quickMessages ?? false;
 
     return Scaffold(
       backgroundColor: c.background,
@@ -175,28 +215,31 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
         foregroundColor: c.ink,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text('Encontrar com a câmera'),
+        title: Text(tr(context, 'Encontrar com a câmera')),
         leading: IconButton(
-          tooltip: 'Fechar câmera',
+          tooltip: tr(context, 'Fechar câmera'),
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         actions: [
           IconButton(
-            tooltip: 'Cartão de ajuda',
+            tooltip: tr(context, 'Cartão de ajuda'),
             icon: const Icon(Icons.front_hand_outlined),
-            onPressed: () =>
-                Navigator.of(context)
-                    .push(acessaRoute<void>(const CartaoAjudaScreen())),
+            onPressed: () => Navigator.of(context).push(
+              acessaRoute<void>(CartaoAjudaScreen(destino: widget.destino)),
+            ),
           ),
         ],
       ),
+      // Com "Mensagens rápidas em destaque", o botão flutuante fica sempre
+      // à mão; a lista ganha espaço embaixo para ele não cobrir nada.
+      floatingActionButton: BotaoMensagensRapidas(destino: widget.destino),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           AcessaSpacing.lg,
           0,
           AcessaSpacing.lg,
-          AcessaSpacing.xl,
+          AcessaSpacing.xl + (mensagensRapidas ? 72 : 0),
         ),
         children: [
           // Área da câmera: gestos amplos, sem botão pequeno para achar.
@@ -204,18 +247,20 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
             index: 0,
             child: Semantics(
               container: true,
-              label: 'Área da câmera. Objeto procurado',
-              value: _alvo.nome,
-              increasedValue: proximo.nome,
-              decreasedValue: anterior.nome,
-              hint:
-                  'Deslize para cima ou para baixo para trocar o objeto. '
-                  'Toque duas vezes para saber onde ele está.',
+              label: tr(context, 'Área da câmera. Objeto procurado'),
+              value: nome(_alvo),
+              increasedValue: nome(proximo),
+              decreasedValue: nome(anterior),
+              hint: tr(
+                context,
+                'Deslize para cima ou para baixo para trocar o objeto. '
+                'Toque duas vezes para saber onde ele está.',
+              ),
               onIncrease: () => _trocarAlvo(1),
               onDecrease: () => _trocarAlvo(-1),
               onTap: _repetir,
               customSemanticsActions: {
-                const CustomSemanticsAction(label: 'O que tem aqui?'):
+                CustomSemanticsAction(label: tr(context, 'O que tem aqui?')):
                     _oQueTemAqui,
               },
               excludeSemantics: true,
@@ -240,7 +285,10 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
             index: 1,
             child: Semantics(
               liveRegion: true,
-              child: _CartaoAviso(aviso: _aviso, centralizado: s.centralizado),
+              child: _CartaoAviso(
+                aviso: _emIdioma(_aviso, idiomaDe(context)),
+                centralizado: s.centralizado,
+              ),
             ),
           ),
           const SizedBox(height: AcessaSpacing.md),
@@ -249,7 +297,7 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
             child: Row(
               children: [
                 IconButton.outlined(
-                  tooltip: 'Procurar ${anterior.nome}',
+                  tooltip: tr(context, 'Procurar ${anterior.nome}'),
                   iconSize: 28,
                   constraints: const BoxConstraints(
                     minWidth: AcessaSpacing.minTouch,
@@ -281,7 +329,7 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
                         );
                       },
                       child: Text(
-                        'Procurando: ${_alvo.nome}',
+                        tr(context, 'Procurando: ${_alvo.nome}'),
                         key: ValueKey(_alvo),
                         textAlign: TextAlign.center,
                         style: text.headlineSmall,
@@ -290,7 +338,7 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
                   ),
                 ),
                 IconButton.outlined(
-                  tooltip: 'Procurar ${proximo.nome}',
+                  tooltip: tr(context, 'Procurar ${proximo.nome}'),
                   iconSize: 28,
                   constraints: const BoxConstraints(
                     minWidth: AcessaSpacing.minTouch,
@@ -306,7 +354,7 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
           Entrance(
             index: 3,
             child: StickerButton(
-              label: 'O que tem aqui?',
+              label: tr(context, 'O que tem aqui?'),
               icon: Icons.visibility_outlined,
               onPressed: _oQueTemAqui,
             ),
@@ -317,27 +365,33 @@ class _EncontrarScreenState extends State<EncontrarScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Simular giro do celular', style: text.titleMedium),
+                Text(
+                  tr(context, 'Simular giro do celular'),
+                  style: text.titleMedium,
+                ),
                 Slider(
                   value: _direcao,
                   min: -180,
                   max: 180,
                   divisions: 72,
                   label: '${_direcao.round()}°',
-                  semanticFormatterCallback: (v) => '${v.round()} graus',
+                  semanticFormatterCallback: (v) =>
+                      tr(context, '${v.round()} graus'),
                   onChanged: _girar,
                 ),
               ],
             ),
           ),
           const SizedBox(height: AcessaSpacing.sm),
-          const Entrance(
+          Entrance(
             index: 5,
             child: SimulationNotice(
-              text:
-                  'Demonstração: a câmera e o reconhecimento de objetos ainda '
-                  'são simulados. No aparelho real, basta girar o corpo com o '
-                  'celular na mão; a imagem não sai do celular.',
+              text: tr(
+                context,
+                'Demonstração: a câmera e o reconhecimento de objetos ainda '
+                'são simulados. No aparelho real, basta girar o corpo com o '
+                'celular na mão; a imagem não sai do celular.',
+              ),
             ),
           ),
           const SizedBox(height: AcessaSpacing.md),
@@ -442,7 +496,7 @@ class _Legenda extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Como usar', style: text.titleLarge),
+          Text(tr(context, 'Como usar'), style: text.titleLarge),
           const SizedBox(height: AcessaSpacing.sm),
           for (final (gesto, sentido) in linhas)
             Padding(
@@ -451,10 +505,10 @@ class _Legenda extends StatelessWidget {
                 TextSpan(
                   children: [
                     TextSpan(
-                      text: '$gesto: ',
+                      text: '${tr(context, gesto)}: ',
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
-                    TextSpan(text: sentido),
+                    TextSpan(text: tr(context, sentido)),
                   ],
                 ),
                 style: text.bodyLarge,

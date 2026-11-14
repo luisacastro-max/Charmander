@@ -1,6 +1,6 @@
 {
-  "versao": 2,
-  "aviso": "Trechos fictícios entre pontos de referência. Distâncias estimadas a partir do mapa ilustrativo.",
+  "versao": 3,
+  "aviso": "Trechos fictícios entre pontos de referência. Distâncias estimadas a partir do mapa ilustrativo. v3: a escada rolante desembarca na Praça de Alimentação e os elevadores ficam mais afastados, para mostrar o desvio de quem não usa escadas.",
   "trechos": [
     {
       "id": "T01",
@@ -87,7 +87,7 @@
       "id": "T10",
       "de": "COR_C",
       "para": "ESR_T",
-      "distanciaM": 19,
+      "distanciaM": 18,
       "escada": true,
       "trocaPiso": null,
       "movimento": "normal"
@@ -96,7 +96,7 @@
       "id": "T11",
       "de": "COR_C",
       "para": "ELV_T",
-      "distanciaM": 22,
+      "distanciaM": 32,
       "escada": false,
       "trocaPiso": null,
       "movimento": "normal"
@@ -150,7 +150,7 @@
       "id": "T17",
       "de": "ELV_T",
       "para": "COR_L",
-      "distanciaM": 38,
+      "distanciaM": 40,
       "escada": false,
       "trocaPiso": null,
       "movimento": "normal"
@@ -240,7 +240,7 @@
       "id": "T27",
       "de": "ELV_2",
       "para": "COR_2",
-      "distanciaM": 25,
+      "distanciaM": 28,
       "escada": false,
       "trocaPiso": null,
       "movimento": "normal"
@@ -249,7 +249,7 @@
       "id": "T28",
       "de": "ELV_2",
       "para": "PA",
-      "distanciaM": 25,
+      "distanciaM": 38,
       "escada": false,
       "trocaPiso": null,
       "movimento": "alto"
@@ -258,7 +258,7 @@
       "id": "T29",
       "de": "COR_2",
       "para": "ESR_2",
-      "distanciaM": 24,
+      "distanciaM": 30,
       "escada": true,
       "trocaPiso": null,
       "movimento": "normal"
@@ -285,7 +285,7 @@
       "id": "T32",
       "de": "ESR_2",
       "para": "RES1",
-      "distanciaM": 28,
+      "distanciaM": 36,
       "escada": true,
       "trocaPiso": null,
       "movimento": "alto"
@@ -294,7 +294,7 @@
       "id": "T33",
       "de": "RES1",
       "para": "PA",
-      "distanciaM": 37,
+      "distanciaM": 20,
       "escada": false,
       "trocaPiso": null,
       "movimento": "alto"
@@ -325,6 +325,15 @@
       "escada": false,
       "trocaPiso": null,
       "movimento": "normal"
+    },
+    {
+      "id": "T37",
+      "de": "ESR_2",
+      "para": "PA",
+      "distanciaM": 20,
+      "escada": true,
+      "trocaPiso": null,
+      "movimento": "alto"
     }
   ]
 }

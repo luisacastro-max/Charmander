@@ -42,9 +42,10 @@ class _StickerButtonState extends State<StickerButton> {
     final fg = primary ? c.onPrimary : c.ink;
     final offset = _down ? Offset.zero : AcessaSticker.shadowOffset;
 
+    final ativo = widget.onPressed != null;
     return Semantics(
       button: true,
-      enabled: widget.onPressed != null,
+      enabled: ativo,
       hint: widget.semanticHint,
       child: FocusableActionDetector(
         onShowFocusHighlight: (v) => setState(() => _focused = v),
@@ -53,59 +54,65 @@ class _StickerButtonState extends State<StickerButton> {
             onInvoke: (_) => widget.onPressed?.call(),
           ),
         },
-        child: GestureDetector(
-          onTapDown: (_) => setState(() => _down = true),
-          onTapCancel: () => setState(() => _down = false),
-          onTapUp: (_) => setState(() => _down = false),
-          onTap: widget.onPressed,
-          child: AnimatedContainer(
-            duration: motion.d(Motion.quick),
-            curve: Motion.enter,
-            transform: Matrix4.translationValues(
-              AcessaSticker.shadowOffset.dx - offset.dx,
-              AcessaSticker.shadowOffset.dy - offset.dy,
-              0,
-            ),
-            constraints: const BoxConstraints(
-              minHeight: AcessaSpacing.minTouch + 8,
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AcessaSpacing.lg,
-              vertical: 14,
-            ),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(AcessaRadius.button),
-              border: Border.all(
-                color: _focused ? c.focus : (primary ? c.onPrimary : c.border),
-                width: _focused ? 4 : AcessaSticker.borderWidth,
+        // Desabilitado: esmaecido (o leitor de tela recebe "desativado").
+        child: Opacity(
+          opacity: ativo ? 1 : .45,
+          child: GestureDetector(
+            onTapDown: (_) => setState(() => _down = true),
+            onTapCancel: () => setState(() => _down = false),
+            onTapUp: (_) => setState(() => _down = false),
+            onTap: widget.onPressed,
+            child: AnimatedContainer(
+              duration: motion.d(Motion.quick),
+              curve: Motion.enter,
+              transform: Matrix4.translationValues(
+                AcessaSticker.shadowOffset.dx - offset.dx,
+                AcessaSticker.shadowOffset.dy - offset.dy,
+                0,
               ),
-              boxShadow: [
-                // Botão principal ganha sombra neon rosa; o secundário, sombra escura.
-                BoxShadow(
-                  color: primary ? c.marker : c.shadow,
-                  offset: offset,
-                  blurRadius: 0,
+              constraints: const BoxConstraints(
+                minHeight: AcessaSpacing.minTouch + 8,
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AcessaSpacing.lg,
+                vertical: 14,
+              ),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(AcessaRadius.button),
+                border: Border.all(
+                  color: _focused
+                      ? c.focus
+                      : (primary ? c.onPrimary : c.border),
+                  width: _focused ? 4 : AcessaSticker.borderWidth,
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                if (widget.icon != null) ...[
-                  Icon(widget.icon, color: fg, size: 24),
-                  const SizedBox(width: AcessaSpacing.sm),
-                ],
-                Flexible(
-                  child: Text(
-                    widget.label,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelLarge
-                        ?.copyWith(color: fg),
+                boxShadow: [
+                  // Botão principal ganha sombra neon rosa; o secundário, sombra escura.
+                  BoxShadow(
+                    color: primary ? c.marker : c.shadow,
+                    offset: offset,
+                    blurRadius: 0,
                   ),
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  if (widget.icon != null) ...[
+                    Icon(widget.icon, color: fg, size: 24),
+                    const SizedBox(width: AcessaSpacing.sm),
+                  ],
+                  Flexible(
+                    child: Text(
+                      widget.label,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelLarge
+                          ?.copyWith(color: fg),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

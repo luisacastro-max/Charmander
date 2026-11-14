@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../features/alertas/alertas_controller.dart';
 import '../features/welcome_preferences/preferences_scope.dart';
 import '../core/widgets/theme_reveal.dart';
 import '../data/shopping_data.dart';
@@ -8,7 +9,7 @@ import 'theme/app_theme.dart';
 import 'theme/tokens.dart';
 
 class AcessaApp extends StatefulWidget {
-  const AcessaApp({super.key, this.controller, this.dados});
+  const AcessaApp({super.key, this.controller, this.dados, this.alertas});
 
   /// Permite injetar o controlador nos testes.
   final PreferencesController? controller;
@@ -17,6 +18,10 @@ class AcessaApp extends StatefulWidget {
   /// carregam sob demanda.
   final ShoppingData? dados;
 
+  /// Alertas da comunidade (mapa colaborativo). Sem valor, usa a simulação
+  /// local (aviso na tela: não compartilha entre aparelhos).
+  final AlertasController? alertas;
+
   @override
   State<AcessaApp> createState() => _AcessaAppState();
 }
@@ -24,10 +29,18 @@ class AcessaApp extends StatefulWidget {
 class _AcessaAppState extends State<AcessaApp> {
   late final PreferencesController _prefs =
       widget.controller ?? PreferencesController();
+  late final AlertasController _alertas =
+      (widget.alertas ?? AlertasController.simulado())..iniciar();
+
+  @override
+  void dispose() {
+    _alertas.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final app = _buildApp();
+    final app = AlertasScope(controller: _alertas, child: _buildApp());
     final dados = widget.dados;
     return dados == null ? app : DadosScope(dados: dados, child: app);
   }

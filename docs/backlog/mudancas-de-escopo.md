@@ -44,3 +44,24 @@ Registro do PO. Cada mudança mantém os identificadores dos requisitos originai
 **Requisitos afetados (sem mudar os IDs):** RF12–RF15 (planejamento) e RF17–RF22 (Navegação Viva) passam a aceitar várias paradas.
 
 **Atualizações pendentes nos documentos Word** (para a equipe): Requisitos v0.4 (seções 7 e 8 — telas e fluxos), Proposta das 13 telas (seções 7 e 9) e Arquitetura (decisão do motor de rotas e do gerenciador de estado).
+
+## Propostas aguardando aprovação
+
+Itens abaixo **não estão aprovados**. Ficam aqui para a equipe decidir. MUD-03 está reservada para o atalho “Como você vai circular hoje?” (ver [pendências](pendencias.md)).
+
+### MUD-04 (proposta) — Mapa colaborativo de alertas (novembro de 2026)
+
+**Pedido da equipe:** inspirado nos alertas do Waze, permitir que visitantes relatem problemas de acessibilidade no shopping (piso molhado, elevador parado, passagem interditada etc.) e que esses relatos apareçam para outras pessoas e influenciem as rotas.
+
+| Tema | Proposta |
+|---|---|
+| Natureza do dado | Relato da comunidade, anônimo e **não verificado**. Sempre identificado assim na tela. |
+| Local | Ponto e andar confirmados pela pessoa numa mini-planta (posição indoor é imprecisa); lista “Perto de” para leitor de tela. |
+| Efeito nas rotas | Bloqueio (interditada, elevador, rampa) retira o trecho; demais tipos encarecem o trecho e geram aviso. RN04 preservada: nunca sugerir escada a quem escolheu rotas sem escadas. |
+| Ciclo de vida | Validade por tipo, renovada por “Ainda está aqui”; resolução por votos de sessões distintas; duplicados viram confirmação. |
+| Compartilhamento | Servidor de demonstração (Node + arquivo JSON) na mesma rede; sem servidor, simulação local identificada. Não é produção. |
+| Telas afetadas | Mapa da navegação (T06), resumo/cálculo de rota (T04 + T05) e novo formulário “Reportar problema”. |
+
+**Requisitos afetados (sem mudar os IDs existentes):** RF12–RF15 e RF17–RF22 passam a considerar alertas ativos; RF48 (barreira e alternativa) ganha uma fonte de barreiras; RF36 (Ajuda+) é a saída quando não há caminho. Novos requisitos sugeridos: RF-A01 a RF-A08 e RN-A01 a RN-A07, descritos em [estado-atual.md](../requisitos/estado-atual.md), com numeração oficial a definir.
+
+**Condições para aprovar como escopo de produção (não apenas demonstração):** decisão sobre moderação e abuso, autenticação, hospedagem do servidor, avaliação de Privacidade (LGPD) e Segurança da Informação, e validação com pessoas usuárias. Ver [pendências](pendencias.md).

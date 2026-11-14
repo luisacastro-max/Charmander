@@ -2,9 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
 import '../../app/theme/tokens.dart';
+import '../../features/welcome_preferences/preferences.dart';
 
 /// "Mapa vivo": ilustração animada que conta o problema e a solução.
 ///
@@ -62,7 +64,7 @@ class _LivingMapState extends State<LivingMap>
     final t = AcessaTheme.of(context);
     return Semantics(
       image: true,
-      label: LivingMap.description,
+      label: tr(context, LivingMap.description),
       excludeSemantics: true,
       child: Container(
         height: widget.height,
@@ -76,7 +78,12 @@ class _LivingMapState extends State<LivingMap>
         ),
         clipBehavior: Clip.antiAlias,
         child: CustomPaint(
-          painter: _MapPainter(_c, t.colors, glow: !t.highContrast),
+          painter: _MapPainter(
+            _c,
+            t.colors,
+            glow: !t.highContrast,
+            idioma: idiomaDe(context),
+          ),
           size: Size.infinite,
         ),
       ),
@@ -89,11 +96,15 @@ double _phase(double t, double a, double b) =>
     ((t - a) / (b - a)).clamp(0.0, 1.0);
 
 class _MapPainter extends CustomPainter {
-  _MapPainter(this.a, this.c, {required this.glow}) : super(repaint: a);
+  _MapPainter(this.a, this.c, {required this.glow, required this.idioma})
+    : super(repaint: a);
 
   final Animation<double> a;
   final AcessaColors c;
   final bool glow;
+
+  /// Idioma dos rótulos desenhados no mapa.
+  final AppLanguage idioma;
 
   // Pontos-chave em coordenadas normalizadas.
   static const entrance = Offset(.09, .86);
@@ -221,21 +232,21 @@ class _MapPainter extends CustomPainter {
     // Rótulos: o desenho não depende só de ícones para ser entendido.
     _label(
       canvas,
-      'Entrada',
+      traduzir('Entrada', idioma),
       p(entrance) + const Offset(14, 0),
       plan,
       align: TextAlign.left,
     );
     _label(
       canvas,
-      'Escada',
+      traduzir('Escada', idioma),
       p(stairs) + const Offset(0, 26),
       _phase(t, .1, .2),
       color: blocked > 0 ? c.marker : c.inkMuted,
     );
     _label(
       canvas,
-      'Elevador',
+      traduzir('Elevador', idioma),
       p(elevator) + const Offset(-22, 0),
       _phase(t, .1, .2),
       align: TextAlign.right,
@@ -243,7 +254,7 @@ class _MapPainter extends CustomPainter {
     );
     _label(
       canvas,
-      'Destino',
+      traduzir('Destino', idioma),
       d + const Offset(0, 24),
       math.max(plan, arrive),
       color: arrive > 0 ? c.help : c.inkMuted,
@@ -405,5 +416,6 @@ class _MapPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_MapPainter old) => old.c != c || old.glow != glow;
+  bool shouldRepaint(_MapPainter old) =>
+      old.c != c || old.glow != glow || old.idioma != idioma;
 }

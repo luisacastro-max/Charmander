@@ -1,30 +1,35 @@
 # Acessa+ — Acessibilidade que conecta pessoas
 
-Projeto da equipe **Charmander** para o hackathon 2026. Três pilares: **Comunicação Universal**, **Navegação Viva** e **Ajuda+**, para reduzir barreiras de comunicação e mobilidade em shopping centers.
+Aplicativo da equipe **Charmander**, desenvolvido para o hackathon 2026. Reúne comunicação acessível, orientação dentro de um shopping demonstrativo e solicitação de ajuda.
 
-## Estado atual
+## Entrega para avaliação
 
-Revisão: 14/11/2026. Base versionada analisada: `2a05442`. Alterações locais de interface em desenvolvimento não são consideradas entregas concluídas.
+**Comece pelo [guia de avaliação](docs/entrega/guia-avaliacao.md)** e pela [documentação técnica consolidada](docs/documentacao-tecnica.md).
 
-| Recurso | Flutter |
+| Material | Localização |
 |---|---|
-| Boas-vindas e preferências combináveis | Implementado |
-| Texto ampliado, alto contraste e movimento reduzido | Implementado; validação assistiva manual pendente |
-| Salvar, restaurar e apagar preferências | Implementado localmente |
-| Busca de destinos e filtro por piso | Implementado |
-| Rotas sem escadas e preferência por elevador | Implementado sobre dados fictícios |
-| Até cinco paradas, reordenação e remoção | Implementado |
-| Navegação por etapas, bússola e mapa interativo | Implementado com localização simulada |
-| Comunicação Universal e conversa | Planejado no Flutter; demonstrado no HTML |
-| Ajuda+ e acompanhamento | Planejado no Flutter; demonstrado no HTML |
-| Home, emergência e painel | Planejado no Flutter; demonstrado no HTML |
-| OCR | Decisão de escopo pendente |
+| Explicação do projeto, arquitetura, tecnologias e funcionamento | [Documentação técnica](docs/documentacao-tecnica.md) |
+| Código-fonte Flutter | [app/lib](app/lib) |
+| Assets e dados fictícios | [app/assets](app/assets) |
+| Testes automatizados | [app/test](app/test) |
+| Instalação, execução e build | [Guia de execução](docs/desenvolvimento/execucao.md) |
+| Índice dos documentos | [docs/README.md](docs/README.md) |
+| Protótipo HTML de referência | [prototipo/index.html](prototipo/index.html) |
 
-“Implementado” indica presença no código, não homologação ou certificação de acessibilidade.
+## O que o aplicativo oferece
+
+- Preferências combináveis, sem cadastro ou diagnóstico obrigatório.
+- Texto ampliado, alto contraste e redução de movimento.
+- Busca de destinos, origem simulada e planejamento de até cinco paradas.
+- Rotas com restrição de escadas e preferências de elevador e movimento.
+- Navegação por pontos simulados, com instruções textuais e mapa interativo.
+- Cartão de ajuda com frases em português, inglês e espanhol, respostas por toque e modo frente a frente.
+- Ajuda+ com pedido, revisão, acompanhamento demonstrativo e cancelamento.
+- “Último metro”: procura de objetos em uma cena fictícia, com sinais visuais e hápticos.
 
 ## Executar
 
-Pré-requisitos: Flutter com Dart compatível com `^3.13.4`, Git e Chrome ou dispositivo Android configurado.
+Requer Flutter com Dart compatível com `^3.13.4`, Git e Chrome ou Android configurado.
 
 ```powershell
 git clone https://github.com/luisacastro-max/Charmander.git
@@ -33,31 +38,26 @@ flutter pub get
 flutter run -d chrome
 ```
 
-Para Android, use o identificador retornado por `flutter devices`. Consulte o [guia de execução](docs/desenvolvimento/execucao.md) para testes e build web.
+Para testar: `flutter analyze` e `flutter test` em `app/`. Para build web: `flutter build web --release`. Instruções completas e limitações de ambiente estão no guia de execução.
 
-## Documentação
+## Versão documentada
 
-- [Índice completo e documentos originais](docs/README.md)
-- [Escopo e requisitos atuais](docs/requisitos/estado-atual.md)
-- [Arquitetura implementada](docs/arquitetura/arquitetura-atual.md)
-- [Dicionário de dados](docs/dados/dicionario-de-dados.md)
-- [Plano de validação](docs/qa/plano-de-validacao.md)
-- [Pendências priorizadas](docs/backlog/pendencias.md)
-- [Roteiro de demonstração](docs/entrega/roteiro-demonstracao.md)
-- [Contribuição e fluxo Git](CONTRIBUTING.md)
+Revisão de 14/11/2026 sobre o código `edbc8e9`, incorporado à main por `4cb0ea1`. A presença no código não representa homologação nem certificação de acessibilidade.
+
+Síntese de voz com flutter_tts, traduções ampliadas da interface e alterações visuais estavam em desenvolvimento local na revisão. Não fazem parte da versão publicada usada como referência e não são pré-requisitos desta entrega.
 
 ## Organização
 
-| Caminho | Conteúdo |
+| Diretório | Responsabilidade |
 |---|---|
-| `app/` | Flutter, assets e testes |
-| `docs/` | Documentação atual, proposta original e evidências |
-| `prototipo/` | Referência HTML/CSS/JavaScript |
+| app/ | Aplicativo, plataformas, dependências e testes |
+| docs/ | Documentação, propostas originais e evidências |
+| prototipo/ | Referência HTML independente do Flutter |
 
-## Protótipo e limites
+Consulte o [guia de contribuição](CONTRIBUTING.md) para branches e pull requests.
 
-Baixe [prototipo/index.html](prototipo/index.html) e abra no navegador. Ele demonstra fluxos ainda ausentes no Flutter e usa dados próprios. Não é o build web do aplicativo.
+## Limites
 
-Shopping, distâncias e eventos BLE são fictícios. A aparência de GPS não representa localização física, GPS interno, sensor magnético ou beacons reais. Nenhuma equipe real é acionada. Spring Boot e PostgreSQL são evoluções futuras.
+Shopping, distâncias, BLE e atendimento são demonstrativos. A aparência de GPS não implica localização física. “Último metro” não acessa câmera nem reconhece objetos reais. Não há envio de pedidos a funcionários, backend, banco remoto ou tradução automática de Libras.
 
-Os Word registram a proposta inicial de 13 telas. Consulte os documentos atuais e o [registro de mudanças](docs/backlog/mudancas-de-escopo.md) para diferenciar proposta e implementação.
+Home completa, conversa livre, voz para texto, emergência e painel permanecem evoluções ou demonstrações do HTML. Os Word são propostas históricas; o [estado atual](docs/requisitos/estado-atual.md) identifica o escopo publicado.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
 import '../../app/theme/tokens.dart';
@@ -143,7 +144,7 @@ class _PreferenceToggleState extends State<PreferenceToggle> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        value ? 'Ativado' : 'Desativado',
+                        tr(context, value ? 'Ativado' : 'Desativado'),
                         style: text.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: fg,

@@ -4,7 +4,6 @@
 import 'package:acessa_plus/app/app.dart';
 import 'package:acessa_plus/data/shopping_data.dart';
 import 'package:acessa_plus/features/destino/destino_screen.dart';
-import 'package:acessa_plus/features/navegacao/bussola.dart';
 import 'package:acessa_plus/features/navegacao/mapa_interativo.dart';
 import 'package:acessa_plus/features/navegacao/navegacao_screen.dart';
 import 'package:acessa_plus/features/welcome_preferences/preferences.dart';
@@ -147,8 +146,9 @@ void main() {
     await tocar(t, find.text('Iniciar navegação'));
 
     expect(find.textContaining('Parada 1 de 2'), findsOneWidget);
-    expect(find.byType(BussolaGuiada), findsOneWidget);
-    expect(find.textContaining('Não usa a bússola do celular'), findsOneWidget);
+    // Só o mapa: a bússola guiada foi retirada.
+    expect(find.byType(MapaInterativo), findsOneWidget);
+    expect(find.text('Bússola'), findsNothing);
     expect(find.textContaining('(simulado)'), findsNothing);
     expect(find.textContaining('Demonstração'), findsOneWidget);
 
@@ -177,7 +177,6 @@ void main() {
     await abrirDestino(t);
     await tocar(t, find.text('Praça de Alimentação'));
     await tocar(t, find.text('Iniciar navegação'));
-    await tocar(t, find.text('Mapa'));
 
     expect(find.byType(MapaInterativo), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('^Mapa do Térreo')), findsOneWidget);
@@ -226,12 +225,5 @@ void main() {
     // Ao subir de elevador, o mapa acompanha o visitante.
     await simularAte(t, find.text('2º piso (você)'));
     semantica.dispose();
-  });
-
-  test('direção da seta em texto para leitores de tela', () {
-    expect(direcaoEmTexto(0), 'para cima no mapa');
-    expect(direcaoEmTexto(90), 'à direita no mapa');
-    expect(direcaoEmTexto(200), 'para baixo no mapa');
-    expect(direcaoEmTexto(350), 'para cima no mapa');
   });
 }

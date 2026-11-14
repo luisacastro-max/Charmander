@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
 import '../../app/theme/tokens.dart';
@@ -131,11 +132,14 @@ class _VisorRadarState extends State<VisorRadar> with TickerProviderStateMixin {
     final motion = Motion.of(context);
     final text = Theme.of(context).textTheme;
     final sinal = widget.sinal;
-    final status = sinal.centralizado
-        ? 'Bem à frente!'
-        : sinal.encontrado
-        ? 'Quente: está na imagem'
-        : 'Frio: gire devagar';
+    final status = tr(
+      context,
+      sinal.centralizado
+          ? 'Bem à frente!'
+          : sinal.encontrado
+          ? 'Quente: está na imagem'
+          : 'Frio: gire devagar',
+    );
 
     return AspectRatio(
       aspectRatio: 4 / 3,
@@ -357,7 +361,7 @@ class _Etiqueta extends StatelessWidget {
             : null,
       ),
       child: Text(
-        deteccao.alvo.nome,
+        tr(context, deteccao.alvo.nome),
         textAlign: TextAlign.center,
         style: text.titleMedium?.copyWith(
           color: ehAlvo ? c.onMarker : Colors.white,

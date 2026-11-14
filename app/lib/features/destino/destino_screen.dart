@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/routes.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
@@ -13,6 +14,9 @@ import '../../domain/models/shopping.dart';
 import '../../domain/rules/informacao.dart';
 import '../../domain/rules/rotas.dart';
 import '../../domain/rules/viagem.dart';
+import '../alertas/alertas_controller.dart';
+import '../alertas/mapa_alertas_screen.dart';
+import '../comunicacao/mensagens_rapidas.dart';
 import '../welcome_preferences/preferences.dart';
 import '../welcome_preferences/preferences_scope.dart';
 import '../welcome_preferences/preferences_screen.dart';
@@ -157,11 +161,32 @@ class _DestinoScreenState extends State<DestinoScreen> {
         scrolledUnderElevation: 0,
         title: const BrandLogo(size: 20, animate: false),
         leading: IconButton(
-          tooltip: 'Voltar',
+          tooltip: tr(context, 'Voltar'),
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
+        actions: [
+          // Mapa de alertas da comunidade, com a contagem de ativos.
+          if (!widget.escolhendoParada &&
+              AlertasScope.maybeOf(context) != null &&
+              _dadosProntos(context) != null)
+            Padding(
+              padding: const EdgeInsets.only(right: AcessaSpacing.sm),
+              child: _BotaoMapaAlertas(
+                ativos: AlertasScope.of(context).ativas.length,
+                onTap: () => Navigator.of(context).push(
+                  acessaRoute<void>(
+                    MapaAlertasScreen(
+                      dados: _dadosProntos(context)!,
+                      pontoId: _aqui,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
+      floatingActionButton: const BotaoMensagensRapidas(),
       body: _dadosProntos(context) != null
           ? _conteudo(context, _dadosProntos(context)!)
           : FutureBuilder<ShoppingData>(
@@ -169,14 +194,17 @@ class _DestinoScreenState extends State<DestinoScreen> {
               builder: (context, snap) {
                 if (snap.hasError) {
                   return _Mensagem(
-                    'Não foi possível carregar o mapa do shopping. '
-                    'Peça ajuda no Balcão de Informações.',
+                    tr(
+                      context,
+                      'Não foi possível carregar o mapa do shopping. '
+                      'Peça ajuda no Balcão de Informações.',
+                    ),
                   );
                 }
                 if (!snap.hasData) {
                   return Center(
                     child: Semantics(
-                      label: 'Carregando o mapa do shopping',
+                      label: tr(context, 'Carregando o mapa do shopping'),
                       child: const CircularProgressIndicator(),
                     ),
                   );
@@ -191,7 +219,10 @@ class _DestinoScreenState extends State<DestinoScreen> {
     final c = AcessaTheme.of(context).colors;
     final text = Theme.of(context).textTheme;
     final prefs = PreferencesScope.of(context).prefs;
-    final criterios = criteriosDe(prefs);
+    // Alertas da comunidade ativos também valem para os resultados.
+    final alertas = AlertasScope.maybeOf(context);
+    final criterios =
+        alertas?.aplicar(criteriosDe(prefs), dados) ?? criteriosDe(prefs);
     final de = _de;
 
     final filtrados = dados.locais.where((l) {
@@ -218,11 +249,13 @@ class _DestinoScreenState extends State<DestinoScreen> {
 
     var i = 0;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
+      // Com o botão "Mensagens rápidas", sobra espaço no fim da lista para
+      // ele não cobrir o último resultado.
+      padding: EdgeInsets.fromLTRB(
         AcessaSpacing.lg,
         0,
         AcessaSpacing.lg,
-        AcessaSpacing.xl,
+        prefs.quickMessages ? AcessaSpacing.xl + 88 : AcessaSpacing.xl,
       ),
       children: [
         Entrance(
@@ -230,9 +263,12 @@ class _DestinoScreenState extends State<DestinoScreen> {
           child: Semantics(
             header: true,
             child: Text(
-              widget.escolhendoParada
-                  ? 'Qual a próxima parada?'
-                  : 'Para onde você quer ir?',
+              tr(
+                context,
+                widget.escolhendoParada
+                    ? 'Qual a próxima parada?'
+                    : 'Para onde você quer ir?',
+              ),
               style: text.displayMedium,
             ),
           ),
@@ -246,8 +282,8 @@ class _DestinoScreenState extends State<DestinoScreen> {
             children: [
               _ChipMenu(
                 icone: Icons.layers_outlined,
-                rotulo: 'Piso: ${_piso ?? 'Todos'}',
-                dica: 'Escolher o piso dos resultados',
+                rotulo: tr(context, 'Piso: ${_piso ?? 'Todos'}'),
+                dica: tr(context, 'Escolher o piso dos resultados'),
                 onTap: () => _escolherPiso(context, dados),
               ),
               if (!widget.escolhendoParada)
@@ -255,8 +291,8 @@ class _DestinoScreenState extends State<DestinoScreen> {
                   icone: prefs.avoidStairs
                       ? Icons.accessible_forward
                       : Icons.tune,
-                  rotulo: _resumoPreferencias(prefs),
-                  dica: 'Revisar minhas preferências de rota',
+                  rotulo: tr(context, _resumoPreferencias(prefs)),
+                  dica: tr(context, 'Revisar minhas preferências de rota'),
                   onTap: () => Navigator.of(context).push(
                     acessaRoute(
                       const PreferencesScreen(continuarParaDestino: false),
@@ -301,9 +337,12 @@ class _DestinoScreenState extends State<DestinoScreen> {
                     ),
                   ),
                   child: IconButton(
-                    tooltip: _podeAdicionar
-                        ? 'Adicionar parada'
-                        : 'Limite de $maxParadas paradas',
+                    tooltip: tr(
+                      context,
+                      _podeAdicionar
+                          ? 'Adicionar parada'
+                          : 'Limite de $maxParadas paradas',
+                    ),
                     onPressed: _podeAdicionar && !_adicionandoParada
                         ? _comecarParada
                         : null,
@@ -328,7 +367,7 @@ class _DestinoScreenState extends State<DestinoScreen> {
               : Padding(
                   padding: const EdgeInsets.only(top: AcessaSpacing.sm),
                   child: Text(
-                    _aviso,
+                    tr(context, _aviso),
                     style: text.bodyMedium?.copyWith(color: c.inkMuted),
                   ),
                 ),
@@ -352,10 +391,16 @@ class _DestinoScreenState extends State<DestinoScreen> {
           liveRegion: true,
           child: Text(
             resultados.isEmpty
-                ? 'Nenhum resultado'
-                : '${resultados.length} '
-                      '${resultados.length == 1 ? 'resultado' : 'resultados'}'
-                      '${temFiltro ? '' : ' · mais perto primeiro'}',
+                ? tr(context, 'Nenhum resultado')
+                : tr(
+                        context,
+                        resultados.length == 1
+                            ? '1 resultado'
+                            : '${resultados.length} resultados',
+                      ) +
+                      (temFiltro
+                          ? ''
+                          : ' · ${tr(context, 'mais perto primeiro')}'),
             style: text.titleMedium?.copyWith(color: c.inkMuted),
           ),
         ),
@@ -371,9 +416,12 @@ class _DestinoScreenState extends State<DestinoScreen> {
                 ponto: dados.ponto(local.pontoId),
                 rota: rota,
                 ultima: n == resultados.length - 1,
-                hint: widget.escolhendoParada || _adicionandoParada
-                    ? 'Adicionar como parada'
-                    : 'Ver rota',
+                hint: tr(
+                  context,
+                  widget.escolhendoParada || _adicionandoParada
+                      ? 'Adicionar como parada'
+                      : 'Ver rota',
+                ),
                 onTap: () => _escolher(local, dados),
               ),
             ),
@@ -414,7 +462,7 @@ class _DestinoScreenState extends State<DestinoScreen> {
                 AcessaSpacing.sm,
               ),
               child: Text(
-                'Mostrar resultados de qual piso?',
+                tr(ctx, 'Mostrar resultados de qual piso?'),
                 style: Theme.of(ctx).textTheme.titleLarge,
               ),
             ),
@@ -430,7 +478,7 @@ class _DestinoScreenState extends State<DestinoScreen> {
                       ? Icons.radio_button_checked
                       : Icons.radio_button_unchecked,
                 ),
-                title: Text(p ?? 'Todos os pisos'),
+                title: Text(tr(ctx, p ?? 'Todos os pisos')),
                 onTap: () => Navigator.of(ctx).pop(p ?? ''),
               ),
           ],
@@ -466,7 +514,7 @@ class _DestinoScreenState extends State<DestinoScreen> {
                   AcessaSpacing.sm,
                 ),
                 child: Text(
-                  'Simular que estou perto de…',
+                  tr(ctx, 'Simular que estou perto de…'),
                   style: Theme.of(ctx).textTheme.titleLarge,
                 ),
               ),
@@ -475,8 +523,11 @@ class _DestinoScreenState extends State<DestinoScreen> {
                   horizontal: AcessaSpacing.lg,
                 ),
                 child: Text(
-                  'Na demonstração, escolher um ponto representa o celular '
-                  'detectar o beacon BLE daquele lugar.',
+                  tr(
+                    ctx,
+                    'Na demonstração, escolher um ponto representa o celular '
+                    'detectar o beacon BLE daquele lugar.',
+                  ),
                   style: Theme.of(ctx).textTheme.bodyMedium
                       ?.copyWith(color: c.inkMuted),
                 ),
@@ -494,7 +545,8 @@ class _DestinoScreenState extends State<DestinoScreen> {
                   ),
                   title: Text(p.nome),
                   subtitle: Text(
-                    '${exibir(p.piso)} · ${p.beacon} (simulado)',
+                    '${tr(ctx, exibir(p.piso))} · ${p.beacon} '
+                    '${tr(ctx, '(simulado)')}',
                     style: TextStyle(color: c.inkMuted),
                   ),
                   onTap: () => Navigator.of(ctx).pop(p.id),
@@ -548,6 +600,71 @@ class _ChipMenu extends StatelessWidget {
                   Text(rotulo, style: text.titleSmall?.copyWith(color: c.ink)),
                   const SizedBox(width: 4),
                   Icon(Icons.keyboard_arrow_down, color: c.ink),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Acesso ao "Mapa de alertas", com a contagem de alertas ativos.
+class _BotaoMapaAlertas extends StatelessWidget {
+  const _BotaoMapaAlertas({required this.ativos, required this.onTap});
+  final int ativos;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AcessaTheme.of(context).colors;
+    final text = Theme.of(context).textTheme;
+    final contagem = tr(context, ativos == 1 ? '1 ativo' : '$ativos ativos');
+    return Semantics(
+      button: true,
+      label: '${tr(context, 'Mapa de alertas')}, $contagem',
+      hint: tr(context, 'Relatos da comunidade sobre o caminho'),
+      excludeSemantics: true,
+      child: Material(
+        color: c.surface,
+        shape: StadiumBorder(side: BorderSide(color: c.simulation, width: 1.5)),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: AcessaSpacing.minTouch,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.campaign_outlined, size: 20, color: c.ink),
+                  const SizedBox(width: 8),
+                  Text(
+                    tr(context, 'Alertas'),
+                    style: text.titleSmall?.copyWith(color: c.ink),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ativos > 0 ? c.simulation : c.mapLine,
+                      borderRadius: BorderRadius.circular(AcessaRadius.pill),
+                    ),
+                    child: Text(
+                      '$ativos',
+                      style: text.labelMedium?.copyWith(
+                        color: ativos > 0 ? c.onAccent : c.ink,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -644,14 +761,17 @@ class _CartaoDePara extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        depoisDe != null ? 'Depois de' : 'Você está aqui',
+                        tr(
+                          context,
+                          depoisDe != null ? 'Depois de' : 'Você está aqui',
+                        ),
                         style: text.bodyMedium?.copyWith(color: c.inkMuted),
                       ),
                       Text(depoisDe ?? origem.nome, style: text.titleMedium),
                       if (depoisDe == null)
                         Text(
-                          '${exibir(origem.piso)} · beacon '
-                          '${origem.beacon} (simulado)',
+                          '${tr(context, exibir(origem.piso))} · beacon '
+                          '${origem.beacon} ${tr(context, '(simulado)')}',
                           style: text.bodyMedium?.copyWith(color: c.inkMuted),
                         ),
                     ],
@@ -666,7 +786,7 @@ class _CartaoDePara extends StatelessWidget {
                   foregroundColor: c.focus,
                   minimumSize: const Size(48, AcessaSpacing.minTouch),
                 ),
-                child: const Text('Trocar'),
+                child: Text(tr(context, 'Trocar')),
               ),
           ],
         ),
@@ -706,7 +826,7 @@ class _CartaoDePara extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Parada ${n + 1}',
+                          tr(context, 'Parada ${n + 1}'),
                           style: text.bodyMedium?.copyWith(color: c.inkMuted),
                         ),
                         Text(p.nome, style: text.titleMedium),
@@ -715,7 +835,7 @@ class _CartaoDePara extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Remover ${p.nome}',
+                  tooltip: tr(context, 'Remover ${p.nome}'),
                   onPressed: () => onRemoverParada(n),
                   icon: const Icon(Icons.close),
                   color: c.inkMuted,
@@ -758,10 +878,13 @@ class _CartaoDePara extends StatelessWidget {
                   style: text.titleMedium,
                   textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
-                    labelText: adicionandoParada
-                        ? 'Parada ${paradas.length + 1}'
-                        : 'Buscar loja ou serviço',
-                    hintText: 'Ex.: banheiro, pizza, livraria',
+                    labelText: tr(
+                      context,
+                      adicionandoParada
+                          ? 'Parada ${paradas.length + 1}'
+                          : 'Buscar loja ou serviço',
+                    ),
+                    hintText: tr(context, 'Ex.: banheiro, pizza, livraria'),
                     border: InputBorder.none,
                     labelStyle: TextStyle(color: c.inkMuted),
                     hintStyle: TextStyle(color: c.inkMuted),
@@ -771,7 +894,7 @@ class _CartaoDePara extends StatelessWidget {
               ),
               if (busca.text.isNotEmpty)
                 IconButton(
-                  tooltip: 'Limpar busca',
+                  tooltip: tr(context, 'Limpar busca'),
                   icon: const Icon(Icons.cancel_outlined),
                   color: c.inkMuted,
                   onPressed: () {
@@ -781,7 +904,7 @@ class _CartaoDePara extends StatelessWidget {
                 )
               else if (adicionandoParada)
                 IconButton(
-                  tooltip: 'Cancelar parada',
+                  tooltip: tr(context, 'Cancelar parada'),
                   icon: const Icon(Icons.close),
                   color: c.inkMuted,
                   onPressed: onCancelarParada,
@@ -866,7 +989,7 @@ class _PilulasAtalhos extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        a.rotulo,
+                        tr(context, a.rotulo),
                         style: text.titleSmall?.copyWith(
                           color: selecionado == a && !t.highContrast
                               ? c.onAccent
@@ -909,17 +1032,22 @@ class _LinhaResultado extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final r = rota;
     final distancia = switch (r) {
-      Rota(etapas: final e) when e.isEmpty => 'Você já está aqui',
-      Rota() => '${r.minutos} min a pé',
-      SemRota(existeComEscada: true) => 'Só há caminho com escadas',
-      SemRota() => 'Sem caminho cadastrado',
+      Rota(etapas: final e) when e.isEmpty => tr(context, 'Você já está aqui'),
+      Rota() => tr(context, '${r.minutos} min a pé'),
+      SemRota(existeComEscada: true) => tr(
+        context,
+        'Só há caminho com escadas',
+      ),
+      SemRota() => tr(context, 'Sem caminho cadastrado'),
     };
     final metros = switch (r) {
-      Rota(etapas: final e) when e.isEmpty => 'aqui',
+      Rota(etapas: final e) when e.isEmpty => tr(context, 'aqui'),
       Rota() => '${r.distanciaM} m',
       SemRota() => '—',
     };
-    final recursos = exibirRecursos(local.recursos);
+    final recursos = [
+      for (final r in exibirRecursos(local.recursos)) tr(context, r),
+    ];
 
     return Semantics(
       button: true,
@@ -976,7 +1104,8 @@ class _LinhaResultado extends StatelessWidget {
                     children: [
                       Text(local.nome, style: text.titleMedium),
                       Text(
-                        '${exibir(ponto.piso)} · ${local.categoria}',
+                        '${tr(context, exibir(ponto.piso))} · '
+                        '${tr(context, local.categoria)}',
                         style: text.bodyMedium?.copyWith(color: c.inkMuted),
                       ),
                       const SizedBox(height: 2),
@@ -1034,9 +1163,13 @@ class _CriteriosAtivos extends StatelessWidget {
     ];
     return Text(
       ativos.isEmpty
-          ? 'Rotas pelo caminho mais curto. Para evitar escadas, ative '
-                '"Rotas sem escadas" nas preferências.'
-          : 'Rotas consideram suas preferências: ${ativos.join(', ')}.',
+          ? tr(
+              context,
+              'Rotas pelo caminho mais curto. Para evitar escadas, ative '
+              '"Rotas sem escadas" nas preferências.',
+            )
+          : '${tr(context, 'Rotas consideram suas preferências:')} '
+                '${ativos.map((a) => tr(context, a)).join(', ')}.',
       style: text.bodyMedium?.copyWith(color: c.inkMuted),
     );
   }
@@ -1058,21 +1191,27 @@ class _SemResultados extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            consulta.trim().isEmpty
-                ? 'Nada encontrado com esses filtros.'
-                : 'Nada encontrado para "${consulta.trim()}".',
+            tr(
+              context,
+              consulta.trim().isEmpty
+                  ? 'Nada encontrado com esses filtros.'
+                  : 'Nada encontrado para "${consulta.trim()}".',
+            ),
             style: text.titleMedium,
           ),
           const SizedBox(height: 4),
           Text(
-            'Tente "banheiro", "elevador" ou "comida", ou limpe os filtros.',
+            tr(
+              context,
+              'Tente "banheiro", "elevador" ou "comida", ou limpe os filtros.',
+            ),
             style: text.bodyMedium?.copyWith(color: c.inkMuted),
           ),
           const SizedBox(height: AcessaSpacing.sm),
           TextButton.icon(
             onPressed: onLimpar,
             icon: const Icon(Icons.filter_alt_off_outlined),
-            label: const Text('Limpar busca e filtros'),
+            label: Text(tr(context, 'Limpar busca e filtros')),
             style: TextButton.styleFrom(
               foregroundColor: c.focus,
               minimumSize: const Size(48, AcessaSpacing.minTouch),
