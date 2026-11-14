@@ -9,7 +9,7 @@
 
 | Item da entrega | Material disponível |
 |---|---|
-| 1. MVP funcional | Aplicativo publicado na Vercel — link a ser informado pela equipe |
+| 1. MVP funcional | [Acessar o MVP na Vercel](https://acessa-plus-j6efrj192-charmander5.vercel.app/) |
 | 2. Repositório e fonte | [Repositório público](https://github.com/luisacastro-max/Charmander), [fonte](app/lib/) e [testes](app/test/) |
 | 3. Documentação técnica | [Projeto, arquitetura, tecnologias e funcionamento](docs/documentacao-tecnica.md) |
 | 4. Instruções de execução | [Instalação, configuração, execução e build](docs/desenvolvimento/execucao.md) |
@@ -71,7 +71,7 @@ O servidor usa JSON local e é de demonstração, sem autenticação ou moderaç
 
 ## Acesso ao MVP na Vercel
 
-**Link do aplicativo:** a ser informado pela equipe.
+**[Abrir o Acessa+ na Vercel](https://acessa-plus-j6efrj192-charmander5.vercel.app/)** — acesso direto pelo navegador, sem instalação.
 
 O aplicativo será avaliado pelo endereço da Vercel. O código-fonte e as instruções locais permanecem disponíveis para reproduzir a execução.
 
