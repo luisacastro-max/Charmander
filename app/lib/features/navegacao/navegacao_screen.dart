@@ -126,8 +126,9 @@ class _NavegacaoScreenState extends State<NavegacaoScreen> {
                 Text(
                   e.concluida
                       ? 'Rota concluída'
-                      : 'Faltam ${e.restanteM} m · cerca de '
-                            '${(e.restanteM / 50).ceil().clamp(1, 999)} min',
+                      : 'Faltam ${e.restanteM} m · '
+                            '${_minutos(e.restanteM)} min · '
+                            'chegada às ${_chegada(e.restanteM)}',
                   style: text.bodyLarge,
                 ),
               ],
@@ -183,7 +184,14 @@ class _NavegacaoScreenState extends State<NavegacaoScreen> {
           if (_vista == _Vista.bussola)
             Center(child: BussolaGuiada(estado: e))
           else
-            MapaInterativo(dados: widget.dados, estado: e),
+            MapaInterativo(
+              dados: widget.dados,
+              estado: e,
+              altura: (MediaQuery.sizeOf(context).height * .55).clamp(
+                320.0,
+                560.0,
+              ),
+            ),
           if (_vista == _Vista.bussola) ...[
             const SizedBox(height: AcessaSpacing.sm),
             Text(
@@ -217,7 +225,28 @@ class _NavegacaoScreenState extends State<NavegacaoScreen> {
   }
 }
 
-/// Instrução da etapa atual, em texto grande (RF18).
+int _minutos(int metros) => (metros / 50).ceil().clamp(1, 999);
+
+/// Horário previsto de chegada, como no GPS.
+String _chegada(int metros) {
+  final h = DateTime.now().add(Duration(minutes: _minutos(metros)));
+  return '${h.hour.toString().padLeft(2, '0')}:'
+      '${h.minute.toString().padLeft(2, '0')}';
+}
+
+IconData _iconeManobra(Manobra m) => switch (m) {
+  Manobra.siga || Manobra.frente => Icons.straight,
+  Manobra.direita => Icons.turn_right,
+  Manobra.esquerda => Icons.turn_left,
+  Manobra.retorno => Icons.u_turn_left,
+  Manobra.elevador => Icons.elevator_outlined,
+  Manobra.escadaRolante => Icons.escalator_outlined,
+  Manobra.escada => Icons.stairs_outlined,
+  Manobra.rampa => Icons.accessible_forward,
+};
+
+/// Instrução da etapa atual no estilo do banner de um GPS: ícone da
+/// manobra, distância grande e o que vem depois (RF18).
 class _CartaoInstrucao extends StatelessWidget {
   const _CartaoInstrucao({required this.estado});
   final EstadoNavegacao estado;
@@ -229,8 +258,11 @@ class _CartaoInstrucao extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final etapa = estado.etapaAtual!;
     final virar = curva(estado.etapaAnterior, etapa);
+    final m = manobra(estado.etapaAnterior, etapa);
+    final depois = estado.etapaSeguinte;
     final dir = estado.direcao;
     final fg = t.highContrast ? c.ink : c.onAccent;
+    final andando = etapa.trecho.trocaPiso == null;
 
     return Semantics(
       label: [
@@ -238,6 +270,7 @@ class _CartaoInstrucao extends StatelessWidget {
         etapa.instrucao,
         if (dir != null) 'Seta ${direcaoEmTexto(dir)}.',
         'Você está em ${estado.pontoAtual.nome}, ${exibir(estado.pontoAtual.piso)}.',
+        if (depois != null) 'Depois: ${depois.instrucao}',
       ].join(' '),
       excludeSemantics: true,
       child: StickerCard(
@@ -246,8 +279,46 @@ class _CartaoInstrucao extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (virar != null)
-              Text(virar, style: text.titleMedium?.copyWith(color: fg)),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: t.highContrast ? c.surface : c.onAccent,
+                    borderRadius: BorderRadius.circular(AcessaRadius.button),
+                    border: t.highContrast
+                        ? Border.all(color: c.ink, width: 2)
+                        : null,
+                  ),
+                  child: Icon(
+                    _iconeManobra(m),
+                    size: 44,
+                    color: t.highContrast ? c.ink : c.navigation,
+                  ),
+                ),
+                const SizedBox(width: AcessaSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (andando)
+                        Text(
+                          '${etapa.trecho.distanciaM} m',
+                          style: text.displaySmall?.copyWith(color: fg),
+                        ),
+                      if (virar != null)
+                        Text(
+                          virar,
+                          style: text.titleMedium?.copyWith(color: fg),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AcessaSpacing.sm),
             Text(
               etapa.instrucao,
               style: text.headlineSmall?.copyWith(color: fg),
@@ -269,6 +340,36 @@ class _CartaoInstrucao extends StatelessWidget {
                 ),
               ],
             ),
+            if (depois != null) ...[
+              Divider(
+                height: AcessaSpacing.lg,
+                color: fg.withValues(alpha: .4),
+              ),
+              Row(
+                children: [
+                  Text(
+                    'Depois',
+                    style: text.bodyMedium?.copyWith(
+                      color: fg,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: AcessaSpacing.sm),
+                  Icon(
+                    _iconeManobra(manobra(etapa, depois)),
+                    size: 22,
+                    color: fg,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      depois.instrucao,
+                      style: text.bodyMedium?.copyWith(color: fg),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

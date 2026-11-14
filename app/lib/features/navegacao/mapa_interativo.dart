@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_theme.dart';
@@ -16,31 +17,102 @@ import '../../domain/rules/viagem.dart';
 const _larguraMapa = 400.0;
 const _alturaMapa = 260.0;
 
-/// Mapa interativo do piso (RF17, RF19, RF48): zoom com gesto ou botões,
-/// "Você está aqui", rota desenhada (feito / a fazer), paradas numeradas e
-/// troca de piso. O mapa é complemento: tudo o que ele mostra também está
-/// em texto na tela de navegação e na descrição para leitores de tela.
+/// Zoom do modo GPS em relação à visão do piso inteiro.
+const _zoomGps = 2.6;
+
+/// Mapa interativo no estilo GPS (RF17, RF19, RF48).
+///
+/// - **Segue você**: zoom no ponto atual e o mapa gira para que a direção
+///   da caminhada fique para cima (como num GPS de carro).
+/// - **Norte do mapa para cima**: alternativa sem giro, para quem se
+///   desorienta com o mapa girando.
+/// - Ao chegar a cada beacon (simulado), a seta desliza até o novo ponto.
+///   Com movimento reduzido, pula direto.
+/// - Arrastar ou pinçar solta o mapa; "Recentralizar" volta a seguir.
+///
+/// O mapa é complemento: tudo o que ele mostra também está em texto na
+/// tela de navegação e na descrição para leitores de tela.
 class MapaInterativo extends StatefulWidget {
-  const MapaInterativo({super.key, required this.dados, required this.estado});
+  const MapaInterativo({
+    super.key,
+    required this.dados,
+    required this.estado,
+    this.altura = 420,
+  });
 
   final ShoppingData dados;
   final EstadoNavegacao estado;
+  final double altura;
 
   @override
   State<MapaInterativo> createState() => _MapaInterativoState();
 }
 
+/// Câmera: ponto do mapa [centro] desenhado em [ancora] da tela, com
+/// [k] pixels por unidade do mapa e giro [rot] (radianos).
+@immutable
+class _Camera {
+  const _Camera(this.centro, this.k, this.rot, this.ancora);
+  final Offset centro;
+  final double k;
+  final double rot;
+  final Offset ancora;
+
+  Offset tela(Offset m) {
+    final d = (m - centro) * k;
+    final c = math.cos(rot), s = math.sin(rot);
+    return ancora + Offset(d.dx * c - d.dy * s, d.dx * s + d.dy * c);
+  }
+
+  Offset mapa(Offset t) {
+    final d = t - ancora;
+    final c = math.cos(-rot), s = math.sin(-rot);
+    return centro + Offset(d.dx * c - d.dy * s, d.dx * s + d.dy * c) / k;
+  }
+
+  _Camera copia({Offset? centro, double? k, Offset? ancora}) =>
+      _Camera(centro ?? this.centro, k ?? this.k, rot, ancora ?? this.ancora);
+}
+
 class _MapaInterativoState extends State<MapaInterativo>
-    with SingleTickerProviderStateMixin {
-  final _tc = TransformationController();
+    with TickerProviderStateMixin {
   late final AnimationController _pulso = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
   );
+
+  /// Deslocamento da seta entre dois beacons.
+  late final AnimationController _mov = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+    value: 1,
+  );
+
   late String _piso = _pisoAtual;
+  bool _seguir = true;
+  bool _norteParaCima = false;
+  double _zoom = 1;
+
+  /// Câmera livre (depois de arrastar, pinçar ou ver a rota inteira).
+  _Camera? _livre;
+  double _kInicioGesto = 1;
   Size _tam = Size.zero;
 
+  late Offset _posDe = _pos(widget.estado.pontoAtual);
+  late Offset _posAte = _posDe;
+  late double _rumoDe = widget.estado.direcao ?? 0;
+  late double _rumoAte = _rumoDe;
+
   String get _pisoAtual => widget.estado.pontoAtual.piso ?? '';
+
+  static Offset _pos(PontoReferencia p) => Offset(p.x, p.y);
+
+  double get _t => Curves.easeInOutCubic.transform(_mov.value);
+  Offset get _posAgora => Offset.lerp(_posDe, _posAte, _t)!;
+  double get _rumoAgora {
+    final d = ((_rumoAte - _rumoDe + 540) % 360) - 180;
+    return _rumoDe + d * _t;
+  }
 
   @override
   void didChangeDependencies() {
@@ -51,13 +123,30 @@ class _MapaInterativoState extends State<MapaInterativo>
   @override
   void didUpdateWidget(MapaInterativo old) {
     super.didUpdateWidget(old);
-    if (old.estado.pontoAtual.id != widget.estado.pontoAtual.id) {
-      // O mapa acompanha o visitante: volta para o piso dele e, se houver
-      // zoom, recentraliza no novo ponto.
-      _piso = _pisoAtual;
-      if (_escala > 1.01) _centralizar(_escala);
-      _pulsar();
+    final novo = widget.estado.pontoAtual;
+    if (old.estado.pontoAtual.id == novo.id &&
+        old.estado.direcao == widget.estado.direcao) {
+      return;
     }
+    // Ao chegar a um novo beacon: a seta desliza do ponto anterior até o
+    // novo e o mapa gira para a próxima direção. O GPS volta a seguir.
+    final anterior = old.estado.pontoAtual;
+    final andou = direcaoNoMapa(anterior, novo);
+    _posDe = _posAgora;
+    _rumoDe = _rumoAgora;
+    _posAte = _pos(novo);
+    _rumoAte =
+        widget.estado.direcao ??
+        (anterior.x == novo.x && anterior.y == novo.y ? _rumoDe : andou);
+    _piso = _pisoAtual;
+    _seguir = true;
+    _livre = null;
+    if (Motion.of(context).enabled) {
+      _mov.forward(from: 0);
+    } else {
+      _mov.value = 1;
+    }
+    _pulsar();
   }
 
   void _pulsar() {
@@ -70,41 +159,72 @@ class _MapaInterativoState extends State<MapaInterativo>
 
   @override
   void dispose() {
-    _tc.dispose();
     _pulso.dispose();
+    _mov.dispose();
     super.dispose();
   }
 
-  double get _escala => _tc.value.getMaxScaleOnAxis();
+  double get _kPiso =>
+      math.min(_tam.width / _larguraMapa, _tam.height / _alturaMapa) * .92;
 
-  Offset _noDesenho(PontoReferencia p) =>
-      Offset(p.x / _larguraMapa * _tam.width, p.y / _alturaMapa * _tam.height);
+  _Camera get _cameraPiso => _Camera(
+    const Offset(_larguraMapa / 2, _alturaMapa / 2),
+    _kPiso,
+    0,
+    _tam.center(Offset.zero),
+  );
 
-  /// Coloca [alvo] (coordenadas do desenho) no centro, na escala [s].
-  void _focar(Offset alvo, double s) {
-    if (_tam.isEmpty) return;
-    final tx = (_tam.width / 2 - alvo.dx * s).clamp(
-      _tam.width - _tam.width * s,
-      0.0,
+  /// Câmera do modo GPS: segue a seta; com "direção para cima", a seta
+  /// fica no terço de baixo para mostrar mais caminho à frente.
+  _Camera get _cameraGps => _Camera(
+    _posAgora,
+    _kPiso * _zoomGps * _zoom,
+    _norteParaCima ? 0 : -_rumoAgora * math.pi / 180,
+    Offset(_tam.width / 2, _tam.height * (_norteParaCima ? .5 : .66)),
+  );
+
+  _Camera get _camera => (!_seguir ? _livre : null) ?? _cameraGps;
+
+  void _soltar() {
+    if (!_seguir) return;
+    final cam = _cameraGps;
+    _livre = cam.copia(
+      centro: cam.mapa(_tam.center(Offset.zero)),
+      ancora: _tam.center(Offset.zero),
     );
-    final ty = (_tam.height / 2 - alvo.dy * s).clamp(
-      _tam.height - _tam.height * s,
-      0.0,
-    );
-    _tc.value = Matrix4.identity()
-      ..translateByDouble(tx, ty, 0, 1)
-      ..scaleByDouble(s, s, 1, 1);
+    _seguir = false;
   }
 
-  void _centralizar([double? s]) {
-    if (_piso != _pisoAtual) setState(() => _piso = _pisoAtual);
-    _focar(_noDesenho(widget.estado.pontoAtual), s ?? math.max(_escala, 2));
-  }
+  void _recentralizar() => setState(() {
+    _seguir = true;
+    _livre = null;
+    _piso = _pisoAtual;
+  });
 
-  void _zoom(double fator) {
-    final centro = _tc.toScene(_tam.center(Offset.zero));
-    _focar(centro, (_escala * fator).clamp(1.0, 4.0));
-  }
+  void _verRotaInteira() => setState(() {
+    _seguir = false;
+    _livre = _cameraPiso;
+  });
+
+  void _zoomBotao(double f) => setState(() {
+    if (_seguir) {
+      _zoom = (_zoom * f).clamp(.5, 3.0);
+    } else {
+      final cam = _livre!;
+      _livre = cam.copia(k: (cam.k * f).clamp(_kPiso * .8, _kPiso * 8));
+    }
+  });
+
+  void _escolherPiso(String p) => setState(() {
+    _piso = p;
+    if (p == _pisoAtual) {
+      _seguir = true;
+      _livre = null;
+    } else {
+      _seguir = false;
+      _livre = _cameraPiso;
+    }
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +251,7 @@ class _MapaInterativoState extends State<MapaInterativo>
                 child: ChoiceChip(
                   label: Text(p == _pisoAtual ? '$p (você)' : p),
                   selected: _piso == p,
-                  onSelected: (_) => setState(() => _piso = p),
+                  onSelected: (_) => _escolherPiso(p),
                   showCheckmark: true,
                   checkmarkColor: c.onPrimary,
                   selectedColor: c.primary,
@@ -163,7 +283,7 @@ class _MapaInterativoState extends State<MapaInterativo>
                   ),
                 ),
                 TextButton(
-                  onPressed: () => setState(() => _piso = _pisoAtual),
+                  onPressed: _recentralizar,
                   style: TextButton.styleFrom(
                     foregroundColor: c.focus,
                     minimumSize: const Size(48, AcessaSpacing.minTouch),
@@ -175,80 +295,161 @@ class _MapaInterativoState extends State<MapaInterativo>
           ),
         ],
         const SizedBox(height: AcessaSpacing.sm),
-        AspectRatio(
-          aspectRatio: _larguraMapa / _alturaMapa,
-          child: Container(
-            decoration: BoxDecoration(
-              color: c.surface,
-              borderRadius: BorderRadius.circular(AcessaRadius.card),
-              border: Border.all(
-                color: t.highContrast ? c.border : c.navigation,
-                width: 2,
-              ),
+        Container(
+          height: widget.altura,
+          decoration: BoxDecoration(
+            color: c.background,
+            borderRadius: BorderRadius.circular(AcessaRadius.card),
+            border: Border.all(
+              color: t.highContrast ? c.border : c.navigation,
+              width: 2,
             ),
-            clipBehavior: Clip.antiAlias,
-            child: LayoutBuilder(
-              builder: (context, box) {
-                _tam = box.biggest;
-                return Semantics(
-                  container: true,
-                  image: true,
-                  label: _descricao(dados, estado),
-                  excludeSemantics: true,
-                  child: InteractiveViewer(
-                    transformationController: _tc,
-                    minScale: 1,
-                    maxScale: 4,
-                    child: CustomPaint(
-                      size: _tam,
-                      painter: _PlantaPainter(
-                        dados: dados,
-                        estado: estado,
-                        piso: _piso,
-                        c: c,
-                        glow: !t.highContrast,
-                        pulso: _pulso,
-                        zoom: _tc,
-                        textScale: MediaQuery.textScalerOf(context).scale(1),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              _tam = box.biggest;
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: Semantics(
+                      container: true,
+                      image: true,
+                      label: _descricao(estado),
+                      excludeSemantics: true,
+                      child: RawGestureDetector(
+                        // O mapa fica com o gesto (a página rola fora dele).
+                        gestures: {
+                          _EscalaImediata:
+                              GestureRecognizerFactoryWithHandlers<
+                                _EscalaImediata
+                              >(_EscalaImediata.new, (r) {
+                                r
+                                  ..onStart = (_) {
+                                    _soltar();
+                                    _kInicioGesto = _livre!.k;
+                                  }
+                                  ..onUpdate = (d) => setState(() {
+                                    final cam = _livre!;
+                                    final k = (_kInicioGesto * d.scale).clamp(
+                                      _kPiso * .8,
+                                      _kPiso * 8,
+                                    );
+                                    // O ponto que estava sob o dedo continua
+                                    // sob o dedo (arrastar e pinçar).
+                                    final alvo = cam.mapa(
+                                      d.localFocalPoint - d.focalPointDelta,
+                                    );
+                                    final novo = cam.copia(k: k);
+                                    _livre = novo.copia(
+                                      centro:
+                                          novo.centro +
+                                          alvo -
+                                          novo.mapa(d.localFocalPoint),
+                                    );
+                                  });
+                              }),
+                        },
+                        child: AnimatedBuilder(
+                          animation: Listenable.merge([_mov, _pulso]),
+                          builder: (context, _) => CustomPaint(
+                            size: _tam,
+                            painter: _PlantaPainter(
+                              dados: dados,
+                              estado: estado,
+                              piso: _piso,
+                              c: c,
+                              glow: !t.highContrast,
+                              cam: _camera,
+                              kPiso: _kPiso,
+                              voce: _posAgora,
+                              rumo: _rumoAgora,
+                              pulso: _pulso.isAnimating ? _pulso.value : 0,
+                              textScale: MediaQuery.textScalerOf(context)
+                                  .scale(1),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                );
-              },
-            ),
+                  // Bússola: mostra para onde fica o topo do mapa e alterna
+                  // entre "direção para cima" e "norte do mapa para cima".
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: AnimatedBuilder(
+                      animation: _mov,
+                      builder: (context, _) => _BotaoMapa(
+                        dica: _norteParaCima
+                            ? 'Girar o mapa na direção da caminhada'
+                            : 'Deixar o norte do mapa para cima',
+                        onTap: () =>
+                            setState(() => _norteParaCima = !_norteParaCima),
+                        child: Transform.rotate(
+                          angle: _camera.rot,
+                          child: Icon(Icons.navigation, color: c.marker),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 8,
+                    bottom: 8,
+                    child: Column(
+                      children: [
+                        _BotaoMapa(
+                          dica: 'Aproximar o mapa',
+                          onTap: () => _zoomBotao(1.4),
+                          child: const Icon(Icons.add),
+                        ),
+                        const SizedBox(height: 6),
+                        _BotaoMapa(
+                          dica: 'Afastar o mapa',
+                          onTap: () => _zoomBotao(1 / 1.4),
+                          child: const Icon(Icons.remove),
+                        ),
+                        const SizedBox(height: 6),
+                        _BotaoMapa(
+                          dica: 'Ver a rota inteira',
+                          onTap: _verRotaInteira,
+                          child: const Icon(Icons.zoom_out_map),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!_seguir)
+                    Positioned(
+                      left: 8,
+                      bottom: 8,
+                      child: FilledButton.icon(
+                        onPressed: _recentralizar,
+                        icon: const Icon(Icons.navigation),
+                        label: const Text('Recentralizar'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: c.primary,
+                          foregroundColor: c.onPrimary,
+                          minimumSize: const Size(48, AcessaSpacing.minTouch),
+                          textStyle: text.titleMedium,
+                          side: BorderSide(color: c.shadow, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-        ),
-        const SizedBox(height: AcessaSpacing.sm),
-        // Botões fora do desenho, para não cobrir nenhuma parte do mapa.
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            _BotaoMapa(
-              icone: Icons.add,
-              dica: 'Aproximar o mapa',
-              onTap: () => _zoom(1.5),
-            ),
-            const SizedBox(width: AcessaSpacing.sm),
-            _BotaoMapa(
-              icone: Icons.remove,
-              dica: 'Afastar o mapa',
-              onTap: () => _zoom(1 / 1.5),
-            ),
-            const SizedBox(width: AcessaSpacing.sm),
-            _BotaoMapa(
-              icone: Icons.my_location,
-              dica: 'Centralizar em você',
-              onTap: _centralizar,
-            ),
-          ],
         ),
         const SizedBox(height: AcessaSpacing.sm),
         const _Legenda(),
         const SizedBox(height: AcessaSpacing.xs),
         Text(
-          'Use dois dedos ou os botões + e − para aproximar e ver o nome '
-          'de todos os lugares. '
-          'Mapa ilustrativo, com dados fictícios.',
+          _norteParaCima
+              ? 'Norte do mapa para cima. Toque na bússola para o mapa '
+                    'girar na direção da caminhada.'
+              : 'O mapa gira para a sua direção ficar para cima. Toque na '
+                    'bússola para fixar o norte do mapa. Mapa ilustrativo, '
+                    'com dados fictícios.',
           style: text.bodyMedium?.copyWith(color: c.inkMuted),
         ),
       ],
@@ -256,7 +457,7 @@ class _MapaInterativoState extends State<MapaInterativo>
   }
 
   /// O que o mapa mostra, em texto (RNF04: imagem nunca é a única fonte).
-  String _descricao(ShoppingData dados, EstadoNavegacao estado) {
+  String _descricao(EstadoNavegacao estado) {
     final nesse = <String>[];
     for (final perna in estado.viagem.pernas) {
       for (final p in perna.pontos) {
@@ -278,17 +479,36 @@ class _MapaInterativoState extends State<MapaInterativo>
     }
     final prox = estado.proximoPonto;
     if (prox != null) b.write(' Próximo ponto: ${prox.nome}.');
+    b.write(
+      _seguir
+          ? (_norteParaCima
+                ? ' O mapa acompanha você, com o norte do mapa para cima.'
+                : ' O mapa acompanha você e gira na direção da caminhada.')
+          : ' O mapa está solto; use Recentralizar para voltar a seguir.',
+    );
     return b.toString();
+  }
+}
+
+/// Reconhecedor de arrastar/pinçar que fica com o gesto logo no toque,
+/// para o mapa não disputar o arrasto com a rolagem da página.
+class _EscalaImediata extends ScaleGestureRecognizer {
+  _EscalaImediata();
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolve(GestureDisposition.accepted);
   }
 }
 
 class _BotaoMapa extends StatelessWidget {
   const _BotaoMapa({
-    required this.icone,
+    required this.child,
     required this.dica,
     required this.onTap,
   });
-  final IconData icone;
+  final Widget child;
   final String dica;
   final VoidCallback onTap;
 
@@ -296,12 +516,13 @@ class _BotaoMapa extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AcessaTheme.of(context).colors;
     return Material(
-      color: c.background,
+      color: c.surface,
+      elevation: 2,
       shape: CircleBorder(side: BorderSide(color: c.border, width: 1.5)),
       child: IconButton(
         tooltip: dica,
         onPressed: onTap,
-        icon: Icon(icone),
+        icon: child,
         color: c.ink,
         constraints: const BoxConstraints(
           minWidth: AcessaSpacing.minTouch,
@@ -327,36 +548,33 @@ class _Legenda extends StatelessWidget {
         Text(rotulo, style: text.bodyMedium),
       ],
     );
-    Widget bola(Color cor, {Widget? filho}) => Container(
-      width: 18,
-      height: 18,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: cor,
-        shape: BoxShape.circle,
-        border: Border.all(color: c.ink, width: 2),
-      ),
-      child: filho,
-    );
     Widget linha(Color cor) => Container(
       width: 22,
-      height: 5,
+      height: 6,
       decoration: BoxDecoration(
         color: cor,
         borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: c.shadow),
       ),
     );
     return Wrap(
       spacing: AcessaSpacing.md,
       runSpacing: AcessaSpacing.xs,
       children: [
-        item(bola(c.marker), 'Você'),
+        item(Icon(Icons.navigation, size: 18, color: c.marker), 'Você'),
         item(linha(c.navigation), 'A percorrer'),
         item(linha(c.inkMuted.withValues(alpha: .5)), 'Já percorrido'),
         item(
-          bola(
-            c.help,
-            filho: Text(
+          Container(
+            width: 18,
+            height: 18,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: c.help,
+              shape: BoxShape.circle,
+              border: Border.all(color: c.ink, width: 2),
+            ),
+            child: Text(
               '1',
               style: TextStyle(
                 fontSize: 10,
@@ -372,6 +590,8 @@ class _Legenda extends StatelessWidget {
   }
 }
 
+/// Desenha o piso pela câmera. Linhas giram com o mapa; ícones e nomes
+/// ficam sempre de pé e com tamanho fixo na tela, como num GPS.
 class _PlantaPainter extends CustomPainter {
   _PlantaPainter({
     required this.dados,
@@ -379,205 +599,240 @@ class _PlantaPainter extends CustomPainter {
     required this.piso,
     required this.c,
     required this.glow,
+    required this.cam,
+    required this.kPiso,
+    required this.voce,
+    required this.rumo,
     required this.pulso,
-    required this.zoom,
     required this.textScale,
-  }) : super(repaint: Listenable.merge([pulso, zoom]));
+  });
 
   final ShoppingData dados;
   final EstadoNavegacao estado;
   final String piso;
   final AcessaColors c;
   final bool glow;
-  final Animation<double> pulso;
-
-  /// Com pouco zoom, só os pontos da rota têm nome (evita sobreposição).
-  final TransformationController zoom;
+  final _Camera cam;
+  final double kPiso;
+  final Offset voce;
+  final double rumo;
+  final double pulso;
   final double textScale;
 
-  late double _k;
+  final _ocupado = <Rect>[];
 
-  Offset _p(PontoReferencia p) => Offset(p.x * _k, p.y * _k);
+  Offset _p(PontoReferencia p) => cam.tela(Offset(p.x, p.y));
 
   @override
   void paint(Canvas canvas, Size size) {
-    _k = size.width / _larguraMapa;
+    _ocupado.clear();
     final noPiso = {
       for (final p in dados.pontos)
         if (p.piso == piso) p.id: p,
     };
 
-    // 1. Planta: corredores largos e finos (base do desenho).
-    final corredor = Paint()
-      ..color = c.mapLine.withValues(alpha: .55)
-      ..strokeWidth = 14 * _k
-      ..strokeCap = StrokeCap.round;
-    final eixo = Paint()
+    // 1. Contorno do prédio.
+    final predio = Path()
+      ..addPolygon([
+        cam.tela(const Offset(-10, -10)),
+        cam.tela(const Offset(_larguraMapa + 10, -10)),
+        cam.tela(const Offset(_larguraMapa + 10, _alturaMapa + 10)),
+        cam.tela(const Offset(-10, _alturaMapa + 10)),
+      ], true);
+    canvas.drawPath(predio, Paint()..color = c.surface);
+    canvas.drawPath(
+      predio,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = c.mapLine,
+    );
+
+    // 2. Corredores como ruas.
+    final larguraRua = (16 * cam.k).clamp(10.0, 70.0);
+    final rua = Paint()
       ..color = c.mapLine
-      ..strokeWidth = 1.5
+      ..strokeWidth = larguraRua
       ..strokeCap = StrokeCap.round;
-    for (final t in dados.trechos) {
-      final a = noPiso[t.de], b = noPiso[t.para];
-      if (a == null || b == null) continue;
-      canvas.drawLine(_p(a), _p(b), corredor);
-      canvas.drawLine(_p(a), _p(b), eixo);
+    final borda = Paint()
+      ..color = c.shadow.withValues(alpha: .6)
+      ..strokeWidth = larguraRua + 3
+      ..strokeCap = StrokeCap.round;
+    final trechosPiso = [
+      for (final t in dados.trechos)
+        if (noPiso[t.de] != null && noPiso[t.para] != null) t,
+    ];
+    for (final t in trechosPiso) {
+      canvas.drawLine(_p(noPiso[t.de]!), _p(noPiso[t.para]!), borda);
+    }
+    for (final t in trechosPiso) {
+      canvas.drawLine(_p(noPiso[t.de]!), _p(noPiso[t.para]!), rua);
     }
 
-    // 2. Rota: já percorrido apagado, a percorrer em destaque.
+    // 3. Rota com contorno (como no GPS): feito apagado, resto em destaque.
     final feitas = estado.etapasFeitas;
     var g = 0;
-    final aFazer = Path(), feito = Path(), atual = Path();
+    final aFazer = Path(), feito = Path();
     final trocas = <(PontoReferencia, String)>[];
     for (final perna in estado.viagem.pernas) {
       for (final e in perna.etapas) {
         final idx = g++;
         if (e.trecho.trocaPiso != null) {
-          if (e.de.piso == piso) {
+          if (e.de.piso == piso && idx >= feitas) {
             trocas.add((e.de, '${_seta(e)} ${e.para.piso}'));
           }
           continue;
         }
         if (e.de.piso != piso || e.para.piso != piso) continue;
-        final alvo = idx < feitas
-            ? feito
-            : idx == feitas
-            ? atual
-            : aFazer;
+        final alvo = idx < feitas ? feito : aFazer;
+        // A etapa em andamento começa onde a seta está.
+        final ini = idx == feitas ? cam.tela(voce) : _p(e.de);
         alvo
-          ..moveTo(_p(e.de).dx, _p(e.de).dy)
+          ..moveTo(ini.dx, ini.dy)
           ..lineTo(_p(e.para).dx, _p(e.para).dy);
       }
     }
-    Paint traco(Color cor, double w) => Paint()
+    final w = (larguraRua * .45).clamp(6.0, 16.0);
+    Paint traco(Color cor, double l) => Paint()
       ..color = cor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = w
+      ..strokeWidth = l
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(feito, traco(c.inkMuted.withValues(alpha: .5), 4));
+    canvas.drawPath(feito, traco(c.inkMuted.withValues(alpha: .45), w * .7));
     if (glow) {
       canvas.drawPath(
-        atual,
-        traco(c.navigation.withValues(alpha: .4), 14)
+        aFazer,
+        traco(c.navigation.withValues(alpha: .35), w + 10)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
       );
     }
-    canvas.drawPath(aFazer, traco(c.navigation, 4.5));
-    canvas.drawPath(atual, traco(c.navigation, 7));
+    canvas.drawPath(aFazer, traco(c.shadow, w + 4));
+    canvas.drawPath(aFazer, traco(c.navigation, w));
 
-    // 3. Pontos do piso, com ícone e nome.
+    // 4. Pontos (de pé, tamanho fixo). Nomes: paradas e rota primeiro;
+    // os demais só com zoom e sem sobrepor.
     final icones = {for (final l in dados.locais) l.pontoId: l.icone};
     final naRota = {
       for (final perna in estado.viagem.pernas)
         for (final p in perna.pontos) p.id,
     };
-    final todosOsNomes = zoom.value.getMaxScaleOnAxis() >= 1.8;
-    for (final p in noPiso.values) {
-      if (p.tipo == TipoPonto.corredor) continue;
+    final paradas = {for (final p in estado.viagem.paradas) p.id};
+    final pontos =
+        noPiso.values.where((p) => p.tipo != TipoPonto.corredor).toList()..sort(
+          (a, b) =>
+              _prioridade(a, naRota, paradas) - _prioridade(b, naRota, paradas),
+        );
+    final aqui = estado.pontoAtual;
+    final vocePiso = aqui.piso == piso;
+    if (vocePiso) {
+      // Reserva o espaço da seta para nenhum nome cobri-la.
+      _ocupado.add(Rect.fromCircle(center: cam.tela(voce), radius: 26));
+    }
+    final todosOsNomes = cam.k >= kPiso * 1.8;
+    for (final p in pontos) {
       final o = _p(p);
+      if (!Rect.fromLTWH(
+        -40,
+        -40,
+        size.width + 80,
+        size.height + 80,
+      ).contains(o)) {
+        continue;
+      }
       final destaque = naRota.contains(p.id);
+      canvas.drawCircle(o, 12, Paint()..color = destaque ? c.ink : c.surface);
       canvas.drawCircle(
         o,
-        9,
-        Paint()..color = destaque ? c.surface : c.background,
-      );
-      canvas.drawCircle(
-        o,
-        9,
+        12,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = destaque ? 2 : 1.2
-          ..color = destaque ? c.ink : c.mapLine,
+          ..strokeWidth = 1.5
+          ..color = destaque ? c.ink : c.border.withValues(alpha: .5),
       );
       final icone = p.tipo == TipoPonto.escada
           ? Icons.stairs_outlined
           : iconeDoLocal(icones[p.id] ?? '');
-      _icone(canvas, icone, o, 11, destaque ? c.ink : c.inkMuted);
-      // O ponto atual já tem a etiqueta "Você".
-      if (p.id == estado.pontoAtual.id) continue;
+      _icone(canvas, icone, o, 14, destaque ? c.background : c.inkMuted);
+      if (vocePiso && p.id == aqui.id) continue;
       if (!destaque && !todosOsNomes) continue;
-      _texto(
-        canvas,
-        p.nome,
-        o + const Offset(0, 15),
-        tamanho: destaque ? 8.5 : 7.5,
-        cor: destaque ? c.ink : c.inkMuted,
-        negrito: destaque,
-      );
+      _nome(canvas, p.nome, o + const Offset(0, 16), destaque);
     }
 
-    // 4. Trocas de piso da rota neste piso ("↑ 2º piso").
+    // 5. Trocas de piso à frente ("↑ 2º piso").
     for (final (p, rotulo) in trocas) {
-      _etiqueta(canvas, rotulo, _p(p) + const Offset(-36, -14), c.navigation);
+      _etiqueta(canvas, rotulo, _p(p) + const Offset(-40, -16), c.navigation);
     }
 
-    // 5. Paradas numeradas e destino final.
-    final paradas = estado.viagem.paradas;
-    for (final (i, p) in paradas.indexed) {
+    // 6. Paradas numeradas e destino final (alfinete).
+    for (final (i, p) in estado.viagem.paradas.indexed) {
       if (p.piso != piso) continue;
-      final o = _p(p) + const Offset(11, -11);
+      final o = _p(p) + const Offset(13, -15);
       final ok = i < estado.perna || (i == estado.perna && estado.naParada);
-      canvas.drawCircle(o, 9, Paint()..color = c.help);
+      canvas.drawCircle(o, 11, Paint()..color = c.help);
       canvas.drawCircle(
         o,
-        9,
+        11,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
           ..color = c.ink,
       );
-      if (i == paradas.length - 1) {
-        _icone(canvas, Icons.flag, o, 12, c.onAccent);
+      final ultima = i == estado.viagem.paradas.length - 1;
+      if (ultima) {
+        _icone(canvas, Icons.flag, o, 14, c.onAccent);
       } else if (ok) {
-        _icone(canvas, Icons.check, o, 12, c.onAccent);
+        _icone(canvas, Icons.check, o, 14, c.onAccent);
       } else {
-        _texto(
-          canvas,
-          '${i + 1}',
-          o,
-          tamanho: 10,
-          cor: c.onAccent,
-          negrito: true,
-          centroVertical: true,
-        );
+        _icone(canvas, null, o, 12, c.onAccent, texto: '${i + 1}');
       }
     }
 
-    // 6. Você está aqui: ponto rosa, seta da direção e pulso curto.
-    final aqui = estado.pontoAtual;
-    if (aqui.piso == piso) {
-      final o = _p(aqui);
-      final v = pulso.isAnimating ? pulso.value : 0.0;
-      if (v > 0) {
+    // 7. Você: halo, pulso curto ao chegar e seta de navegação.
+    if (vocePiso) {
+      final o = cam.tela(voce);
+      canvas.drawCircle(o, 24, Paint()..color = c.marker.withValues(alpha: .2));
+      if (pulso > 0) {
         canvas.drawCircle(
           o,
-          10 + 18 * v,
+          16 + 22 * pulso,
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = 3
-            ..color = c.marker.withValues(alpha: 1 - v),
+            ..color = c.marker.withValues(alpha: 1 - pulso),
         );
       }
-      final dir = estado.direcao;
-      if (dir != null) {
-        canvas.save();
-        canvas.translate(o.dx, o.dy);
-        canvas.rotate(dir * math.pi / 180);
-        canvas.drawPath(
-          Path()
-            ..moveTo(0, -22)
-            ..lineTo(-7, -11)
-            ..lineTo(7, -11)
-            ..close(),
-          Paint()..color = c.marker,
-        );
-        canvas.restore();
-      }
-      canvas.drawCircle(o, 9, Paint()..color = c.ink);
-      canvas.drawCircle(o, 6.5, Paint()..color = c.marker);
-      _etiqueta(canvas, 'Você', o + const Offset(0, 26), c.marker);
+      canvas.save();
+      canvas.translate(o.dx, o.dy);
+      canvas.rotate(rumo * math.pi / 180 + cam.rot);
+      final seta = Path()
+        ..moveTo(0, -17)
+        ..lineTo(12, 13)
+        ..lineTo(0, 6)
+        ..lineTo(-12, 13)
+        ..close();
+      canvas.drawPath(seta, Paint()..color = c.marker);
+      canvas.drawPath(
+        seta,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..strokeJoin = StrokeJoin.round
+          ..color = c.ink,
+      );
+      canvas.restore();
     }
   }
+
+  static int _prioridade(
+    PontoReferencia p,
+    Set<String> naRota,
+    Set<String> paradas,
+  ) => paradas.contains(p.id)
+      ? 0
+      : naRota.contains(p.id)
+      ? 1
+      : 2;
 
   String _seta(EtapaRota e) {
     final pisos = dados.pisos;
@@ -586,14 +841,22 @@ class _PlantaPainter extends CustomPainter {
         : '↓';
   }
 
-  void _icone(Canvas canvas, IconData i, Offset o, double tam, Color cor) {
+  void _icone(
+    Canvas canvas,
+    IconData? i,
+    Offset o,
+    double tam,
+    Color cor, {
+    String? texto,
+  }) {
     final tp = TextPainter(
       text: TextSpan(
-        text: String.fromCharCode(i.codePoint),
+        text: texto ?? String.fromCharCode(i!.codePoint),
         style: TextStyle(
-          fontFamily: i.fontFamily,
-          package: i.fontPackage,
+          fontFamily: texto == null ? i!.fontFamily : null,
+          package: texto == null ? i!.fontPackage : null,
           fontSize: tam,
+          fontWeight: texto == null ? null : FontWeight.w700,
           color: cor,
         ),
       ),
@@ -602,33 +865,35 @@ class _PlantaPainter extends CustomPainter {
     tp.paint(canvas, o - Offset(tp.width / 2, tp.height / 2));
   }
 
-  void _texto(
-    Canvas canvas,
-    String s,
-    Offset o, {
-    required double tamanho,
-    required Color cor,
-    bool negrito = false,
-    bool centroVertical = false,
-  }) {
+  /// Nome com fundo escuro, pulado se cobrir outro nome ou a seta.
+  void _nome(Canvas canvas, String s, Offset topo, bool destaque) {
     final tp = TextPainter(
       text: TextSpan(
         text: s,
         style: TextStyle(
-          fontSize: tamanho * textScale.clamp(1.0, 1.4),
+          fontSize: (destaque ? 12 : 11) * textScale.clamp(1.0, 1.4),
           height: 1.1,
-          fontWeight: negrito ? FontWeight.w700 : FontWeight.w400,
-          color: cor,
+          fontWeight: destaque ? FontWeight.w700 : FontWeight.w400,
+          color: destaque ? c.ink : c.inkMuted,
         ),
       ),
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
       maxLines: 2,
-    )..layout(maxWidth: 70);
-    tp.paint(
-      canvas,
-      Offset(o.dx - tp.width / 2, centroVertical ? o.dy - tp.height / 2 : o.dy),
+    )..layout(maxWidth: 96);
+    final r = Rect.fromLTWH(
+      topo.dx - tp.width / 2 - 4,
+      topo.dy - 1,
+      tp.width + 8,
+      tp.height + 2,
     );
+    if (_ocupado.any((o) => o.overlaps(r))) return;
+    _ocupado.add(r);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(r, const Radius.circular(5)),
+      Paint()..color = c.background.withValues(alpha: .82),
+    );
+    tp.paint(canvas, Offset(topo.dx - tp.width / 2, topo.dy));
   }
 
   void _etiqueta(Canvas canvas, String s, Offset o, Color fundo) {
@@ -636,7 +901,7 @@ class _PlantaPainter extends CustomPainter {
       text: TextSpan(
         text: s,
         style: TextStyle(
-          fontSize: 9 * textScale.clamp(1.0, 1.4),
+          fontSize: 11 * textScale.clamp(1.0, 1.4),
           fontWeight: FontWeight.w700,
           color: c.onAccent,
         ),
@@ -644,9 +909,10 @@ class _PlantaPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
     final r = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: o, width: tp.width + 10, height: tp.height + 4),
-      const Radius.circular(8),
+      Rect.fromCenter(center: o, width: tp.width + 12, height: tp.height + 6),
+      const Radius.circular(9),
     );
+    _ocupado.add(r.outerRect);
     canvas.drawRRect(r, Paint()..color = fundo);
     canvas.drawRRect(
       r,
@@ -659,10 +925,5 @@ class _PlantaPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_PlantaPainter old) =>
-      old.estado != estado ||
-      old.piso != piso ||
-      old.c != c ||
-      old.glow != glow ||
-      old.textScale != textScale;
+  bool shouldRepaint(_PlantaPainter old) => true;
 }

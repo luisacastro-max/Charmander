@@ -79,6 +79,34 @@ Funcionalidade: Navegar com paradas, bússola e mapa
     Quando chego ao 2º piso de elevador
     Então o mapa passa a mostrar o 2º piso automaticamente
 
+  # Modo GPS
+
+  Cenário: Instrução no estilo de banner de GPS
+    Quando a navegação está em andamento
+    Então vejo o ícone da manobra (seguir, virar, elevador, escada), a distância em metros
+    E a linha "Depois" com a manobra seguinte
+    E "Faltam … m · … min · chegada às HH:MM"
+
+  Cenário: O mapa segue e gira na direção da caminhada
+    Quando abro a aba "Mapa"
+    Então o mapa aproxima no meu ponto, com a seta "Você" no terço de baixo
+    E o mapa gira para a direção da caminhada ficar para cima
+    Quando simulo a chegada ao próximo beacon
+    Então a seta desliza até o novo ponto e o mapa gira para a próxima direção
+    E com movimento reduzido a seta pula direto, sem animação
+
+  Cenário: Norte do mapa para cima
+    Quando toco na bússola do mapa
+    Então o mapa para de girar e o norte do mapa fica para cima
+    Quando toco de novo
+    Então o mapa volta a girar na direção da caminhada
+
+  Cenário: Mapa solto e Recentralizar
+    Quando arrasto ou pinço o mapa, ou toco em "Ver a rota inteira"
+    Então o mapa para de me seguir e aparece "Recentralizar"
+    Quando toco em "Recentralizar" ou chego ao próximo beacon
+    Então o mapa volta a me seguir
+
   Cenário: Mapa acessível a leitores de tela (RNF04)
     Então o mapa tem uma descrição em texto com o piso, onde estou,
       os pontos da rota naquele piso e o próximo ponto

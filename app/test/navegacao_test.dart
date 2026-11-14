@@ -162,14 +162,36 @@ void main() {
     expect(find.bySemanticsLabel(RegExp('^Mapa do Térreo')), findsOneWidget);
     expect(find.text('Térreo (você)'), findsOneWidget);
 
-    await tocar(t, find.byTooltip('Aproximar o mapa'));
-    final viewer = t.widget<InteractiveViewer>(find.byType(InteractiveViewer));
+    // Modo GPS: segue você e gira na direção da caminhada.
     expect(
-      viewer.transformationController!.value.getMaxScaleOnAxis(),
-      greaterThan(1),
+      find.bySemanticsLabel(RegExp('gira na direção da caminhada')),
+      findsOneWidget,
     );
+    expect(find.text('Recentralizar'), findsNothing);
+    await tocar(t, find.byTooltip('Aproximar o mapa'));
     await tocar(t, find.byTooltip('Afastar o mapa'));
-    await tocar(t, find.byTooltip('Centralizar em você'));
+
+    // Bússola: alterna para "norte do mapa para cima".
+    await tocar(t, find.byTooltip('Deixar o norte do mapa para cima'));
+    expect(
+      find.bySemanticsLabel(RegExp('norte do mapa para cima')),
+      findsOneWidget,
+    );
+    await tocar(t, find.byTooltip('Girar o mapa na direção da caminhada'));
+
+    // Arrastar solta o mapa; "Recentralizar" volta a seguir.
+    await t.drag(
+      find.bySemanticsLabel(RegExp('^Mapa do')),
+      const Offset(60, 40),
+    );
+    await t.pumpAndSettle();
+    expect(find.text('Recentralizar'), findsOneWidget);
+    await tocar(t, find.text('Recentralizar'));
+    expect(find.text('Recentralizar'), findsNothing);
+
+    await tocar(t, find.byTooltip('Ver a rota inteira'));
+    expect(find.text('Recentralizar'), findsOneWidget);
+    await tocar(t, find.text('Recentralizar'));
 
     await tocar(t, find.widgetWithText(ChoiceChip, '2º piso'));
     expect(find.text('Vendo o 2º piso. Você está no Térreo.'), findsOneWidget);
