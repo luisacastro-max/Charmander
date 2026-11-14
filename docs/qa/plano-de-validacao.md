@@ -1,41 +1,45 @@
 # Plano de testes e validação
 
-## Automação existente
+Base publicada: edbc8e9, integrada à main por 4cb0ea1. Revisão documental: 14/11/2026.
 
-Execute `flutter analyze` e `flutter test` em app/.
+## Automação
+
+Executar em app/: `flutter analyze` e `flutter test`. Para cobertura opcional: `flutter test --coverage`.
 
 | Arquivo em app/test/ | Área |
 |---|---|
 | widget_test.dart | Boas-vindas, preferências, tema e semântica |
-| destino_test.dart | Busca, filtro e origem simulada |
-| navegacao_test.dart | Paradas, avanço, chegada e mapa |
-| data/dados_test.dart | Integridade de catálogo e conteúdos |
+| destino_test.dart | Busca, filtro e origem |
+| navegacao_test.dart | Paradas, avanço e mapa |
+| cartao_ajuda_test.dart | Frases traduzidas, respostas e frente a frente |
+| ajuda_test.dart | Pedido, revisão, estados e retorno ao percurso |
+| encontrar_test.dart | Cena fictícia, gestos e sinais |
+| data/dados_test.dart | Integridade dos JSON |
 | data/preferences_store_test.dart | Persistência e exclusão |
-| data/rotas_test.dart | Restrições, elevador, custos e etapas |
-| data/viagem_test.dart | Paradas, direção e estado de navegação |
+| data/rotas_test.dart | Restrições e cálculo |
+| data/viagem_test.dart | Paradas e estado de navegação |
 
-Arquivos .feature nesta pasta descrevem cenários BDD. Não há runner Gherkin configurado; a automação correspondente está nos testes Dart citados nos cabeçalhos.
+Os arquivos .feature são especificações BDD. Não há runner Gherkin configurado; testes Dart fazem a automação relacionada.
 
-## Validação manual necessária
+## Validação manual
 
-- Percorrer o fluxo com TalkBack e, quando disponível, VoiceOver.
-- Conferir foco, ordem de leitura, rótulos, anúncios e teclado no navegador.
-- Testar texto ampliado junto à escala do sistema em telas estreitas.
-- Conferir alto contraste e redução de estímulos sem perda de conteúdo.
-- Reabrir o app e confirmar restauração; apagar preferências e conferir nova abertura.
-- Demonstrar rota sem escadas até a Praça de Alimentação e incompatibilidade do Mezanino.
-- Adicionar, reordenar e remover paradas; conferir limite de cinco.
-- Conferir chegada intermediária e final.
-- Testar zoom, piso, rotação, visão da rota e recentralização.
-- Testar recursos locais sem conexão após disponibilizar o app; não presumir instalação web offline.
+- Usar TalkBack e, quando houver dispositivo, VoiceOver.
+- Conferir foco, ordem, rótulos, anúncios e teclado no navegador.
+- Testar fonte ampliada com escala do sistema em telas estreitas.
+- Conferir alto contraste e movimento reduzido.
+- Salvar, reabrir e apagar preferências.
+- Calcular rota sem escadas e demonstrar incompatibilidade do Mezanino.
+- Adicionar, reordenar e remover paradas; confirmar limite de cinco.
+- Avançar por pontos, conferir pisos, zoom e recentralização.
+- Selecionar frases, idioma do leitor, respostas e frente a frente.
+- Revisar local e pedido, avançar estados, cancelar e retomar percurso.
+- Testar último metro com cena e direção simuladas, sem pressupor câmera real.
+- Conferir recursos locais sem conexão depois de disponibilizar o app, sem presumir instalação web offline.
 
-## Evidências
+## Evidências e resultado desta revisão
 
-Registrar commit, data, responsável, dispositivo/sistema, versões Flutter/Dart, comandos, resultados e evidências. Capturas antigas são histórico, não validação da versão atual.
+Registrar data, commit, responsável, dispositivo, sistema, versões Flutter/Dart, comandos e resultados. Capturas históricas não comprovam o build atual. Cobertura de linhas não equivale a requisitos integralmente atendidos.
 
-A revisão documental não possui nova execução aprovada. Na análise anterior, o SDK bloqueou acesso a C:\flutter\bin\cache\lockfile. Resultados anteriores não devem ser tratados como aprovação desta revisão.
+Esta revisão validou documentação e links, sem nova execução aprovada do Flutter. Na análise anterior, houve bloqueio do lockfile do SDK. Testes de voz e i18n encontrados localmente não integram a base publicada documentada.
 
-## Critério de entrega
-
-Concluir análise estática, testes pertinentes e fluxo manual no aparelho da apresentação. Registrar falhas e limitações. Não declarar certificação ou acessibilidade integral apenas com testes de widgets.
-
+Antes da apresentação, executar o fluxo no aparelho escolhido e registrar falhas. Não declarar certificação ou acessibilidade integral apenas com testes de widgets.
