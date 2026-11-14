@@ -1,35 +1,26 @@
 # Acessa+ — Acessibilidade que conecta pessoas
 
-Aplicativo da equipe **Charmander**, desenvolvido para o hackathon 2026. Reúne comunicação acessível, orientação dentro de um shopping demonstrativo e solicitação de ajuda.
+Projeto da equipe **Charmander** para o HackaRun 2026: comunicação acessível, navegação em shopping demonstrativo e ajuda ao visitante.
 
-## Entrega para avaliação
+## Entrega final
 
-**Comece pelo [guia de avaliação](docs/entrega/guia-avaliacao.md)** e pela [documentação técnica consolidada](docs/documentacao-tecnica.md).
+**[Acesse os quatro itens da entrega final](ENTREGA_FINAL.md).**
 
-| Material | Localização |
+| Item | Material |
 |---|---|
-| Explicação do projeto, arquitetura, tecnologias e funcionamento | [Documentação técnica](docs/documentacao-tecnica.md) |
-| Código-fonte Flutter | [app/lib](app/lib) |
-| Assets e dados fictícios | [app/assets](app/assets) |
-| Testes automatizados | [app/test](app/test) |
-| Instalação, execução e build | [Guia de execução](docs/desenvolvimento/execucao.md) |
-| Índice dos documentos | [docs/README.md](docs/README.md) |
-| Protótipo HTML de referência | [prototipo/index.html](prototipo/index.html) |
+| MVP na Vercel | Link a ser informado pela equipe |
+| Código-fonte | [app/lib](app/lib/) |
+| Documentação técnica | [Projeto, arquitetura, tecnologias e funcionamento](docs/documentacao-tecnica.md) |
+| Instalação e execução | [Guia reproduzível](docs/desenvolvimento/execucao.md) |
+| Testes e evidências | [Testes](app/test/) e [validação da entrega](docs/qa/validacao-entrega-final.md) |
 
-## O que o aplicativo oferece
+## Funcionalidades
 
-- Preferências combináveis, sem cadastro ou diagnóstico obrigatório.
-- Texto ampliado, alto contraste e redução de movimento.
-- Busca de destinos, origem simulada e planejamento de até cinco paradas.
-- Rotas com restrição de escadas e preferências de elevador e movimento.
-- Navegação por pontos simulados, com instruções textuais e mapa interativo.
-- Cartão de ajuda com frases em português, inglês e espanhol, respostas por toque e modo frente a frente.
-- Ajuda+ com pedido, revisão, acompanhamento demonstrativo e cancelamento.
-- “Último metro”: procura de objetos em uma cena fictícia, com sinais visuais e hápticos.
+Preferências locais, contraste e texto ampliado; pesquisa de destinos; rotas com até cinco paradas; mapa e avanço por beacons simulados; cartão de comunicação e respostas; Ajuda+ com revisão/acompanhamento; idiomas pt/en/es e síntese de voz conforme suporte; mapa colaborativo de ocorrências; último metro em cena fictícia.
+
+A interface indica quando os alertas estão simulados localmente. Compartilhamento entre navegadores exige API: o servidor de demonstração está incluído.
 
 ## Executar
-
-Requer Flutter com Dart compatível com `^3.13.4`, Git e Chrome ou Android configurado.
 
 ```powershell
 git clone https://github.com/luisacastro-max/Charmander.git
@@ -38,26 +29,27 @@ flutter pub get
 flutter run -d chrome
 ```
 
-Para testar: `flutter analyze` e `flutter test` em `app/`. Para build web: `flutter build web --release`. Instruções completas e limitações de ambiente estão no guia de execução.
-
-## Versão documentada
-
-Revisão de 14/11/2026 sobre o código `edbc8e9`, incorporado à main por `4cb0ea1`. A presença no código não representa homologação nem certificação de acessibilidade.
-
-Síntese de voz com flutter_tts, traduções ampliadas da interface e alterações visuais estavam em desenvolvimento local na revisão. Não fazem parte da versão publicada usada como referência e não são pré-requisitos desta entrega.
+Ambiente identificado: Flutter 3.47.5 / Dart 3.13.4. Requer Chrome ou ambiente Android. [Configuração completa e modo compartilhado](docs/desenvolvimento/execucao.md).
 
 ## Organização
 
 | Diretório | Responsabilidade |
 |---|---|
-| app/ | Aplicativo, plataformas, dependências e testes |
-| docs/ | Documentação, propostas originais e evidências |
+| app/lib/features/ | Telas por funcionalidade |
+| app/lib/domain/ | Modelos e regras |
+| app/lib/data/ | Repositórios e dados |
+| app/lib/core/ | Componentes e voz |
+| app/lib/app/ | Aplicação, tema, rotas e traduções |
+| app/assets/ | JSON e fontes |
+| app/test/ | Testes automatizados |
+| .claude/serve-web.js e .claude/api-ocorrencias.js | Servidor de demonstração e API |
+| docs/ | [Documentação e propostas originais](docs/README.md) |
 | prototipo/ | Referência HTML independente do Flutter |
 
-Consulte o [guia de contribuição](CONTRIBUTING.md) para branches e pull requests.
+Código-base desta entrega: 0500d9d, integrado à main por 54786c3. Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para colaboração.
 
 ## Limites
 
-Shopping, distâncias, BLE e atendimento são demonstrativos. A aparência de GPS não implica localização física. “Último metro” não acessa câmera nem reconhece objetos reais. Não há envio de pedidos a funcionários, backend, banco remoto ou tradução automática de Libras.
+Shopping, BLE, distâncias, assistência e cena do último metro são demonstrativos. Não há câmera real, OCR, localização física, atendimento acionado ou tradução automática de Libras. API Node é demonstrativa, sem autenticação ou moderação. Spring Boot/PostgreSQL são evolução futura.
 
-Home completa, conversa livre, voz para texto, emergência e painel permanecem evoluções ou demonstrações do HTML. Os Word são propostas históricas; o [estado atual](docs/requisitos/estado-atual.md) identifica o escopo publicado.
+O [guia de avaliação](docs/entrega/guia-avaliacao.md) apresenta a jornada. O HTML não comprova funcionalidades do Flutter.

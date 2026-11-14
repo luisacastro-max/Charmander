@@ -19,3 +19,7 @@ Thumbs.db
 
 # Dados do servidor de demonstração de alertas (gerados em execução)
 /.claude/dados/
+
+# Ferramentas e revisão locais; não integram a entrega
+/.flutter-publish-sdk/
+/.video_review/

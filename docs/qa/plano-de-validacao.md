@@ -1,6 +1,6 @@
 # Plano de testes e validação
 
-Base publicada: edbc8e9, integrada à main por 4cb0ea1. Revisão documental: 14/11/2026.
+Base publicada: 0500d9d, integrado à main por 54786c3. Revisão documental: 14/11/2026.
 
 ## Automação
 
@@ -69,6 +69,6 @@ Expiração (horas) não é prática de validar manualmente: conferir por testes
 
 Registrar data, commit, responsável, dispositivo, sistema, versões Flutter/Dart, comandos e resultados. Capturas históricas não comprovam o build atual. Cobertura de linhas não equivale a requisitos integralmente atendidos.
 
-Esta revisão validou documentação e links, sem nova execução aprovada do Flutter. Na análise anterior, houve bloqueio do lockfile do SDK. Testes de voz e i18n encontrados localmente não integram a base publicada documentada.
+A revisão final inclui análise estática e tentativas de execução registradas em [validação da entrega](validacao-entrega-final.md). Voz e i18n agora integram a base publicada.
 
 Antes da apresentação, executar o fluxo no aparelho escolhido e registrar falhas. Não declarar certificação ou acessibilidade integral apenas com testes de widgets.

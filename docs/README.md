@@ -2,10 +2,13 @@
 
 ## Entrada para avaliação
 
+- [Entrega final — quatro itens](../ENTREGA_FINAL.md)
+- [Validação da entrega](qa/validacao-entrega-final.md)
+
 - [Guia de avaliação](entrega/guia-avaliacao.md): materiais, código-fonte e jornada.
 - [Documentação técnica consolidada](documentacao-tecnica.md): projeto, arquitetura, tecnologias, funcionamento e limites.
 
-Revisão de 14/11/2026 sobre edbc8e9, integrado à main por 4cb0ea1. Alterações locais de voz, tradução e interface não são automaticamente entregas publicadas.
+Revisão de 14/11/2026 sobre 0500d9d, integrado à main por 54786c3. Voz, i18n e alertas integram esta revisão publicada.
 
 ## Referências atuais
 

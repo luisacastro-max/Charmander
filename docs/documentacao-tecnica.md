@@ -1,173 +1,120 @@
 # Documentação técnica — Acessa+
 
-**Equipe:** Charmander  
-**Revisão:** 14/11/2026  
-**Código de referência:** edbc8e9, incorporado à main por 4cb0ea1  
-**Natureza:** MVP demonstrativo de hackathon
+Equipe Charmander · HackaRun 2026 · Revisão 14/11/2026  
+Base: 0500d9d, integrada à main por 54786c3.
 
-## 1. Projeto e problema
+## Projeto e objetivo
 
-O Acessa+ busca reduzir barreiras de comunicação e orientação em shopping centers. Placas, mapas e atendimento exclusivamente verbal podem dificultar a visita de pessoas cegas, com baixa visão, surdas, com dificuldades de fala, mobilidade reduzida, sensibilidades sensoriais, idosos e estrangeiros.
+O Acessa+ reduz barreiras para visitantes de shopping centers que precisam de outras formas de ler, se comunicar, se orientar ou solicitar ajuda. Destina-se a pessoas cegas, com baixa visão, surdas, com dificuldades de fala, mobilidade reduzida, sensibilidades sensoriais, idosos e estrangeiros.
 
-A proposta permite que cada visitante escolha recursos úteis sem declarar deficiência ou diagnóstico. A experiência se organiza em três pilares: Comunicação Universal, Navegação Viva e Ajuda+.
+O visitante combina recursos sem declarar diagnóstico. Os pilares são Comunicação Universal, Navegação Viva e Ajuda+. O MVP usa um shopping fictício e informa as simulações.
 
-## 2. Objetivo e escopo entregue
+## Tecnologias
 
-| Pilar ou módulo | Funcionamento no MVP |
-|---|---|
-| Preferências | Ajustes de leitura, contraste, movimento, comunicação e mobilidade, salvos no aparelho |
-| Navegação Viva | Busca, rotas por pontos cadastrados, paradas e avanço por eventos BLE simulados |
-| Comunicação Universal | Cartão de frases previamente traduzidas, respostas por toque e modo frente a frente |
-| Ajuda+ | Seleção da necessidade, localização, forma de atendimento, revisão e estados simulados |
-| Último metro | Exploração de uma cena fictícia para localizar objetos e demonstrar sinais visuais e hápticos |
-
-O cartão não equivale a um chat livre. A assistência não envia mensagens para uma equipe real. A procura de objetos não utiliza câmera ou modelo de visão computacional.
-
-## 3. Tecnologias utilizadas
-
-Versões abaixo são restrições declaradas no pubspec da base publicada, não afirmações sobre a versão instalada em todos os ambientes.
-
-| Tecnologia | Versão ou situação | Papel |
+| Tecnologia | Versão declarada ou identificada | Função |
 |---|---|---|
-| Flutter | Versão do framework não fixada no repositório | Interface compartilhada e integração com plataformas |
-| Dart | SDK ^3.13.4 | Modelos, regras, estado e telas |
-| Material e Cupertino Icons | Flutter / cupertino_icons ^1.0.8 | Controles, navegação e ícones |
-| shared_preferences | ^2.5.6 | Persistência local de idioma e preferências |
-| JSON | Assets empacotados | Catálogo, trechos, frases e sugestões |
-| Flutter Test | SDK Flutter | Testes unitários e de widgets |
-| flutter_lints | ^6.0.0 | Análise estática |
-| Fredoka / Atkinson Hyperlegible | Fontes locais, licenças em assets/fonts | Títulos e leitura |
-| Git / GitHub | Repositório público | Histórico, branches e avaliação do fonte |
-| HTML, CSS e JavaScript | Protótipo separado | Referência inicial de fluxos |
-| Trello | Organização documentada | Planejamento e acompanhamento da equipe |
+| Flutter | 3.47.5 identificado no ambiente | Interface Android, iOS e web |
+| Dart | 3.13.4; restrição ^3.13.4 | Regras, modelos e telas |
+| shared_preferences | ^2.5.6 | Preferências e idioma locais |
+| flutter_tts | ^4.2.5 | Síntese de voz conforme dispositivo |
+| http | ^1.5.0 | API de ocorrências |
+| cupertino_icons | ^1.0.8 | Ícones |
+| flutter_test / flutter_lints | SDK / ^6.0.0 | Testes e análise |
+| JSON | Assets e arquivo do servidor | Catálogo, frases, percursos e ocorrências |
+| Node.js | 18+ para servidor e testes | API demonstrativa e arquivos web |
+| Fredoka / Atkinson Hyperlegible | Empacotadas com licenças | Tipografia |
+| Git / GitHub | Repositório público | Histórico, fonte e entrega |
+| Vercel | Configuração estática incluída | Hospedagem do build web |
+| Trello | Organização descrita nos documentos originais | Gestão da equipe |
 
-O projeto possui diretórios Android, iOS e web. Android é a prioridade móvel da proposta; a existência do diretório iOS não comprova teste nessa plataforma. VS Code, Android Studio e Figma são ferramentas previstas nos documentos originais, não dependências de execução.
+pubspec.lock registra a resolução das dependências. Diretórios de plataforma não comprovam teste em todos os sistemas. Spring Boot e PostgreSQL são evoluções futuras; a API existente é Node demonstrativa.
 
-Spring Boot e PostgreSQL são possibilidades futuras. Não existe API própria nem banco remoto no MVP publicado.
+## Arquitetura
 
-## 4. Arquitetura
-
-A aplicação adota organização por funcionalidades, com componentes compartilhados, modelos, regras e repositórios. Não há servidor na arquitetura atual.
+Organização por funcionalidades, modelos/regras, repositórios e componentes compartilhados.
 
 ```mermaid
 flowchart TD
-    A["Telas por funcionalidade"] --> B["Modelos e regras"]
-    A --> C["Repositórios e dados"]
+    A["Telas Flutter"] --> B["Regras e modelos"]
+    A --> C["Repositórios"]
     C --> D["Assets JSON"]
-    A --> E["Preferências e tema"]
-    E --> F["Armazenamento local"]
+    C --> E["API Node ou simulação"]
+    A --> F["Preferências, tema e voz"]
 ```
 
-A figura resume relações de uso, não um isolamento completo de camadas: alguns modelos ainda importam o enum de idioma da feature de preferências.
-
-| Diretório | Conteúdo e responsabilidade |
+| Diretório | Responsabilidade |
 |---|---|
-| app/lib/app/ | Aplicação, rotas, tema, tokens e política de movimento |
-| app/lib/core/widgets/ | Botões, cartões, identidade e componentes compartilhados |
-| app/lib/domain/models/ | Pontos, locais, trechos e conteúdos de comunicação |
-| app/lib/domain/rules/ | Rotas, viagens, procura de objetos e assistência |
-| app/lib/data/repositories/ | Contratos de acesso e leitura dos JSON |
-| app/lib/data/shopping_data.dart | Carga do shopping e disponibilização por DadosScope |
-| app/lib/features/welcome_preferences/ | Boas-vindas, ajustes e persistência |
-| app/lib/features/destino/ | Pesquisa e planejamento com paradas |
-| app/lib/features/navegacao/ | Orientação por etapas e mapa |
-| app/lib/features/comunicacao/ | Cartão de ajuda e interações bilíngues |
-| app/lib/features/ajuda/ | Formulário, revisão e acompanhamento |
-| app/lib/features/ultimo_metro/ | Cena e procura demonstrativa |
-| app/test/ | Testes de regras, dados e widgets |
+| app/lib/app/ | Aplicação, rotas, tema e i18n |
+| app/lib/core/ | Widgets e síntese de voz |
+| app/lib/domain/ | Modelos, rotas, viagens, procura e ocorrências |
+| app/lib/data/ | JSON, contratos e clientes HTTP/simulados |
+| app/lib/features/ | Preferências, destino, navegação, comunicação, ajuda, último metro e alertas |
+| app/assets/ | Dados fictícios e fontes |
+| app/test/ | Testes unitários e de widgets |
+| .claude/serve-web.js | Build web e API na mesma origem |
+| .claude/api-ocorrencias.js | API demonstrativa |
+| docs/ | Documentação e propostas históricas |
 
-A documentação detalhada está em [arquitetura atual](arquitetura/arquitetura-atual.md).
+PreferencesController e AlertasController usam ChangeNotifier; escopos expõem estado e dados às telas. Interações de tela mantêm estado local. Não há Provider, Riverpod ou Bloc.
 
-## 5. Inicialização e gerenciamento de estado
+## Inicialização e funcionamento
 
-O main inicializa o Flutter, restaura preferências e carrega os dados. AcessaApp aplica tema, escala de texto e escopos de acesso ao estado.
+main restaura preferências, carrega o shopping e escolhe o repositório de alertas. O endereço vem de OCORRENCIAS_API; sem configuração, a web tenta /api/ocorrencias na mesma origem. Sem resposta saudável, usa simulação local identificada.
 
-PreferencesController utiliza ChangeNotifier e InheritedNotifier. DadosScope distribui o shopping já carregado. Busca, paradas, pedido e telas de navegação usam estado local; não foi adotado Provider, Riverpod ou Bloc.
+O visitante ajusta preferências, busca destino e planeja até cinco paradas. Cartões de comunicação e Ajuda+ também têm acesso no início e no percurso.
 
-EstadoNavegacao representa o progresso de forma imutável. O pedido de ajuda usa PedidoAjuda, com categoria, local, preferência, detalhes e estado. Não há restauração persistente de percurso ou pedido após fechar o app.
+### Rotas e mapa
 
-## 6. Funcionamento dos fluxos
+Dijkstra calcula menor custo em um grafo com 31 pontos, 22 locais e 36 trechos. Sem escadas remove trechos marcados. Preferência por elevador e redução de estímulos penalizam custos, sem garantia absoluta de exclusão. Paradas seguem a ordem escolhida, não uma otimização automática.
 
-### 6.1 Preferências e destino
+A distância exibida soma metros cadastrados. O tempo usa 50 metros/minuto com mínimo de um minuto. Ponto atual e direção são simulados; não há GPS indoor, sensor magnético ou BLE físico.
 
-O visitante pode abrir as preferências, combinar recursos e continuar para a busca. Comunicação Universal e Ajuda+ também têm atalhos na tela inicial.
+Chegadas avançam pelo botão de simulação. Paradas intermediárias aguardam confirmação. Mapa oferece recursos de visualização e acompanha o piso do percurso.
 
-Na busca, o visitante consulta locais, filtra resultados e altera o ponto atual simulado. A origem representa um ponto cadastrado, não a posição física do aparelho.
+### Comunicação e idiomas
 
-### 6.2 Cálculo e planejamento da rota
+Cartões usam frases pré-traduzidas em pt/en/es, idioma de quem lê, respostas por toque e frente a frente. Isso não é chat livre nem tradução automática.
 
-O catálogo contém 31 pontos e 22 locais; 36 trechos conectam pontos em três níveis fictícios. Dijkstra encontra o menor custo no grafo bidirecional.
+A camada i18n traduz textos cadastrados e modelos variáveis; texto sem tradução retorna em português. Voz usa flutter_tts e depende do motor do dispositivo/navegador. Orientação automática respeita preferência; ação explícita “Ouvir” pode solicitar fala diretamente. Texto permanece disponível.
 
-“Sem escadas” remove trechos marcados com degraus. Preferir elevador multiplica por seis o custo de trocas de piso por escada ou escada rolante. Redução de estímulos multiplica por três o custo de trechos cadastrados com movimento alto. As preferências por custo não garantem exclusão absoluta desses trechos.
+### Ajuda+
 
-A interface permite até cinco paradas, com reordenação e remoção. O motor respeita a ordem escolhida; não otimiza automaticamente a sequência. Caso uma perna seja incompatível, informa qual parada falhou sem retirar as restrições do visitante.
+Categoria, localização confirmável, preferência de atendimento e detalhes opcionais antecedem revisão e envio demonstrativo. Estados: registrada, atribuída, apoio a caminho e concluída, com cancelamento enquanto permitido. Nenhum funcionário real é acionado.
 
-Distâncias exibidas são a soma dos metros cadastrados, não do custo ponderado. Tempo estimado: 50 metros por minuto, com mínimo de um minuto.
+### Último metro
 
-### 6.3 Navegação Viva
+Cena fixa e direção controlada simulam localizar objetos por sinais visuais e hápticos. Não existe captura de câmera, OCR ou reconhecimento real de objetos.
 
-Após iniciar, são apresentados etapa, ponto atual, progresso e distância restante. O visitante aciona “Simular chegada” para representar um evento de beacon. Uma parada intermediária aguarda confirmação antes da próxima perna.
+### Mapa colaborativo
 
-Mapa e seta usam coordenadas ilustrativas. Rotação, zoom, piso e recentralização ajudam a visualizar o percurso, mas não correspondem a GPS indoor ou magnetômetro.
+Relatos incluem piso, posição e categoria, como piso molhado, obstáculo, passagem interditada ou elevador parado. É possível confirmar permanência e votar em resolução. Expiração, duplicidade e impacto nos trechos são regras do domínio.
 
-### 6.4 Cartão de comunicação
+Alertas ativos afetam as rotas conforme categoria/proximidade e restrições, preservando escolhas de mobilidade. Não equivalem a informação oficialmente validada pelo shopping.
 
-O visitante seleciona uma frase e o idioma de quem vai ler. O cartão apresenta o texto e permite respostas por toque. O modo frente a frente gira a metade destinada à outra pessoa.
+Em modo HTTP, sessões consultam a API a cada três segundos. Não há WebSocket. Em simulação, os dados não são compartilhados entre aparelhos.
 
-Frases em português, inglês e espanhol são pré-traduzidas. Não há tradução livre automática. Quando existe destino, ele pode preencher uma frase contextual. Traduções precisam de revisão humana antes de uso operacional.
+## Contrato da API demonstrativa
 
-### 6.5 Ajuda+
-
-O visitante seleciona uma categoria, confirma ou corrige o local, indica forma de atendimento e detalhes opcionais. Antes do envio demonstrativo, revisa os dados.
-
-Estados: solicitação registrada, atendimento atribuído, apoio a caminho e concluída. Cancelamento é permitido enquanto o pedido está em andamento. As transições são controladas pela demonstração; nenhum funcionário é acionado. Quando aberto no percurso, o fluxo permite retornar à navegação preservada na pilha de telas.
-
-### 6.6 Último metro
-
-Ao chegar, o app oferece uma demonstração de procura de objetos. Um controle simula a direção; uma cena fixa determina quais objetos estariam no campo de visão. Indicadores e pulsos hápticos mudam conforme o alvo se aproxima do centro.
-
-Não existe captura de imagem, OCR, detector real ou garantia de orientação física segura.
-
-## 7. Dados, armazenamento e privacidade
-
-| Dado | Local | Persistência |
+| Método | Caminho | Finalidade |
 |---|---|---|
-| Pontos e locais | assets/data/catalogo.json | Empacotado no aplicativo |
-| Trechos | assets/data/percursos.json | Empacotado no aplicativo |
-| Frases e cartões | assets/data/comunicacao.json | Empacotado no aplicativo |
-| Idioma e preferências | shared_preferences | Local, até exclusão |
-| Percurso e pedido | Memória da sessão | Não restaurados ao reabrir |
-| Cena de objetos | Regras de procura | Fictícia, definida no código |
+| GET | /api/ocorrencias/saude | Saúde |
+| GET | /api/ocorrencias?shopping=demo | Lista |
+| POST | /api/ocorrencias | Registrar ou identificar duplicidade |
+| POST | /api/ocorrencias/{id}/confirmar | Confirmar permanência |
+| POST | /api/ocorrencias/{id}/resolver | Votar em resolução |
 
-Não há cadastro obrigatório, backend de usuários ou envio do pedido para fora do aparelho. Preferências representam escolhas de recursos. Campos livres podem conter texto informado pelo visitante e devem ser usados com dados fictícios durante a demonstração.
+X-Sessao identifica uma sessão para controle de votos, sem autenticar uma pessoa. Respostas usam ocorrencia/ocorrencias; erros têm campo erro. O código do servidor é a referência completa de validações e limites.
 
-Informação não cadastrada aparece como “Não informado”, sem presumir acessibilidade. Consulte o [dicionário de dados](dados/dicionario-de-dados.md).
+Servidor salva .claude/dados/ocorrencias.json, fora do Git. Não há autenticação, moderação ou arquitetura de produção; não deve ser exposto como serviço operacional.
 
-## 8. Execução e avaliação do fonte
+## Dados e privacidade
 
-```powershell
-git clone https://github.com/luisacastro-max/Charmander.git
-cd Charmander/app
-flutter pub get
-flutter run -d chrome
-```
+Catálogo, trechos e frases são assets. Preferências/idioma persistem no dispositivo; percurso e pedido de ajuda ficam em memória. Ocorrências compartilhadas vão ao servidor configurado. Portanto, a afirmação de que “nada sai do dispositivo” não se aplica aos relatos em modo compartilhado.
 
-Para Android: executar flutter devices e usar flutter run -d com o identificador retornado. Para web de produção, executar flutter build web --release e servir app/build/web por HTTP.
+Não há cadastro obrigatório. Use somente dados fictícios na demonstração e evite informações pessoais em descrições. Dado ausente não comprova acessibilidade.
 
-Dependências estão em app/pubspec.yaml, com resolução versionada em app/pubspec.lock. Não são necessárias chaves de API ou servidor de banco para o MVP documentado.
+## Execução, qualidade e limites
 
-## 9. Qualidade e testes
+Consulte [instalação e execução](desenvolvimento/execucao.md), [entrega final](../ENTREGA_FINAL.md) e [resultados de validação](qa/validacao-entrega-final.md).
 
-Executar flutter analyze e flutter test em app/. Os testes cobrem dados, preferências, rotas, viagens, destino, navegação, cartão, assistência e procura demonstrativa.
-
-Arquivos .feature registram cenários BDD, mas não há runner Gherkin configurado. Testes de widgets e semântica não substituem uso com TalkBack/VoiceOver.
-
-Esta revisão validou organização e documentação; não obteve nova execução aprovada do app. Na análise anterior, o ambiente bloqueou o lockfile do SDK. O [plano de validação](qa/plano-de-validacao.md) informa como registrar evidências sem presumir aprovação.
-
-## 10. Limitações e evolução
-
-Home completa, conversa livre, voz para texto, barreiras com rota alternativa, emergência e painel ainda requerem evolução no Flutter. OCR continua uma decisão pendente; “último metro” simulado não implementa OCR.
-
-Síntese de voz com flutter_tts e internacionalização ampliada estavam em alterações locais não publicadas na base documentada. A cobertura de idioma, disponibilidade de vozes e suporte por dispositivo precisam de validação antes de apresentação como entrega.
-
-Para operação real, será necessário validar dados, acessibilidade, infraestrutura BLE, integração com atendimento e tratamento de dados. O código demonstrativo não comprova segurança de navegação em um shopping real.
+O build estático não cria a API Node; sem serviço separado, mantém modo local. Voz varia por plataforma. Câmera/OCR, Libras automática, equipe real e localização física não estão implementados. Compatibilidade assistiva requer avaliação com pessoas usuárias e tecnologias assistivas; não há certificação declarada.
