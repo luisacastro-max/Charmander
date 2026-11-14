@@ -5,6 +5,12 @@
 **Revisão:** 14/11/2026  
 **Código do MVP:** 0500d9d, integrado à main por 54786c3
 
+## Resumo para os avaliadores
+
+**[Baixar o resumo do projeto em PDF — uma página](docs/entrega/Acessa_Plus_Resumo_Avaliadores.pdf)**
+
+Documento em tópicos para conhecer o problema, o público, a solução, as funcionalidades e os limites do MVP antes da apresentação.
+
 ## Materiais exigidos
 
 | Item da entrega | Material disponível |
