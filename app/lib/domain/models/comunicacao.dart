@@ -46,9 +46,11 @@ class FraseTraduzida {
     required this.pt,
     required this.en,
     required this.es,
+    this.icone,
   });
 
   final String id;
+  final String? icone;
   final String pt;
   final String en;
   final String es;
@@ -64,6 +66,7 @@ class FraseTraduzida {
     pt: j['pt'] as String,
     en: j['en'] as String,
     es: j['es'] as String,
+    icone: j['icone'] as String?,
   );
 }
 

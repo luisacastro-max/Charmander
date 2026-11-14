@@ -21,4 +21,10 @@ abstract interface class ComunicacaoRepository {
   Future<List<CategoriaMensagens>> mensagensRapidas();
   Future<List<FraseTraduzida>> frasesTraduzidas();
   Future<List<SugestoesDoPonto>> sugestoesPorPonto();
+
+  /// Cartão de ajuda: frases para mostrar a outra pessoa, em 3 idiomas.
+  Future<List<FraseTraduzida>> cartoesAjuda();
+
+  /// Respostas que a outra pessoa toca no cartão de ajuda.
+  Future<List<FraseTraduzida>> respostasRapidas();
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../app/routes.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/tokens.dart';
 import '../../core/widgets/brand_logo.dart';
@@ -10,6 +11,9 @@ import '../../core/widgets/sticker_card.dart';
 import '../../data/shopping_data.dart';
 import '../../domain/rules/informacao.dart';
 import '../../domain/rules/viagem.dart';
+import '../ajuda/ajuda_screen.dart';
+import '../comunicacao/cartao_ajuda_screen.dart';
+import '../ultimo_metro/encontrar_screen.dart';
 import 'bussola.dart';
 import 'mapa_interativo.dart';
 
@@ -88,6 +92,15 @@ class _NavegacaoScreenState extends State<NavegacaoScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Cartão de ajuda',
+            icon: const Icon(Icons.front_hand_outlined),
+            onPressed: () => Navigator.of(context).push(
+              acessaRoute<void>(CartaoAjudaScreen(destino: e.paradaAtual.nome)),
+            ),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -219,6 +232,24 @@ class _NavegacaoScreenState extends State<NavegacaoScreen> {
                   '${e.proximoPonto!.beacon} sozinho ao chegar perto.',
             ),
           ],
+          const SizedBox(height: AcessaSpacing.lg),
+          // Ajuda+ durante o percurso, já com o ponto atual (RF43).
+          StickerButton(
+            label: 'Pedir ajuda',
+            icon: Icons.volunteer_activism_outlined,
+            kind: StickerButtonKind.secondary,
+            semanticHint: 'Abre o Ajuda+ com a sua localização atual',
+            onPressed: () => Navigator.of(context).push(
+              acessaRoute<void>(
+                AjudaScreen(
+                  pontoId: e.pontoAtual.id,
+                  destino: e.paradaAtual.nome,
+                  dados: widget.dados,
+                  durantePercurso: true,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -463,6 +494,18 @@ class _CartaoChegada extends StatelessWidget {
             style: text.titleMedium?.copyWith(color: fg),
           ),
           const SizedBox(height: AcessaSpacing.md),
+          // Último metro: o mapa trouxe até aqui; a câmera acha a porta,
+          // o balcão, uma cadeira...
+          StickerButton(
+            label: 'Encontrar com a câmera',
+            icon: Icons.photo_camera_outlined,
+            kind: StickerButtonKind.secondary,
+            semanticHint: 'Ajuda a achar porta, balcão ou cadeira por perto',
+            onPressed: () =>
+                Navigator.of(context)
+                    .push(acessaRoute<void>(const EncontrarScreen())),
+          ),
+          const SizedBox(height: AcessaSpacing.sm),
           StickerButton(
             label: 'Escolher novo destino',
             icon: Icons.search,

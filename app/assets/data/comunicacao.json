@@ -242,5 +242,101 @@
         }
       ]
     }
+  ],
+  "cartoesAjuda": [
+    {
+      "id": "A01",
+      "icone": "levar",
+      "pt": "Pode me levar até {destino}?",
+      "en": "Can you take me to {destino}?",
+      "es": "¿Puede llevarme a {destino}?"
+    },
+    {
+      "id": "A02",
+      "icone": "ajuda",
+      "pt": "Olá, preciso de ajuda.",
+      "en": "Hello, I need help.",
+      "es": "Hola, necesito ayuda."
+    },
+    {
+      "id": "A03",
+      "icone": "ler",
+      "pt": "Não enxergo bem. Pode ler isto para mim?",
+      "en": "I can't see well. Could you read this for me?",
+      "es": "No veo bien. ¿Puede leerme esto?"
+    },
+    {
+      "id": "A04",
+      "icone": "escrita",
+      "pt": "Sou surdo(a). Pode escrever para mim?",
+      "en": "I am deaf. Could you write it down for me?",
+      "es": "Soy sordo(a). ¿Puede escribírmelo?"
+    },
+    {
+      "id": "A05",
+      "icone": "banheiro",
+      "pt": "Onde fica o banheiro acessível?",
+      "en": "Where is the accessible restroom?",
+      "es": "¿Dónde está el baño accesible?"
+    },
+    {
+      "id": "A06",
+      "icone": "elevador",
+      "pt": "Preciso de um elevador.",
+      "en": "I need an elevator.",
+      "es": "Necesito un ascensor."
+    },
+    {
+      "id": "A07",
+      "icone": "tranquilo",
+      "pt": "Preciso de um lugar tranquilo.",
+      "en": "I need a quiet place.",
+      "es": "Necesito un lugar tranquilo."
+    },
+    {
+      "id": "A08",
+      "icone": "obrigado",
+      "pt": "Obrigado(a) pela ajuda.",
+      "en": "Thank you for your help.",
+      "es": "Gracias por su ayuda."
+    }
+  ],
+  "respostasRapidas": [
+    {
+      "id": "R01",
+      "pt": "Sim",
+      "en": "Yes",
+      "es": "Sí"
+    },
+    {
+      "id": "R02",
+      "pt": "Não",
+      "en": "No",
+      "es": "No"
+    },
+    {
+      "id": "R03",
+      "pt": "Me siga",
+      "en": "Follow me",
+      "es": "Sígame"
+    },
+    {
+      "id": "R04",
+      "pt": "Espere aqui",
+      "en": "Wait here",
+      "es": "Espere aquí"
+    },
+    {
+      "id": "R05",
+      "pt": "Vou chamar alguém",
+      "en": "I'll get someone",
+      "es": "Voy a llamar a alguien"
+    },
+    {
+      "id": "R06",
+      "pt": "Não sei",
+      "en": "I don't know",
+      "es": "No lo sé"
+    }
   ]
 }

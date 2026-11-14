@@ -67,4 +67,12 @@ class JsonComunicacaoRepository implements ComunicacaoRepository {
   @override
   Future<List<SugestoesDoPonto>> sugestoesPorPonto() =>
       _a.list('sugestoesPorPonto', SugestoesDoPonto.fromJson);
+
+  @override
+  Future<List<FraseTraduzida>> cartoesAjuda() =>
+      _a.list('cartoesAjuda', FraseTraduzida.fromJson);
+
+  @override
+  Future<List<FraseTraduzida>> respostasRapidas() =>
+      _a.list('respostasRapidas', FraseTraduzida.fromJson);
 }
