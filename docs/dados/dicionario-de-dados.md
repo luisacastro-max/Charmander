@@ -84,6 +84,8 @@ Ligação entre dois pontos, válida nos dois sentidos.
 | `cartoes` | `id`, `icone`, `texto` | 8 cartões com símbolo + texto (RF27) |
 | `mensagensRapidas` | `categoria`, `frases` | 6 categorias (RF27) |
 | `frasesTraduzidas` | `id`, `pt`, `en`, `es` | 6 frases **traduzidas previamente**, não por tradução automática (RF28) |
+| `cartoesAjuda` | `id`, `icone`, `pt`, `en`, `es` | Frases do **cartão de ajuda** para mostrar a outra pessoa. `{destino}` é trocado pelo nome do destino da rota. Traduções **a revisar por pessoa fluente** antes de uso real |
+| `respostasRapidas` | `id`, `pt`, `en`, `es` | Respostas que a outra pessoa toca no cartão (Sim, Não, Me siga...) |
 | `sugestoesPorPonto` | `pontoId`, `titulo`, `acoes[]` | Cada ação tem `mensagem` **ou** `ativarPreferencia`; só executa por ação do visitante (RN14) |
 
 ## Preferências salvas no aparelho

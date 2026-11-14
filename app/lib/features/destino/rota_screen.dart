@@ -32,20 +32,24 @@ class RotaScreen extends StatefulWidget {
     required this.origemId,
     required this.destino,
     required this.dados,
+    this.paradasAntes = const [],
   });
 
   final String origemId;
 
-  /// Primeira parada escolhida na tela "Para onde?".
+  /// Destino escolhido na tela "Para onde?".
   final Local destino;
   final ShoppingData dados;
+
+  /// Paradas escolhidas com o "+" antes do destino.
+  final List<Local> paradasAntes;
 
   @override
   State<RotaScreen> createState() => _RotaScreenState();
 }
 
 class _RotaScreenState extends State<RotaScreen> {
-  late final List<Local> _paradas = [widget.destino];
+  late final List<Local> _paradas = [...widget.paradasAntes, widget.destino];
   String _aviso = '';
 
   ShoppingData get dados => widget.dados;

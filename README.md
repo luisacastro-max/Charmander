@@ -1,66 +1,63 @@
 # Acessa+ — Acessibilidade que conecta pessoas
 
-Projeto da equipe **Charmander** para o hackathon 2026.
+Projeto da equipe **Charmander** para o hackathon 2026. Três pilares: **Comunicação Universal**, **Navegação Viva** e **Ajuda+**, para reduzir barreiras de comunicação e mobilidade em shopping centers.
 
-O Acessa+ propõe reduzir barreiras de comunicação, orientação e mobilidade em shopping centers, reunindo três pilares: **Comunicação Universal**, **Navegação Viva** e **Ajuda+**.
+## Estado atual
 
-## Protótipo interativo
+Revisão: 14/11/2026. Base versionada analisada: `2a05442`. Alterações locais de interface em desenvolvimento não são consideradas entregas concluídas.
 
-O [protótipo HTML](prototipo/index.html) apresenta as telas e os fluxos da proposta. Para experimentar, baixe o arquivo e abra-o em um navegador. O GitHub exibe o código do HTML ao abrir esse link.
-
-**Como acessar:** abra o link do protótipo acima, clique em **Download raw file** (ícone de download) e abra o arquivo `index.html` no Chrome, Edge ou outro navegador. Não é necessário instalar o aplicativo ou configurar o GitHub Pages.
-
-### Roteiro de demonstração
-
-1. Na tela de boas-vindas, selecione **Começar**.
-2. Ajuste as preferências e selecione **Continuar para o início**.
-3. Explore os atalhos de comunicação, navegação, estabelecimentos e assistência.
-4. Use os controles de simulação para testar pontos de referência e evolução dos atendimentos.
-
-O HTML é um protótipo de interface. A proposta para o aplicativo mobile é Flutter e Dart; este repositório ainda não contém a implementação Flutter.
-
-## Documentação da entrega
-
-| Entrega | Arquivo | Situação |
-|---|---|---|
-| Proposta e estrutura inicial das telas | [Proposta das 13 telas](docs/telas/proposta-e-estrutura-inicial-das-telas.docx) | Planejamento inicial |\n| Documentação de requisitos | [Requisitos v0.4](docs/requisitos/requisitos-v0.4.docx) | Documento preliminar |
-| Arquitetura proposta | [Proposta de arquitetura](docs/arquitetura/proposta-de-arquitetura.docx) | Proposta com decisões pendentes |
-| Linguagem e justificativa técnica | [Justificativa técnica](docs/tecnologias/justificativa-tecnica.docx) | Decisão proposta para confirmação da equipe |
-| Plataforma e tecnologias adotadas | [Plataforma e tecnologias v0.1](docs/tecnologias/plataforma-e-tecnologias-v0.1.docx) | Documento fornecido pela equipe |\n| Tecnologia sorteada: Trello | [Uso do Trello](docs/gestao/uso-do-trello.docx) | Documento fornecido pela equipe |
-| Visualização das telas | [Protótipo interativo](prototipo/index.html) | Demonstração em HTML |
-
-Os documentos originais foram preservados em Word.
-
-## Escopo da demonstração
-
-- Comunicação por texto, cartões e frases prontas; áudio conforme suporte do navegador.
-- Preferências de acessibilidade, como texto ampliado, alto contraste e rotas sem escadas.
-- Consulta de locais e navegação com pontos de referência e beacons BLE simulados.
-- Solicitação e acompanhamento demonstrativo de assistência.
-- Saída de emergência simulada e painel demonstrativo do shopping.
-
-Os dados são fictícios. Não há integração operacional com shopping, beacons físicos ou equipe real de atendimento. A emergência é uma simulação. O reconhecimento de voz depende do navegador, das permissões e do serviço utilizado pela plataforma. A área de Libras informa uma possibilidade futura de atendimento humano.
-
-## Tecnologias propostas
-
-| Etapa | Tecnologias |
+| Recurso | Flutter |
 |---|---|
-| Protótipo de interface disponível | HTML, CSS e JavaScript |
-| Aplicativo mobile proposto | Flutter e Dart |
-| Dados do MVP proposto | Dados locais e simulações |
-| Evolução futura | API Spring Boot e PostgreSQL, conforme validação da equipe |
-| Organização das atividades | Trello |
+| Boas-vindas e preferências combináveis | Implementado |
+| Texto ampliado, alto contraste e movimento reduzido | Implementado; validação assistiva manual pendente |
+| Salvar, restaurar e apagar preferências | Implementado localmente |
+| Busca de destinos e filtro por piso | Implementado |
+| Rotas sem escadas e preferência por elevador | Implementado sobre dados fictícios |
+| Até cinco paradas, reordenação e remoção | Implementado |
+| Navegação por etapas, bússola e mapa interativo | Implementado com localização simulada |
+| Comunicação Universal e conversa | Planejado no Flutter; demonstrado no HTML |
+| Ajuda+ e acompanhamento | Planejado no Flutter; demonstrado no HTML |
+| Home, emergência e painel | Planejado no Flutter; demonstrado no HTML |
+| OCR | Decisão de escopo pendente |
 
-## Pontos a alinhar
+“Implementado” indica presença no código, não homologação ou certificação de acessibilidade.
 
-Os documentos registram decisões em aberto, incluindo a entrada de OCR no MVP, o motor de rotas e o comportamento de áudio na emergência. A documentação de requisitos v0.4 também mantém referências às 11 telas iniciais, embora tenha sido ampliada para 13. Esses pontos devem ser revisados pela equipe antes da versão definitiva.
+## Executar
 
-## Organização do repositório
+Pré-requisitos: Flutter com Dart compatível com `^3.13.4`, Git e Chrome ou dispositivo Android configurado.
+
+```powershell
+git clone https://github.com/luisacastro-max/Charmander.git
+cd Charmander/app
+flutter pub get
+flutter run -d chrome
+```
+
+Para Android, use o identificador retornado por `flutter devices`. Consulte o [guia de execução](docs/desenvolvimento/execucao.md) para testes e build web.
+
+## Documentação
+
+- [Índice completo e documentos originais](docs/README.md)
+- [Escopo e requisitos atuais](docs/requisitos/estado-atual.md)
+- [Arquitetura implementada](docs/arquitetura/arquitetura-atual.md)
+- [Dicionário de dados](docs/dados/dicionario-de-dados.md)
+- [Plano de validação](docs/qa/plano-de-validacao.md)
+- [Pendências priorizadas](docs/backlog/pendencias.md)
+- [Roteiro de demonstração](docs/entrega/roteiro-demonstracao.md)
+- [Contribuição e fluxo Git](CONTRIBUTING.md)
+
+## Organização
 
 | Caminho | Conteúdo |
 |---|---|
-| `docs/requisitos/` | Requisitos do sistema |
-| `docs/arquitetura/` | Arquitetura proposta |
-| `docs/tecnologias/` | Justificativa tecnológica |
-| `docs/gestao/` | Uso do Trello |
-| `docs/telas/` | Proposta, estrutura e fluxos das telas |\n| `prototipo/` | Protótipo interativo |
+| `app/` | Flutter, assets e testes |
+| `docs/` | Documentação atual, proposta original e evidências |
+| `prototipo/` | Referência HTML/CSS/JavaScript |
+
+## Protótipo e limites
+
+Baixe [prototipo/index.html](prototipo/index.html) e abra no navegador. Ele demonstra fluxos ainda ausentes no Flutter e usa dados próprios. Não é o build web do aplicativo.
+
+Shopping, distâncias e eventos BLE são fictícios. A aparência de GPS não representa localização física, GPS interno, sensor magnético ou beacons reais. Nenhuma equipe real é acionada. Spring Boot e PostgreSQL são evoluções futuras.
+
+Os Word registram a proposta inicial de 13 telas. Consulte os documentos atuais e o [registro de mudanças](docs/backlog/mudancas-de-escopo.md) para diferenciar proposta e implementação.

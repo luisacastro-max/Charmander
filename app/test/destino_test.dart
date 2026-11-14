@@ -81,7 +81,10 @@ void main() {
 
   testWidgets('RF08: filtro por piso', (t) async {
     await abrirDestino(t);
-    await tocar(t, find.widgetWithText(ChoiceChip, '2º piso'));
+    await tocar(t, find.text('Piso: Todos'));
+    await t.tap(find.text('2º piso').last);
+    await t.pumpAndSettle();
+    expect(find.text('Piso: 2º piso'), findsOneWidget);
     expect(find.text('Praça de Alimentação'), findsOneWidget);
     expect(find.text('Vitrine Moda'), findsNothing);
   });

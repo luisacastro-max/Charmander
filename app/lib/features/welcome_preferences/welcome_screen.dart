@@ -9,6 +9,8 @@ import '../../core/widgets/living_map.dart';
 import '../../core/widgets/marker_highlight.dart';
 import '../../core/widgets/sticker_button.dart';
 import '../../core/widgets/sticker_card.dart';
+import '../ajuda/ajuda_screen.dart';
+import '../comunicacao/cartao_ajuda_screen.dart';
 import '../destino/destino_screen.dart';
 import 'preferences_screen.dart';
 
@@ -33,18 +35,24 @@ class WelcomeScreen extends StatelessWidget {
         'Comunicação Universal',
         'Texto, voz, cartões e frases em 3 idiomas.',
         c.communication,
+        () =>
+            Navigator.of(context)
+                .push(acessaRoute<void>(const CartaoAjudaScreen())),
       ),
       (
         Icons.explore_outlined,
         'Navegação Viva',
         'Rotas que respeitam o seu jeito de se locomover.',
         c.navigation,
+        null,
       ),
       (
         Icons.volunteer_activism_outlined,
         'Ajuda+',
         'Peça apoio só quando quiser, do seu jeito.',
         c.help,
+        () =>
+            Navigator.of(context).push(acessaRoute<void>(const AjudaScreen())),
       ),
     ];
 
@@ -129,6 +137,7 @@ class WelcomeScreen extends StatelessWidget {
                   title: p.$2,
                   body: p.$3,
                   color: p.$4,
+                  onTap: p.$5,
                 ),
               ),
               const SizedBox(height: AcessaSpacing.md),
@@ -181,6 +190,7 @@ class _PillarCard extends StatelessWidget {
     required this.title,
     required this.body,
     required this.color,
+    this.onTap,
   });
 
   final IconData icon;
@@ -188,47 +198,56 @@ class _PillarCard extends StatelessWidget {
   final String body;
   final Color color;
 
+  /// Quando há uma tela para abrir, o cartão vira botão (com seta).
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final t = AcessaTheme.of(context);
     final c = t.colors;
     final text = Theme.of(context).textTheme;
     final fg = t.highContrast ? c.ink : c.onAccent;
+    final card = StickerCard(
+      color: t.highContrast ? c.surface : color,
+      borderColor: t.highContrast ? c.ink : c.shadow,
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: t.highContrast ? c.surface : c.onAccent,
+              shape: BoxShape.circle,
+              border: Border.all(color: fg, width: 2),
+            ),
+            child: Icon(icon, color: t.highContrast ? c.ink : color, size: 28),
+          ),
+          const SizedBox(width: AcessaSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: text.titleLarge?.copyWith(fontSize: 20, color: fg),
+                ),
+                const SizedBox(height: 2),
+                Text(body, style: text.bodyMedium?.copyWith(color: fg)),
+              ],
+            ),
+          ),
+          if (onTap != null) Icon(Icons.chevron_right, color: fg, size: 30),
+        ],
+      ),
+    );
+    if (onTap == null) return MergeSemantics(child: card);
     return MergeSemantics(
-      child: StickerCard(
-        color: t.highContrast ? c.surface : color,
-        borderColor: t.highContrast ? c.ink : c.shadow,
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: t.highContrast ? c.surface : c.onAccent,
-                shape: BoxShape.circle,
-                border: Border.all(color: fg, width: 2),
-              ),
-              child: Icon(
-                icon,
-                color: t.highContrast ? c.ink : color,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: AcessaSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: text.titleLarge?.copyWith(fontSize: 20, color: fg),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(body, style: text.bodyMedium?.copyWith(color: fg)),
-                ],
-              ),
-            ),
-          ],
+      child: Semantics(
+        button: true,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AcessaRadius.card),
+          child: card,
         ),
       ),
     );

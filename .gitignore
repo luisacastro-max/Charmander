@@ -1,0 +1,18 @@
+# Configuração local de desenvolvimento
+/.claude/launch.json
+.DS_Store
+Thumbs.db
+*.log
+
+# Credenciais e ambiente; exemplos podem ser versionados
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.jks
+*.keystore
+
+# Temporários Microsoft Office
+~$*
+
