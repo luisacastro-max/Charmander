@@ -2,7 +2,7 @@
 
 Equipe Charmander · HackaRun 2026 · Revisão 14/11/2026  
 Base: 0500d9d, integrada à main por 54786c3.
-
+link video:https://www.youtube.com/@Bruna__03
 ## Projeto e objetivo
 
 O Acessa+ reduz barreiras para visitantes de shopping centers que precisam de outras formas de ler, se comunicar, se orientar ou solicitar ajuda. Destina-se a pessoas cegas, com baixa visão, surdas, com dificuldades de fala, mobilidade reduzida, sensibilidades sensoriais, idosos e estrangeiros.
