@@ -12,8 +12,10 @@ import '../../data/shopping_data.dart';
 import '../../domain/models/shopping.dart';
 import '../../domain/rules/informacao.dart';
 import '../../domain/rules/rotas.dart';
+import '../../domain/rules/viagem.dart';
 import '../welcome_preferences/preferences.dart';
 import '../welcome_preferences/preferences_scope.dart';
+import '../welcome_preferences/preferences_screen.dart';
 import 'rota_screen.dart';
 
 /// Critérios de rota a partir das preferências (RN02: mobilidade não
@@ -71,12 +73,21 @@ class DestinoScreen extends StatefulWidget {
 class _DestinoScreenState extends State<DestinoScreen> {
   late String _aqui = widget.pontoInicial;
   final _busca = TextEditingController();
+  final _foco = FocusNode();
   _Atalho? _atalho;
   String? _piso;
+
+  /// Paradas escolhidas antes do destino final, como no "+" do Uber.
+  final _paradas = <Local>[];
+
+  /// O campo de busca está escolhendo uma parada (e não o destino).
+  bool _adicionandoParada = false;
+  String _aviso = '';
 
   @override
   void dispose() {
     _busca.dispose();
+    _foco.dispose();
     super.dispose();
   }
 
@@ -85,6 +96,55 @@ class _DestinoScreenState extends State<DestinoScreen> {
     _atalho = null;
     _piso = null;
   });
+
+  /// Ponto de onde as distâncias são contadas: a última parada ou onde
+  /// o visitante está.
+  String get _de => _paradas.isEmpty ? _aqui : _paradas.last.pontoId;
+
+  bool get _podeAdicionar =>
+      !widget.escolhendoParada && _paradas.length < maxParadas - 1;
+
+  void _comecarParada() => setState(() {
+    _adicionandoParada = true;
+    _busca.clear();
+    _atalho = null;
+    _aviso = 'Escolha a parada ${_paradas.length + 1}.';
+    _foco.requestFocus();
+  });
+
+  void _removerParada(int i) => setState(() {
+    final l = _paradas.removeAt(i);
+    _aviso = '${l.nome} removida das paradas.';
+  });
+
+  void _escolher(Local local, ShoppingData dados) {
+    if (widget.escolhendoParada) {
+      Navigator.of(context).pop(local);
+      return;
+    }
+    if (_adicionandoParada) {
+      setState(() {
+        _paradas.add(local);
+        _adicionandoParada = false;
+        _busca.clear();
+        _atalho = null;
+        _aviso =
+            '${local.nome} é a parada ${_paradas.length}. '
+            'Agora escolha para onde quer ir.';
+      });
+      return;
+    }
+    Navigator.of(context).push(
+      acessaRoute(
+        RotaScreen(
+          origemId: _aqui,
+          destino: local,
+          paradasAntes: List.of(_paradas),
+          dados: dados,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,14 +192,15 @@ class _DestinoScreenState extends State<DestinoScreen> {
     final text = Theme.of(context).textTheme;
     final prefs = PreferencesScope.of(context).prefs;
     final criterios = criteriosDe(prefs);
-    final aqui = dados.ponto(_aqui);
+    final de = _de;
 
     final filtrados = dados.locais.where((l) {
       if (!l.destino) return false;
-      // Escolhendo a próxima parada, a anterior não aparece de novo.
+      // A parada anterior (ou o ponto de partida da busca) não aparece.
       if (widget.escolhendoParada && l.pontoId == widget.pontoInicial) {
         return false;
       }
+      if (_paradas.isNotEmpty && l.pontoId == de) return false;
       if (_atalho != null && !_atalho!.filtro(l)) return false;
       if (_piso != null && dados.ponto(l.pontoId).piso != _piso) return false;
       return l.corresponde(_busca.text);
@@ -149,7 +210,7 @@ class _DestinoScreenState extends State<DestinoScreen> {
     // sem rota compatível vai para o fim (nunca escondido).
     final resultados = [
       for (final l in filtrados)
-        (l, dados.motor.calcular(_aqui, l.pontoId, criterios)),
+        (l, dados.motor.calcular(de, l.pontoId, criterios)),
     ]..sort((a, b) => _ordem(a.$2).compareTo(_ordem(b.$2)));
 
     final temFiltro =
@@ -179,66 +240,106 @@ class _DestinoScreenState extends State<DestinoScreen> {
         const SizedBox(height: AcessaSpacing.md),
         Entrance(
           index: i++,
-          child: widget.escolhendoParada
-              ? _DepoisDe(nome: widget.paradaDepoisDe!)
-              : _VoceEstaAqui(
-                  ponto: aqui,
+          child: Wrap(
+            spacing: AcessaSpacing.sm,
+            runSpacing: AcessaSpacing.sm,
+            children: [
+              _ChipMenu(
+                icone: Icons.layers_outlined,
+                rotulo: 'Piso: ${_piso ?? 'Todos'}',
+                dica: 'Escolher o piso dos resultados',
+                onTap: () => _escolherPiso(context, dados),
+              ),
+              if (!widget.escolhendoParada)
+                _ChipMenu(
+                  icone: prefs.avoidStairs
+                      ? Icons.accessible_forward
+                      : Icons.tune,
+                  rotulo: _resumoPreferencias(prefs),
+                  dica: 'Revisar minhas preferências de rota',
+                  onTap: () => Navigator.of(context).push(
+                    acessaRoute(
+                      const PreferencesScreen(continuarParaDestino: false),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AcessaSpacing.md),
+        Entrance(
+          index: i++,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: _CartaoDePara(
+                  origem: dados.ponto(_aqui),
+                  depoisDe: widget.paradaDepoisDe,
+                  paradas: _paradas,
+                  busca: _busca,
+                  foco: _foco,
+                  adicionandoParada: _adicionandoParada,
+                  onBusca: () => setState(() {}),
                   onTrocar: () => _escolherPonto(context, dados),
+                  onRemoverParada: _removerParada,
+                  onCancelarParada: () => setState(() {
+                    _adicionandoParada = false;
+                    _busca.clear();
+                    _aviso = 'Parada cancelada.';
+                  }),
+                ),
+              ),
+              if (!widget.escolhendoParada) ...[
+                const SizedBox(width: AcessaSpacing.sm),
+                Material(
+                  color: c.surface,
+                  shape: CircleBorder(
+                    side: BorderSide(
+                      color: c.border.withValues(alpha: .6),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: IconButton(
+                    tooltip: _podeAdicionar
+                        ? 'Adicionar parada'
+                        : 'Limite de $maxParadas paradas',
+                    onPressed: _podeAdicionar && !_adicionandoParada
+                        ? _comecarParada
+                        : null,
+                    icon: const Icon(Icons.add),
+                    color: c.ink,
+                    disabledColor: c.inkMuted.withValues(alpha: .4),
+                    iconSize: 28,
+                    constraints: const BoxConstraints(
+                      minWidth: 56,
+                      minHeight: 56,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Semantics(
+          liveRegion: true,
+          child: _aviso.isEmpty
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding: const EdgeInsets.only(top: AcessaSpacing.sm),
+                  child: Text(
+                    _aviso,
+                    style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                  ),
                 ),
         ),
         const SizedBox(height: AcessaSpacing.md),
         Entrance(
           index: i++,
-          child: TextField(
-            controller: _busca,
-            onChanged: (_) => setState(() {}),
-            style: text.bodyLarge,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              labelText: 'Buscar loja ou serviço',
-              hintText: 'Ex.: banheiro, pizza, livraria',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _busca.text.isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: 'Limpar busca',
-                      icon: const Icon(Icons.close),
-                      onPressed: () => setState(_busca.clear),
-                    ),
-              filled: true,
-              fillColor: c.surface,
-              labelStyle: TextStyle(color: c.inkMuted),
-              hintStyle: TextStyle(color: c.inkMuted),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AcessaRadius.button),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AcessaRadius.button),
-                borderSide: BorderSide(color: c.border.withValues(alpha: .5)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AcessaRadius.button),
-                borderSide: BorderSide(color: c.focus, width: 3),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AcessaSpacing.md),
-        Entrance(
-          index: i++,
-          child: _GradeAtalhos(
+          child: _PilulasAtalhos(
             selecionado: _atalho,
             onSelecionar: (a) =>
                 setState(() => _atalho = _atalho == a ? null : a),
-          ),
-        ),
-        const SizedBox(height: AcessaSpacing.md),
-        Entrance(
-          index: i++,
-          child: _FiltroPiso(
-            pisos: dados.pisos,
-            selecionado: _piso,
-            onSelecionar: (p) => setState(() => _piso = p),
           ),
         ),
         const SizedBox(height: AcessaSpacing.sm),
@@ -258,35 +359,24 @@ class _DestinoScreenState extends State<DestinoScreen> {
             style: text.titleMedium?.copyWith(color: c.inkMuted),
           ),
         ),
-        const SizedBox(height: AcessaSpacing.sm),
+        const SizedBox(height: AcessaSpacing.xs),
         if (resultados.isEmpty)
           _SemResultados(consulta: _busca.text, onLimpar: _limpar)
         else
-          for (final (n, (local, rota)) in resultados.indexed) ...[
+          for (final (n, (local, rota)) in resultados.indexed)
             Entrance(
               index: n.clamp(0, 6),
-              child: _CartaoResultado(
+              child: _LinhaResultado(
                 local: local,
                 ponto: dados.ponto(local.pontoId),
                 rota: rota,
-                hint: widget.escolhendoParada
-                    ? 'Adicionar como próxima parada'
+                ultima: n == resultados.length - 1,
+                hint: widget.escolhendoParada || _adicionandoParada
+                    ? 'Adicionar como parada'
                     : 'Ver rota',
-                onTap: () => widget.escolhendoParada
-                    ? Navigator.of(context).pop(local)
-                    : Navigator.of(context).push(
-                        acessaRoute(
-                          RotaScreen(
-                            origemId: _aqui,
-                            destino: local,
-                            dados: dados,
-                          ),
-                        ),
-                      ),
+                onTap: () => _escolher(local, dados),
               ),
             ),
-            const SizedBox(height: AcessaSpacing.sm),
-          ],
       ],
     );
   }
@@ -296,6 +386,61 @@ class _DestinoScreenState extends State<DestinoScreen> {
       DadosScope.maybeOf(context);
 
   static int _ordem(ResultadoRota r) => r is Rota ? r.distanciaM : 1 << 30;
+
+  static String _resumoPreferencias(Preferences p) {
+    if (p.avoidStairs) return 'Sem escadas';
+    if (p.preferElevators) return 'Prefere elevador';
+    if (p.calm) return 'Caminho tranquilo';
+    return 'Caminho mais curto';
+  }
+
+  Future<void> _escolherPiso(BuildContext context, ShoppingData dados) async {
+    final c = AcessaTheme.of(context).colors;
+    final opcoes = <String?>[null, ...dados.pisos];
+    final escolhido = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: c.surface,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AcessaSpacing.lg,
+                0,
+                AcessaSpacing.lg,
+                AcessaSpacing.sm,
+              ),
+              child: Text(
+                'Mostrar resultados de qual piso?',
+                style: Theme.of(ctx).textTheme.titleLarge,
+              ),
+            ),
+            for (final p in opcoes)
+              ListTile(
+                minTileHeight: AcessaSpacing.minTouch + 8,
+                selected: _piso == p,
+                selectedColor: c.focus,
+                textColor: c.ink,
+                iconColor: c.ink,
+                leading: Icon(
+                  _piso == p
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                ),
+                title: Text(p ?? 'Todos os pisos'),
+                onTap: () => Navigator.of(ctx).pop(p ?? ''),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (escolhido != null) {
+      setState(() => _piso = escolhido.isEmpty ? null : escolhido);
+    }
+  }
 
   Future<void> _escolherPonto(BuildContext context, ShoppingData dados) async {
     final c = AcessaTheme.of(context).colors;
@@ -363,170 +508,310 @@ class _DestinoScreenState extends State<DestinoScreen> {
   }
 }
 
-class _VoceEstaAqui extends StatelessWidget {
-  const _VoceEstaAqui({required this.ponto, required this.onTrocar});
-  final PontoReferencia ponto;
+/// Chip com seta para baixo (como "Ir agora ▾" e "Para mim ▾" do Uber).
+class _ChipMenu extends StatelessWidget {
+  const _ChipMenu({
+    required this.icone,
+    required this.rotulo,
+    required this.dica,
+    required this.onTap,
+  });
+  final IconData icone;
+  final String rotulo;
+  final String dica;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AcessaTheme.of(context).colors;
+    final text = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      hint: dica,
+      child: Material(
+        color: c.surface,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: AcessaSpacing.minTouch,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icone, size: 20, color: c.ink),
+                  const SizedBox(width: 8),
+                  Text(rotulo, style: text.titleSmall?.copyWith(color: c.ink)),
+                  const SizedBox(width: 4),
+                  Icon(Icons.keyboard_arrow_down, color: c.ink),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Cartão "de → para" do Uber: ponto de partida (bolinha), paradas e o
+/// campo do destino (quadrado), ligados por uma linha.
+class _CartaoDePara extends StatelessWidget {
+  const _CartaoDePara({
+    required this.origem,
+    required this.depoisDe,
+    required this.paradas,
+    required this.busca,
+    required this.foco,
+    required this.adicionandoParada,
+    required this.onBusca,
+    required this.onTrocar,
+    required this.onRemoverParada,
+    required this.onCancelarParada,
+  });
+
+  final PontoReferencia origem;
+  final String? depoisDe;
+  final List<Local> paradas;
+  final TextEditingController busca;
+  final FocusNode foco;
+  final bool adicionandoParada;
+  final VoidCallback onBusca;
   final VoidCallback onTrocar;
+  final ValueChanged<int> onRemoverParada;
+  final VoidCallback onCancelarParada;
 
   @override
   Widget build(BuildContext context) {
     final t = AcessaTheme.of(context);
     final c = t.colors;
     final text = Theme.of(context).textTheme;
-    return StickerCard(
-      color: c.surface,
-      borderColor: c.navigation,
-      child: Row(
-        children: [
-          const _PontoPulsante(),
-          const SizedBox(width: AcessaSpacing.md),
-          Expanded(
-            child: MergeSemantics(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Você está aqui',
-                    style: text.bodyMedium?.copyWith(color: c.inkMuted),
-                  ),
-                  Text(ponto.nome, style: text.titleMedium),
-                  Text(
-                    '${exibir(ponto.piso)} · beacon ${ponto.beacon} (simulado)',
-                    style: text.bodyMedium?.copyWith(color: c.inkMuted),
-                  ),
-                ],
+
+    Widget trilho(Widget marca, {bool acima = true, bool abaixo = true}) =>
+        SizedBox(
+          width: 28,
+          child: Column(
+            children: [
+              Expanded(
+                child: Container(
+                  width: 2,
+                  color: acima ? c.inkMuted : Colors.transparent,
+                ),
               ),
-            ),
+              marca,
+              Expanded(
+                child: Container(
+                  width: 2,
+                  color: abaixo ? c.inkMuted : Colors.transparent,
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: onTrocar,
-            style: TextButton.styleFrom(
-              foregroundColor: c.focus,
-              minimumSize: const Size(48, AcessaSpacing.minTouch),
-            ),
-            child: const Text('Trocar'),
-          ),
-        ],
+        );
+
+    Widget bolinha(Color cor, {double tam = 14}) => Container(
+      width: tam,
+      height: tam,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: c.background,
+        border: Border.all(color: cor, width: 4),
       ),
     );
-  }
-}
 
-/// No modo "adicionar parada": de onde as distâncias são contadas.
-class _DepoisDe extends StatelessWidget {
-  const _DepoisDe({required this.nome});
-  final String nome;
+    final divisor = Divider(
+      height: 1,
+      indent: 40,
+      color: c.border.withValues(alpha: .2),
+    );
 
-  @override
-  Widget build(BuildContext context) {
-    final c = AcessaTheme.of(context).colors;
-    final text = Theme.of(context).textTheme;
-    return StickerCard(
-      color: c.surface,
-      borderColor: c.help,
-      child: MergeSemantics(
+    final linhas = <Widget>[
+      // Origem: onde o visitante está (beacon simulado) ou a parada anterior.
+      IntrinsicHeight(
         child: Row(
           children: [
-            Icon(Icons.alt_route, color: c.help, size: 30),
-            const SizedBox(width: AcessaSpacing.md),
+            trilho(bolinha(c.navigation), acima: false),
+            const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Depois de',
-                    style: text.bodyMedium?.copyWith(color: c.inkMuted),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: MergeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        depoisDe != null ? 'Depois de' : 'Você está aqui',
+                        style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                      ),
+                      Text(depoisDe ?? origem.nome, style: text.titleMedium),
+                      if (depoisDe == null)
+                        Text(
+                          '${exibir(origem.piso)} · beacon '
+                          '${origem.beacon} (simulado)',
+                          style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                        ),
+                    ],
                   ),
-                  Text(nome, style: text.titleMedium),
-                  Text(
-                    'Distâncias contadas a partir daí.',
-                    style: text.bodyMedium?.copyWith(color: c.inkMuted),
-                  ),
-                ],
+                ),
               ),
             ),
+            if (depoisDe == null)
+              TextButton(
+                onPressed: onTrocar,
+                style: TextButton.styleFrom(
+                  foregroundColor: c.focus,
+                  minimumSize: const Size(48, AcessaSpacing.minTouch),
+                ),
+                child: const Text('Trocar'),
+              ),
           ],
         ),
       ),
-    );
-  }
-}
+    ];
 
-/// Ponto "você está aqui" que pulsa 3 vezes e para (sem loop infinito).
-class _PontoPulsante extends StatefulWidget {
-  const _PontoPulsante();
-
-  @override
-  State<_PontoPulsante> createState() => _PontoPulsanteState();
-}
-
-class _PontoPulsanteState extends State<_PontoPulsante>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1100),
-  );
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (Motion.of(context).enabled && !_c.isAnimating && _c.value == 0) {
-      _c.repeat(count: 3);
-    }
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AcessaTheme.of(context).colors;
-    return ExcludeSemantics(
-      child: SizedBox(
-        width: 44,
-        height: 44,
-        child: AnimatedBuilder(
-          animation: _c,
-          builder: (context, _) {
-            final v = _c.isAnimating ? _c.value : 0.0;
-            return Stack(
-              alignment: Alignment.center,
+    for (final (n, p) in paradas.indexed) {
+      linhas
+        ..add(divisor)
+        ..add(
+          IntrinsicHeight(
+            child: Row(
               children: [
-                if (v > 0)
+                trilho(
                   Container(
-                    width: 18 + 26 * v,
-                    height: 18 + 26 * v,
+                    width: 20,
+                    height: 20,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: c.navigation.withValues(alpha: 1 - v),
-                        width: 3,
+                      color: c.help,
+                    ),
+                    child: Text(
+                      '${n + 1}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: c.onAccent,
                       ),
                     ),
                   ),
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: c.navigation,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: c.ink, width: 3),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: MergeSemantics(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Parada ${n + 1}',
+                          style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                        ),
+                        Text(p.nome, style: text.titleMedium),
+                      ],
+                    ),
                   ),
                 ),
+                IconButton(
+                  tooltip: 'Remover ${p.nome}',
+                  onPressed: () => onRemoverParada(n),
+                  icon: const Icon(Icons.close),
+                  color: c.inkMuted,
+                ),
               ],
-            );
-          },
+            ),
+          ),
+        );
+    }
+
+    // Campo de busca: destino (quadrado) ou parada nova (bolinha).
+    linhas
+      ..add(divisor)
+      ..add(
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              trilho(
+                adicionandoParada
+                    ? bolinha(c.help)
+                    : Container(
+                        width: 14,
+                        height: 14,
+                        color: c.ink,
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: 5,
+                          height: 5,
+                          color: c.background,
+                        ),
+                      ),
+                abaixo: false,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: busca,
+                  focusNode: foco,
+                  onChanged: (_) => onBusca(),
+                  style: text.titleMedium,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    labelText: adicionandoParada
+                        ? 'Parada ${paradas.length + 1}'
+                        : 'Buscar loja ou serviço',
+                    hintText: 'Ex.: banheiro, pizza, livraria',
+                    border: InputBorder.none,
+                    labelStyle: TextStyle(color: c.inkMuted),
+                    hintStyle: TextStyle(color: c.inkMuted),
+                    floatingLabelStyle: TextStyle(color: c.focus),
+                  ),
+                ),
+              ),
+              if (busca.text.isNotEmpty)
+                IconButton(
+                  tooltip: 'Limpar busca',
+                  icon: const Icon(Icons.cancel_outlined),
+                  color: c.inkMuted,
+                  onPressed: () {
+                    busca.clear();
+                    onBusca();
+                  },
+                )
+              else if (adicionandoParada)
+                IconButton(
+                  tooltip: 'Cancelar parada',
+                  icon: const Icon(Icons.close),
+                  color: c.inkMuted,
+                  onPressed: onCancelarParada,
+                ),
+            ],
+          ),
+        ),
+      );
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(AcessaRadius.button),
+        border: Border.all(
+          color: t.highContrast ? c.border : c.ink.withValues(alpha: .85),
+          width: 2,
         ),
       ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: linhas),
     );
   }
 }
 
-class _GradeAtalhos extends StatelessWidget {
-  const _GradeAtalhos({required this.selecionado, required this.onSelecionar});
+/// Atalhos em pílulas roláveis (alvos de toque de 48 dp).
+class _PilulasAtalhos extends StatelessWidget {
+  const _PilulasAtalhos({
+    required this.selecionado,
+    required this.onSelecionar,
+  });
   final _Atalho? selecionado;
   final ValueChanged<_Atalho> onSelecionar;
 
@@ -537,122 +822,198 @@ class _GradeAtalhos extends StatelessWidget {
     final motion = Motion.of(context);
     final text = Theme.of(context).textTheme;
     final cores = [c.navigation, c.help, c.communication];
-    return LayoutBuilder(
-      builder: (context, box) {
-        final w = (box.maxWidth - AcessaSpacing.sm) / 2;
-        return Wrap(
-          spacing: AcessaSpacing.sm,
-          runSpacing: AcessaSpacing.sm,
-          children: [
-            for (final (n, a) in _atalhos.indexed)
-              SizedBox(
-                width: w,
-                child: Semantics(
-                  button: true,
-                  selected: selecionado == a,
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(AcessaRadius.button),
-                      onTap: () => onSelecionar(a),
-                      child: AnimatedContainer(
-                        duration: motion.d(Motion.quick),
-                        constraints: const BoxConstraints(minHeight: 64),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: t.highContrast
-                              ? c.surface
-                              : selecionado == a
-                              ? cores[n % 3]
-                              : c.surface,
-                          borderRadius: BorderRadius.circular(
-                            AcessaRadius.button,
-                          ),
-                          border: Border.all(
-                            color: selecionado == a
-                                ? (t.highContrast ? c.primary : c.shadow)
-                                : cores[n % 3].withValues(alpha: .7),
-                            width: selecionado == a ? 3 : 2,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              a.icone,
-                              size: 26,
-                              color: selecionado == a && !t.highContrast
-                                  ? c.onAccent
-                                  : cores[n % 3],
-                            ),
-                            const SizedBox(width: AcessaSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                a.rotulo,
-                                style: text.titleMedium?.copyWith(
-                                  color: selecionado == a && !t.highContrast
-                                      ? c.onAccent
-                                      : c.ink,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+    return Wrap(
+      spacing: AcessaSpacing.sm,
+      runSpacing: AcessaSpacing.sm,
+      children: [
+        for (final (n, a) in _atalhos.indexed)
+          Semantics(
+            button: true,
+            selected: selecionado == a,
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                customBorder: const StadiumBorder(),
+                onTap: () => onSelecionar(a),
+                child: AnimatedContainer(
+                  duration: motion.d(Motion.quick),
+                  constraints: const BoxConstraints(
+                    minHeight: AcessaSpacing.minTouch,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: ShapeDecoration(
+                    color: selecionado == a && !t.highContrast
+                        ? cores[n % 3]
+                        : c.surface,
+                    shape: StadiumBorder(
+                      side: BorderSide(
+                        color: selecionado == a
+                            ? (t.highContrast ? c.primary : c.shadow)
+                            : cores[n % 3].withValues(alpha: .7),
+                        width: selecionado == a ? 3 : 1.5,
                       ),
                     ),
                   ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        a.icone,
+                        size: 20,
+                        color: selecionado == a && !t.highContrast
+                            ? c.onAccent
+                            : cores[n % 3],
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        a.rotulo,
+                        style: text.titleSmall?.copyWith(
+                          color: selecionado == a && !t.highContrast
+                              ? c.onAccent
+                              : c.ink,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-          ],
-        );
-      },
+            ),
+          ),
+      ],
     );
   }
 }
 
-class _FiltroPiso extends StatelessWidget {
-  const _FiltroPiso({
-    required this.pisos,
-    required this.selecionado,
-    required this.onSelecionar,
+/// Resultado em linha, como a lista do Uber: ícone com a distância embaixo,
+/// nome em destaque e detalhes, separados por linhas finas.
+class _LinhaResultado extends StatelessWidget {
+  const _LinhaResultado({
+    required this.local,
+    required this.ponto,
+    required this.rota,
+    required this.ultima,
+    required this.hint,
+    required this.onTap,
   });
-  final List<String> pisos;
-  final String? selecionado;
-  final ValueChanged<String?> onSelecionar;
+  final Local local;
+  final PontoReferencia ponto;
+  final ResultadoRota rota;
+  final bool ultima;
+  final String hint;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final c = AcessaTheme.of(context).colors;
+    final t = AcessaTheme.of(context);
+    final c = t.colors;
     final text = Theme.of(context).textTheme;
-    Widget chip(String rotulo, String? valor) => Semantics(
-      selected: selecionado == valor,
-      inMutuallyExclusiveGroup: true,
-      child: ChoiceChip(
-        label: Text(rotulo),
-        selected: selecionado == valor,
-        onSelected: (_) => onSelecionar(valor),
-        showCheckmark: true,
-        checkmarkColor: c.onPrimary,
-        selectedColor: c.primary,
-        backgroundColor: c.surface,
-        labelStyle: text.labelLarge?.copyWith(
-          color: selecionado == valor ? c.onPrimary : c.ink,
+    final r = rota;
+    final distancia = switch (r) {
+      Rota(etapas: final e) when e.isEmpty => 'Você já está aqui',
+      Rota() => '${r.minutos} min a pé',
+      SemRota(existeComEscada: true) => 'Só há caminho com escadas',
+      SemRota() => 'Sem caminho cadastrado',
+    };
+    final metros = switch (r) {
+      Rota(etapas: final e) when e.isEmpty => 'aqui',
+      Rota() => '${r.distanciaM} m',
+      SemRota() => '—',
+    };
+    final recursos = exibirRecursos(local.recursos);
+
+    return Semantics(
+      button: true,
+      hint: hint,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              border: ultima
+                  ? null
+                  : Border(
+                      bottom: BorderSide(color: c.border.withValues(alpha: .2)),
+                    ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 56,
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: t.highContrast ? c.surface : c.mapLine,
+                          shape: BoxShape.circle,
+                          border: t.highContrast
+                              ? Border.all(color: c.ink, width: 2)
+                              : null,
+                        ),
+                        child: Icon(
+                          iconeDoLocal(local.icone),
+                          size: 22,
+                          color: c.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        metros,
+                        textAlign: TextAlign.center,
+                        style: text.bodySmall?.copyWith(color: c.inkMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AcessaSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(local.nome, style: text.titleMedium),
+                      Text(
+                        '${exibir(ponto.piso)} · ${local.categoria}',
+                        style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(
+                            r is SemRota
+                                ? Icons.warning_amber_rounded
+                                : Icons.directions_walk,
+                            size: 18,
+                            color: r is SemRota ? c.simulation : c.help,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              distancia,
+                              style: text.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: c.ink,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        recursos.take(2).join(' · '),
+                        style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: c.inkMuted),
+              ],
+            ),
+          ),
         ),
-        side: BorderSide(color: c.border.withValues(alpha: .6), width: 1.5),
-        shape: const StadiumBorder(),
       ),
-    );
-    return Wrap(
-      spacing: AcessaSpacing.sm,
-      runSpacing: AcessaSpacing.sm,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Text('Piso:', style: text.titleMedium),
-        chip('Todos', null),
-        for (final p in pisos) chip(p, p),
-      ],
     );
   }
 }
@@ -677,111 +1038,6 @@ class _CriteriosAtivos extends StatelessWidget {
                 '"Rotas sem escadas" nas preferências.'
           : 'Rotas consideram suas preferências: ${ativos.join(', ')}.',
       style: text.bodyMedium?.copyWith(color: c.inkMuted),
-    );
-  }
-}
-
-class _CartaoResultado extends StatelessWidget {
-  const _CartaoResultado({
-    required this.local,
-    required this.ponto,
-    required this.rota,
-    required this.onTap,
-    this.hint = 'Ver rota',
-  });
-  final Local local;
-  final PontoReferencia ponto;
-  final ResultadoRota rota;
-  final VoidCallback onTap;
-  final String hint;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AcessaTheme.of(context);
-    final c = t.colors;
-    final text = Theme.of(context).textTheme;
-    final r = rota;
-    final distancia = switch (r) {
-      Rota(etapas: final e) when e.isEmpty => 'Você já está aqui',
-      Rota() => '${r.distanciaM} m · cerca de ${r.minutos} min',
-      SemRota(existeComEscada: true) => 'Só há caminho com escadas',
-      SemRota() => 'Sem caminho cadastrado',
-    };
-    final recursos = exibirRecursos(local.recursos);
-
-    return Semantics(
-      button: true,
-      hint: hint,
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AcessaRadius.card),
-          onTap: onTap,
-          child: StickerCard(
-            color: c.surface,
-            borderColor: c.border.withValues(alpha: t.highContrast ? 1 : .3),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: t.highContrast ? c.surface : c.navigation,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: c.ink, width: 2),
-                  ),
-                  child: Icon(
-                    iconeDoLocal(local.icone),
-                    color: t.highContrast ? c.ink : c.onAccent,
-                  ),
-                ),
-                const SizedBox(width: AcessaSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(local.nome, style: text.titleMedium),
-                      Text(
-                        '${exibir(ponto.piso)} · ${local.categoria}',
-                        style: text.bodyMedium?.copyWith(color: c.inkMuted),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            r is SemRota
-                                ? Icons.warning_amber_rounded
-                                : Icons.directions_walk,
-                            size: 18,
-                            color: r is SemRota ? c.simulation : c.help,
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              distancia,
-                              style: text.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: c.ink,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        recursos.take(2).join(' · '),
-                        style: text.bodyMedium?.copyWith(color: c.inkMuted),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: c.inkMuted),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

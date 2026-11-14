@@ -87,6 +87,27 @@ void main() {
     );
   });
 
+  testWidgets('Como no Uber: "+" na busca adiciona parada antes do destino', (
+    t,
+  ) async {
+    await abrirDestino(t);
+    await tocar(t, find.byTooltip('Adicionar parada'));
+    expect(find.text('Parada 1'), findsOneWidget);
+    await tocar(t, find.text('Elevadores — Térreo'));
+    await t.scrollUntilVisible(
+      find.textContaining('é a parada 1'),
+      -300,
+      scrollable: lista,
+    );
+    expect(find.textContaining('é a parada 1'), findsOneWidget);
+    expect(find.byTooltip('Remover Elevadores — Térreo'), findsOneWidget);
+    // Agora a busca é do destino; distâncias contadas a partir do elevador.
+    await tocar(t, find.text('Praça de Alimentação'));
+    expect(find.text('Rota até'), findsOneWidget);
+    expect(find.text('2 paradas'), findsOneWidget);
+    expect(find.textContaining('Até a parada 1: Elevadores'), findsOneWidget);
+  });
+
   testWidgets('Reordenar e remover paradas recalcula a rota', (t) async {
     await montarRotaComParada(t);
     await tocar(t, find.byTooltip('Mover Praça de Alimentação para antes'));

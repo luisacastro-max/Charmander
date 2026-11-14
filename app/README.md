@@ -1,17 +1,10 @@
-# acessa_plus
+# Aplicativo Flutter do Acessa+
 
-Acessa+ — Acessibilidade que conecta pessoas
+Aplicativo demonstrativo com preferências de acessibilidade, dados locais, busca, rotas com paradas e navegação por pontos simulados.
 
-## Getting Started
+- [Apresentação e situação atual](../README.md)
+- [Ambiente, execução e build](../docs/desenvolvimento/execucao.md)
+- [Arquitetura](../docs/arquitetura/arquitetura-atual.md)
+- [Plano de validação](../docs/qa/plano-de-validacao.md)
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Execute os comandos Flutter nesta pasta. O requisito Dart é `^3.13.4`.
