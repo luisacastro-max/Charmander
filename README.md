@@ -8,7 +8,7 @@ Projeto da equipe **Charmander** para o HackaRun 2026: comunicação acessível,
 
 | Item | Material |
 |---|---|
-| MVP na Vercel | Link a ser informado pela equipe |
+| MVP na Vercel | [Abrir o Acessa+](https://acessa-plus-j6efrj192-charmander5.vercel.app/) |
 | Código-fonte | [app/lib](app/lib/) |
 | Documentação técnica | [Projeto, arquitetura, tecnologias e funcionamento](docs/documentacao-tecnica.md) |
 | Instalação e execução | [Guia reproduzível](docs/desenvolvimento/execucao.md) |
