@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
 import '../../app/theme/tokens.dart';
@@ -10,7 +11,14 @@ import '../../core/widgets/icones.dart';
 import '../../data/shopping_data.dart';
 import '../../domain/models/shopping.dart';
 import '../../domain/rules/rotas.dart';
+import '../../domain/models/ocorrencia.dart';
+import '../../domain/rules/alertas_apresentacao.dart';
+import '../../domain/rules/ocorrencias.dart' show agrupar;
 import '../../domain/rules/viagem.dart';
+import '../alertas/alertas_controller.dart';
+import '../alertas/alertas_visual.dart';
+import '../alertas/detalhes_alerta.dart';
+import '../welcome_preferences/preferences.dart';
 
 /// Tamanho do desenho do shopping, em unidades do cadastro
 /// (catalogo.json → "mapa").
@@ -38,11 +46,22 @@ class MapaInterativo extends StatefulWidget {
     required this.dados,
     required this.estado,
     this.altura = 420,
+    this.rotaMaisUsada,
+    this.exploracao = false,
   });
 
   final ShoppingData dados;
   final EstadoNavegacao estado;
   final double altura;
+
+  /// Rota mais usada (sem preferências), desenhada tracejada e esmaecida
+  /// atrás da rota adaptada. Nula quando as duas são iguais.
+  final Viagem? rotaMaisUsada;
+
+  /// Modo exploração (mapa de alertas, fora de uma rota): mostra o piso
+  /// inteiro, sem linha de rota nem paradas, e ajusta legenda e descrição.
+  /// Use com um [EstadoNavegacao] de rota de um ponto só (origem = destino).
+  final bool exploracao;
 
   @override
   State<MapaInterativo> createState() => _MapaInterativoState();
@@ -89,8 +108,8 @@ class _MapaInterativoState extends State<MapaInterativo>
   );
 
   late String _piso = _pisoAtual;
-  bool _seguir = true;
-  bool _norteParaCima = false;
+  late bool _seguir = !widget.exploracao;
+  late bool _norteParaCima = widget.exploracao;
   double _zoom = 1;
 
   /// Câmera livre (depois de arrastar, pinçar ou ver a rota inteira).
@@ -114,9 +133,15 @@ class _MapaInterativoState extends State<MapaInterativo>
     return _rumoDe + d * _t;
   }
 
+  /// O pulso de chegada só toca na abertura (e a cada novo beacon), não a
+  /// cada mudança de dependência (ex.: alertas novos).
+  bool _abriu = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_abriu) return;
+    _abriu = true;
     _pulsar();
   }
 
@@ -217,7 +242,7 @@ class _MapaInterativoState extends State<MapaInterativo>
 
   void _escolherPiso(String p) => setState(() {
     _piso = p;
-    if (p == _pisoAtual) {
+    if (p == _pisoAtual && !widget.exploracao) {
       _seguir = true;
       _livre = null;
     } else {
@@ -234,6 +259,13 @@ class _MapaInterativoState extends State<MapaInterativo>
     final dados = widget.dados;
     final estado = widget.estado;
     final noMeuPiso = _piso == _pisoAtual;
+    final alertas = AlertasScope.maybeOf(context);
+    final doPiso = alertas?.visiveis(piso: _piso) ?? const <Ocorrencia>[];
+    final pendentes = [
+      for (final p in alertas?.pendentes ?? const <EnvioPendente>[])
+        if (p.nova.piso == _piso) p,
+    ];
+    final pontos = {for (final p in dados.pontos) p.id: p};
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -243,13 +275,13 @@ class _MapaInterativoState extends State<MapaInterativo>
           runSpacing: AcessaSpacing.sm,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Text('Piso:', style: text.titleMedium),
+            Text(tr(context, 'Piso:'), style: text.titleMedium),
             for (final p in dados.pisos)
               Semantics(
                 selected: _piso == p,
                 inMutuallyExclusiveGroup: true,
                 child: ChoiceChip(
-                  label: Text(p == _pisoAtual ? '$p (você)' : p),
+                  label: Text(tr(context, p == _pisoAtual ? '$p (você)' : p)),
                   selected: _piso == p,
                   onSelected: (_) => _escolherPiso(p),
                   showCheckmark: true,
@@ -278,7 +310,7 @@ class _MapaInterativoState extends State<MapaInterativo>
                 const SizedBox(width: AcessaSpacing.sm),
                 Expanded(
                   child: Text(
-                    'Vendo o $_piso. Você está no $_pisoAtual.',
+                    tr(context, 'Vendo o $_piso. Você está no $_pisoAtual.'),
                     style: text.bodyMedium,
                   ),
                 ),
@@ -288,7 +320,7 @@ class _MapaInterativoState extends State<MapaInterativo>
                     foregroundColor: c.focus,
                     minimumSize: const Size(48, AcessaSpacing.minTouch),
                   ),
-                  child: const Text('Ver meu piso'),
+                  child: Text(tr(context, 'Ver meu piso')),
                 ),
               ],
             ),
@@ -309,13 +341,14 @@ class _MapaInterativoState extends State<MapaInterativo>
           child: LayoutBuilder(
             builder: (context, box) {
               _tam = box.biggest;
+              if (!_seguir) _livre ??= _cameraPiso;
               return Stack(
                 children: [
                   Positioned.fill(
                     child: Semantics(
                       container: true,
                       image: true,
-                      label: _descricao(estado),
+                      label: _descricao(context, estado, doPiso, pontos),
                       excludeSemantics: true,
                       child: RawGestureDetector(
                         // O mapa fica com o gesto (a página rola fora dele).
@@ -357,6 +390,8 @@ class _MapaInterativoState extends State<MapaInterativo>
                             painter: _PlantaPainter(
                               dados: dados,
                               estado: estado,
+                              fantasma: widget.rotaMaisUsada,
+                              exploracao: widget.exploracao,
                               piso: _piso,
                               c: c,
                               glow: !t.highContrast,
@@ -365,6 +400,7 @@ class _MapaInterativoState extends State<MapaInterativo>
                               voce: _posAgora,
                               rumo: _rumoAgora,
                               pulso: _pulso.isAnimating ? _pulso.value : 0,
+                              idioma: idiomaDe(context),
                               textScale: MediaQuery.textScalerOf(context)
                                   .scale(1),
                             ),
@@ -373,6 +409,22 @@ class _MapaInterativoState extends State<MapaInterativo>
                       ),
                     ),
                   ),
+                  // Alertas da comunidade: widgets sobre o desenho, na posição
+                  // dada pela câmera (acompanham giro e zoom).
+                  if (alertas != null)
+                    Positioned.fill(
+                      child: AnimatedBuilder(
+                        animation: _mov,
+                        builder: (context, _) => _CamadaAlertas(
+                          cam: _camera,
+                          tam: _tam,
+                          alertas: doPiso,
+                          pendentes: pendentes,
+                          dados: dados,
+                          pontos: pontos,
+                        ),
+                      ),
+                    ),
                   // Bússola: mostra para onde fica o topo do mapa e alterna
                   // entre "direção para cima" e "norte do mapa para cima".
                   Positioned(
@@ -382,8 +434,11 @@ class _MapaInterativoState extends State<MapaInterativo>
                       animation: _mov,
                       builder: (context, _) => _BotaoMapa(
                         dica: _norteParaCima
-                            ? 'Girar o mapa na direção da caminhada'
-                            : 'Deixar o norte do mapa para cima',
+                            ? tr(
+                                context,
+                                'Girar o mapa na direção da caminhada',
+                              )
+                            : tr(context, 'Deixar o norte do mapa para cima'),
                         onTap: () =>
                             setState(() => _norteParaCima = !_norteParaCima),
                         child: Transform.rotate(
@@ -399,19 +454,24 @@ class _MapaInterativoState extends State<MapaInterativo>
                     child: Column(
                       children: [
                         _BotaoMapa(
-                          dica: 'Aproximar o mapa',
+                          dica: tr(context, 'Aproximar o mapa'),
                           onTap: () => _zoomBotao(1.4),
                           child: const Icon(Icons.add),
                         ),
                         const SizedBox(height: 6),
                         _BotaoMapa(
-                          dica: 'Afastar o mapa',
+                          dica: tr(context, 'Afastar o mapa'),
                           onTap: () => _zoomBotao(1 / 1.4),
                           child: const Icon(Icons.remove),
                         ),
                         const SizedBox(height: 6),
                         _BotaoMapa(
-                          dica: 'Ver a rota inteira',
+                          dica: tr(
+                            context,
+                            widget.exploracao
+                                ? 'Ver o piso inteiro'
+                                : 'Ver a rota inteira',
+                          ),
                           onTap: _verRotaInteira,
                           child: const Icon(Icons.zoom_out_map),
                         ),
@@ -425,7 +485,7 @@ class _MapaInterativoState extends State<MapaInterativo>
                       child: FilledButton.icon(
                         onPressed: _recentralizar,
                         icon: const Icon(Icons.navigation),
-                        label: const Text('Recentralizar'),
+                        label: Text(tr(context, 'Recentralizar')),
                         style: FilledButton.styleFrom(
                           backgroundColor: c.primary,
                           foregroundColor: c.onPrimary,
@@ -441,23 +501,49 @@ class _MapaInterativoState extends State<MapaInterativo>
           ),
         ),
         const SizedBox(height: AcessaSpacing.sm),
-        const _Legenda(),
+        _Legenda(
+          comFantasma: widget.rotaMaisUsada != null,
+          exploracao: widget.exploracao,
+        ),
+        if (alertas != null) ...[
+          const SizedBox(height: AcessaSpacing.xs),
+          const LegendaAlertas(),
+        ],
         const SizedBox(height: AcessaSpacing.xs),
         Text(
-          _norteParaCima
-              ? 'Norte do mapa para cima. Toque na bússola para o mapa '
-                    'girar na direção da caminhada.'
-              : 'O mapa gira para a sua direção ficar para cima. Toque na '
-                    'bússola para fixar o norte do mapa. Mapa ilustrativo, '
-                    'com dados fictícios.',
+          tr(
+            context,
+            _norteParaCima
+                ? 'Norte do mapa para cima. Toque na bússola para o mapa '
+                      'girar na direção da caminhada.'
+                : 'O mapa gira para a sua direção ficar para cima. Toque na '
+                      'bússola para fixar o norte do mapa. Mapa ilustrativo, '
+                      'com dados fictícios.',
+          ),
           style: text.bodyMedium?.copyWith(color: c.inkMuted),
         ),
+        if (alertas != null) ...[
+          const SizedBox(height: AcessaSpacing.md),
+          _ListaAlertasDoPiso(
+            alertas: doPiso,
+            pendentes: pendentes,
+            dados: dados,
+            pontos: pontos,
+            agora: alertas.relogio(),
+          ),
+        ],
       ],
     );
   }
 
   /// O que o mapa mostra, em texto (RNF04: imagem nunca é a única fonte).
-  String _descricao(EstadoNavegacao estado) {
+  /// Cada frase é traduzida separadamente para o idioma do visitante.
+  String _descricao(
+    BuildContext context,
+    EstadoNavegacao estado,
+    List<Ocorrencia> alertas,
+    Map<String, PontoReferencia> pontos,
+  ) {
     final nesse = <String>[];
     for (final perna in estado.viagem.pernas) {
       for (final p in perna.pontos) {
@@ -466,27 +552,33 @@ class _MapaInterativoState extends State<MapaInterativo>
         }
       }
     }
-    final b = StringBuffer('Mapa do $_piso. ');
-    if (estado.pontoAtual.piso == _piso) {
-      b.write('Você está em ${estado.pontoAtual.nome}. ');
-    } else {
-      b.write('Você está no ${estado.pontoAtual.piso}. ');
-    }
-    if (nesse.isEmpty) {
-      b.write('A rota não passa por este piso.');
-    } else {
-      b.write('Neste piso a rota passa por ${nesse.join(', ')}.');
-    }
-    final prox = estado.proximoPonto;
-    if (prox != null) b.write(' Próximo ponto: ${prox.nome}.');
-    b.write(
+    final frases = <String>[
+      'Mapa do $_piso.',
+      if (estado.pontoAtual.piso == _piso)
+        'Você está em ${estado.pontoAtual.nome}.'
+      else
+        'Você está no ${estado.pontoAtual.piso}.',
+      if (!widget.exploracao) ...[
+        if (nesse.isEmpty)
+          'A rota não passa por este piso.'
+        else
+          'Neste piso a rota passa por ${nesse.join(', ')}.',
+        if (estado.proximoPonto case final prox?)
+          'Próximo ponto: ${prox.nome}.',
+      ],
+      if (AlertasScope.maybeOf(context) != null) ...[
+        resumoAlertasNoPiso(alertas.length),
+        for (final o in alertas) fraseDoAlerta(o, pontos),
+      ],
+      if (widget.rotaMaisUsada != null)
+        'A linha tracejada mostra a rota mais usada, que a sua rota evita.',
       _seguir
           ? (_norteParaCima
-                ? ' O mapa acompanha você, com o norte do mapa para cima.'
-                : ' O mapa acompanha você e gira na direção da caminhada.')
-          : ' O mapa está solto; use Recentralizar para voltar a seguir.',
-    );
-    return b.toString();
+                ? 'O mapa acompanha você, com o norte do mapa para cima.'
+                : 'O mapa acompanha você e gira na direção da caminhada.')
+          : 'O mapa está solto; use Recentralizar para voltar a seguir.',
+    ];
+    return frases.map((f) => tr(context, f)).join(' ');
   }
 }
 
@@ -534,7 +626,13 @@ class _BotaoMapa extends StatelessWidget {
 }
 
 class _Legenda extends StatelessWidget {
-  const _Legenda();
+  const _Legenda({this.comFantasma = false, this.exploracao = false});
+
+  /// Sem rota: só "Você".
+  final bool exploracao;
+
+  /// Mostra o item da rota mais usada (tracejada).
+  final bool comFantasma;
 
   @override
   Widget build(BuildContext context) {
@@ -545,7 +643,7 @@ class _Legenda extends StatelessWidget {
       children: [
         simbolo,
         const SizedBox(width: 6),
-        Text(rotulo, style: text.bodyMedium),
+        Flexible(child: Text(rotulo, style: text.bodyMedium)),
       ],
     );
     Widget linha(Color cor) => Container(
@@ -561,30 +659,54 @@ class _Legenda extends StatelessWidget {
       spacing: AcessaSpacing.md,
       runSpacing: AcessaSpacing.xs,
       children: [
-        item(Icon(Icons.navigation, size: 18, color: c.marker), 'Você'),
-        item(linha(c.navigation), 'A percorrer'),
-        item(linha(c.inkMuted.withValues(alpha: .5)), 'Já percorrido'),
         item(
-          Container(
-            width: 18,
-            height: 18,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: c.help,
-              shape: BoxShape.circle,
-              border: Border.all(color: c.ink, width: 2),
+          Icon(Icons.navigation, size: 18, color: c.marker),
+          tr(context, 'Você'),
+        ),
+        if (!exploracao) ...[
+          item(linha(c.navigation), tr(context, 'A percorrer')),
+          item(
+            linha(c.inkMuted.withValues(alpha: .5)),
+            tr(context, 'Já percorrido'),
+          ),
+          if (comFantasma)
+            item(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var k = 0; k < 3; k++)
+                    Container(
+                      width: 6,
+                      height: 4,
+                      margin: const EdgeInsets.only(right: 2),
+                      color: c.inkMuted,
+                    ),
+                ],
+              ),
+              tr(context, 'Rota mais usada (tracejada)'),
             ),
-            child: Text(
-              '1',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: c.onAccent,
+          item(
+            Container(
+              width: 18,
+              height: 18,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: c.help,
+                shape: BoxShape.circle,
+                border: Border.all(color: c.ink, width: 2),
+              ),
+              child: Text(
+                '1',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: c.onAccent,
+                ),
               ),
             ),
+            tr(context, 'Parada'),
           ),
-          'Parada',
-        ),
+        ],
       ],
     );
   }
@@ -596,6 +718,8 @@ class _PlantaPainter extends CustomPainter {
   _PlantaPainter({
     required this.dados,
     required this.estado,
+    required this.fantasma,
+    required this.exploracao,
     required this.piso,
     required this.c,
     required this.glow,
@@ -605,10 +729,17 @@ class _PlantaPainter extends CustomPainter {
     required this.rumo,
     required this.pulso,
     required this.textScale,
+    required this.idioma,
   });
 
   final ShoppingData dados;
   final EstadoNavegacao estado;
+
+  /// Rota mais usada, tracejada atrás da rota do visitante.
+  final Viagem? fantasma;
+
+  /// Sem rota (mapa de alertas): não desenha paradas.
+  final bool exploracao;
   final String piso;
   final AcessaColors c;
   final bool glow;
@@ -618,6 +749,9 @@ class _PlantaPainter extends CustomPainter {
   final double rumo;
   final double pulso;
   final double textScale;
+
+  /// Idioma do visitante (nome do piso nas trocas de piso).
+  final AppLanguage idioma;
 
   final _ocupado = <Rect>[];
 
@@ -669,6 +803,36 @@ class _PlantaPainter extends CustomPainter {
       canvas.drawLine(_p(noPiso[t.de]!), _p(noPiso[t.para]!), rua);
     }
 
+    // 2b. Rota mais usada (quando a rota adaptada é outra): tracejada e
+    // esmaecida, só nos trechos que a rota do visitante não usa.
+    if (fantasma case final f?) {
+      final usados = {
+        for (final perna in estado.viagem.pernas)
+          for (final e in perna.etapas) e.trecho.id,
+      };
+      final linha = Path();
+      for (final perna in f.pernas) {
+        for (final e in perna.etapas) {
+          if (e.trecho.trocaPiso != null || usados.contains(e.trecho.id)) {
+            continue;
+          }
+          if (e.de.piso != piso || e.para.piso != piso) continue;
+          linha
+            ..moveTo(_p(e.de).dx, _p(e.de).dy)
+            ..lineTo(_p(e.para).dx, _p(e.para).dy);
+        }
+      }
+      final wf = (larguraRua * .3).clamp(4.0, 10.0);
+      canvas.drawPath(
+        _tracejar(linha, wf * 1.6, wf * 1.2),
+        Paint()
+          ..color = c.inkMuted.withValues(alpha: .8)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = wf
+          ..strokeCap = StrokeCap.butt,
+      );
+    }
+
     // 3. Rota com contorno (como no GPS): feito apagado, resto em destaque.
     final feitas = estado.etapasFeitas;
     var g = 0;
@@ -679,7 +843,10 @@ class _PlantaPainter extends CustomPainter {
         final idx = g++;
         if (e.trecho.trocaPiso != null) {
           if (e.de.piso == piso && idx >= feitas) {
-            trocas.add((e.de, '${_seta(e)} ${e.para.piso}'));
+            trocas.add((
+              e.de,
+              '${_seta(e)} ${traduzir(e.para.piso ?? '', idioma)}',
+            ));
           }
           continue;
         }
@@ -766,7 +933,7 @@ class _PlantaPainter extends CustomPainter {
 
     // 6. Paradas numeradas e destino final (alfinete).
     for (final (i, p) in estado.viagem.paradas.indexed) {
-      if (p.piso != piso) continue;
+      if (exploracao || p.piso != piso) continue;
       final o = _p(p) + const Offset(13, -15);
       final ok = i < estado.perna || (i == estado.perna && estado.naParada);
       canvas.drawCircle(o, 11, Paint()..color = c.help);
@@ -924,6 +1091,223 @@ class _PlantaPainter extends CustomPainter {
     tp.paint(canvas, o - Offset(tp.width / 2, tp.height / 2));
   }
 
+  /// Corta [p] em traços de [traco] px com [vao] px de espaço.
+  static Path _tracejar(Path p, double traco, double vao) {
+    final r = Path();
+    for (final m in p.computeMetrics()) {
+      for (var d = 0.0; d < m.length; d += traco + vao) {
+        r.addPath(m.extractPath(d, d + traco), Offset.zero);
+      }
+    }
+    return r;
+  }
+
   @override
   bool shouldRepaint(_PlantaPainter old) => true;
+}
+
+/// Marcadores dos alertas do piso, posicionados pela câmera. Alertas
+/// próximos na tela viram um grupo com o número; relatos desta sessão
+/// ainda não enviados aparecem como "Enviando…" ou "Não enviado".
+class _CamadaAlertas extends StatelessWidget {
+  const _CamadaAlertas({
+    required this.cam,
+    required this.tam,
+    required this.alertas,
+    required this.pendentes,
+    required this.dados,
+    required this.pontos,
+  });
+
+  final _Camera cam;
+  final Size tam;
+  final List<Ocorrencia> alertas;
+  final List<EnvioPendente> pendentes;
+  final ShoppingData dados;
+  final Map<String, PontoReferencia> pontos;
+
+  /// Lado do alvo de toque de cada marcador (≥ 48 dp).
+  static const _lado = 48.0;
+
+  bool _visivel(Offset o) => Rect.fromLTWH(
+    -_lado / 2,
+    -_lado / 2,
+    tam.width + _lado,
+    tam.height + _lado,
+  ).contains(o);
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AcessaTheme.of(context).colors;
+    final text = Theme.of(context).textTheme;
+    // Raio de agrupamento: ~40 px na tela, convertido para a planta.
+    final grupos = agrupar(alertas, 40 / cam.k);
+    final filhos = <Widget>[];
+
+    for (final g in grupos) {
+      final o = cam.tela(Offset(g.first.x, g.first.y));
+      if (!_visivel(o)) continue;
+      final unico = g.length == 1;
+      final rotulo = unico
+          ? '${tr(context, 'Alerta da comunidade:')} '
+                '${tr(context, fraseDoAlerta(g.first, pontos))}'
+          : tr(context, '${g.length} alertas neste local');
+      filhos.add(
+        Positioned(
+          left: o.dx - _lado / 2,
+          top: o.dy - _lado / 2,
+          width: _lado,
+          height: _lado,
+          child: Semantics(
+            button: true,
+            label: rotulo,
+            hint: tr(context, 'Toque para ver os detalhes'),
+            excludeSemantics: true,
+            child: GestureDetector(
+              key: ValueKey(
+                unico ? 'alerta-${g.first.id}' : 'grupo-${g.first.id}',
+              ),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => unico
+                  ? mostrarDetalhesAlerta(context, g.first.id, dados)
+                  : mostrarGrupoAlertas(context, g, dados),
+              child: Center(
+                child: unico
+                    ? MarcadorAlerta(tipo: g.first.tipo)
+                    : MarcadorGrupo(quantos: g.length),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    for (final p in pendentes) {
+      final o = cam.tela(Offset(p.nova.x, p.nova.y));
+      if (!_visivel(o)) continue;
+      final falhou = p.estado == EstadoEnvio.falhou;
+      final estado = tr(context, falhou ? 'Não enviado' : 'Enviando…');
+      filhos.add(
+        Positioned(
+          left: o.dx - 50,
+          top: o.dy - _lado / 2,
+          width: 100,
+          child: Semantics(
+            button: true,
+            label: '${tr(context, p.nova.tipo.rotulo)}: $estado',
+            excludeSemantics: true,
+            child: GestureDetector(
+              key: ValueKey('pendente-${p.chave}'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => mostrarEnvioPendente(context, p),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: _lado,
+                    child: Center(child: MarcadorPendente(falhou: falhou)),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: c.background,
+                      borderRadius: BorderRadius.circular(AcessaRadius.pill),
+                      border: Border.all(
+                        color: falhou ? c.simulation : c.border,
+                      ),
+                    ),
+                    child: Text(
+                      estado,
+                      style: text.labelSmall?.copyWith(color: c.ink),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return Stack(clipBehavior: Clip.none, children: filhos);
+  }
+}
+
+/// Lista acessível "Alertas neste piso": o mesmo conteúdo dos marcadores,
+/// em texto, para leitor de tela e para quem prefere lista a mapa.
+class _ListaAlertasDoPiso extends StatelessWidget {
+  const _ListaAlertasDoPiso({
+    required this.alertas,
+    required this.pendentes,
+    required this.dados,
+    required this.pontos,
+    required this.agora,
+  });
+
+  final List<Ocorrencia> alertas;
+  final List<EnvioPendente> pendentes;
+  final ShoppingData dados;
+  final Map<String, PontoReferencia> pontos;
+  final DateTime agora;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AcessaTheme.of(context).colors;
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            tr(context, 'Alertas neste piso'),
+            style: text.titleLarge,
+          ),
+        ),
+        Semantics(
+          liveRegion: true,
+          child: Text(
+            tr(context, resumoAlertasNoPiso(alertas.length)),
+            style: text.bodyMedium?.copyWith(color: c.inkMuted),
+          ),
+        ),
+        for (final o in alertas)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            minTileHeight: AcessaSpacing.minTouch + 8,
+            textColor: c.ink,
+            leading: MarcadorAlerta(tipo: o.tipo, tamanho: 32),
+            title: Text(tr(context, o.tipo.rotulo)),
+            subtitle: Text(
+              '${tr(context, 'Perto de: ${nomeDoLocal(o, pontos) ?? '—'}')} · '
+              '${tr(context, 'confirmado ${haQuanto(o.confirmadaEm, agora)}')}',
+              style: TextStyle(color: c.inkMuted),
+            ),
+            trailing: Icon(Icons.chevron_right, color: c.inkMuted),
+            onTap: () => mostrarDetalhesAlerta(context, o.id, dados),
+          ),
+        for (final p in pendentes)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            minTileHeight: AcessaSpacing.minTouch + 8,
+            textColor: c.ink,
+            leading: MarcadorPendente(
+              falhou: p.estado == EstadoEnvio.falhou,
+              tamanho: 32,
+            ),
+            title: Text(tr(context, p.nova.tipo.rotulo)),
+            subtitle: Text(
+              tr(
+                context,
+                p.estado == EstadoEnvio.falhou ? 'Não enviado' : 'Enviando…',
+              ),
+              style: TextStyle(color: c.inkMuted),
+            ),
+            onTap: () => mostrarEnvioPendente(context, p),
+          ),
+      ],
+    );
+  }
 }

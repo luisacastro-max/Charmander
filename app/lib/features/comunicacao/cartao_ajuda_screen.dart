@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
 import '../../app/theme/tokens.dart';
+import '../../core/voz/voz.dart';
 import '../../core/widgets/burst.dart';
 import '../../core/widgets/sticker_card.dart';
 import '../../data/repositories/json_repositorios.dart';
@@ -15,6 +17,7 @@ import '../../domain/models/comunicacao.dart';
 import '../welcome_preferences/preferences.dart';
 import '../welcome_preferences/preferences_scope.dart';
 import 'cartao_animacoes.dart';
+import 'mensagens_rapidas.dart';
 
 /// Cartão de ajuda: o visitante escolhe uma frase e mostra o celular para
 /// outra pessoa (atendente, segurança, outro cliente).
@@ -32,6 +35,10 @@ import 'cartao_animacoes.dart';
 class CartaoAjudaScreen extends StatefulWidget {
   const CartaoAjudaScreen({super.key, this.destino, this.repositorio});
 
+  /// Mensagens rápidas (RF27): frases prontas por categoria. Com a
+  /// preferência "Mensagens rápidas em destaque", aparecem primeiro e
+  /// destacadas; sem ela, vêm depois do cartão de ajuda.
+
   /// Preenche "Pode me levar até {destino}?". Sem destino, a frase some.
   final String? destino;
   final ComunicacaoRepository? repositorio;
@@ -41,9 +48,10 @@ class CartaoAjudaScreen extends StatefulWidget {
 }
 
 class _Dados {
-  const _Dados(this.frases, this.respostas);
+  const _Dados(this.frases, this.respostas, this.mensagens);
   final List<FraseTraduzida> frases;
   final List<FraseTraduzida> respostas;
+  final List<CategoriaMensagens> mensagens;
 }
 
 class _CartaoAjudaScreenState extends State<CartaoAjudaScreen> {
@@ -54,15 +62,20 @@ class _CartaoAjudaScreenState extends State<CartaoAjudaScreen> {
 
   Future<_Dados> _carregar() async {
     final r = widget.repositorio ?? JsonComunicacaoRepository();
-    return _Dados(await r.cartoesAjuda(), await r.respostasRapidas());
+    return _Dados(
+      await r.cartoesAjuda(),
+      await r.respostasRapidas(),
+      await r.mensagensRapidas(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final c = AcessaTheme.of(context).colors;
     final text = Theme.of(context).textTheme;
-    final visitante =
-        PreferencesScope.maybeOf(context)?.prefs.language ?? AppLanguage.pt;
+    final prefs = PreferencesScope.maybeOf(context)?.prefs;
+    final visitante = prefs?.language ?? AppLanguage.pt;
+    final destaque = prefs?.quickMessages ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -70,9 +83,9 @@ class _CartaoAjudaScreenState extends State<CartaoAjudaScreen> {
         foregroundColor: c.ink,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text('Cartão de ajuda'),
+        title: Text(tr(context, 'Cartão de ajuda')),
         leading: IconButton(
-          tooltip: 'Voltar',
+          tooltip: tr(context, 'Voltar'),
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -81,8 +94,8 @@ class _CartaoAjudaScreenState extends State<CartaoAjudaScreen> {
         future: _dados,
         builder: (context, snap) {
           if (snap.hasError) {
-            return const Center(
-              child: Text('Não foi possível carregar as frases.'),
+            return Center(
+              child: Text(tr(context, 'Não foi possível carregar as frases.')),
             );
           }
           if (!snap.hasData) {
@@ -92,6 +105,34 @@ class _CartaoAjudaScreenState extends State<CartaoAjudaScreen> {
           final frases = d.frases
               .where((f) => widget.destino != null || !_temDestino(f))
               .toList();
+          void mostrar(FraseTraduzida f, Rect? origem) =>
+              Navigator.of(context).push(
+                rotaExpandir<void>(
+                  context,
+                  _CartaoMostrar(
+                    frase: f,
+                    respostas: d.respostas,
+                    leitorInicial: _leitor,
+                    visitante: visitante,
+                    destino: widget.destino,
+                  ),
+                  origem: origem,
+                ),
+              );
+          final mensagens = d.mensagens.isEmpty
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.only(bottom: AcessaSpacing.md),
+                  child: DistribuirCarta(
+                    index: 4,
+                    child: MensagensRapidas(
+                      categorias: d.mensagens,
+                      visitante: visitante,
+                      destaque: destaque,
+                      aoEscolher: (f) => mostrar(f, null),
+                    ),
+                  ),
+                );
           return ListView(
             padding: const EdgeInsets.fromLTRB(
               AcessaSpacing.lg,
@@ -102,21 +143,30 @@ class _CartaoAjudaScreenState extends State<CartaoAjudaScreen> {
             children: [
               DistribuirCarta(
                 index: 0,
-                child: Text('Mostrar para alguém', style: text.headlineMedium),
+                child: Text(
+                  tr(context, 'Mostrar para alguém'),
+                  style: text.headlineMedium,
+                ),
               ),
               const SizedBox(height: AcessaSpacing.xs),
               DistribuirCarta(
                 index: 1,
                 child: Text(
-                  'Escolha a frase. O celular mostra em letras grandes para a '
-                  'outra pessoa ler, e ela pode responder tocando na tela.',
+                  tr(
+                    context,
+                    'Escolha a frase. O celular mostra em letras grandes para a '
+                    'outra pessoa ler, e ela pode responder tocando na tela.',
+                  ),
                   style: text.bodyLarge,
                 ),
               ),
               const SizedBox(height: AcessaSpacing.md),
               DistribuirCarta(
                 index: 2,
-                child: Text('Quem vai ler fala', style: text.titleMedium),
+                child: Text(
+                  tr(context, 'Quem vai ler fala'),
+                  style: text.titleMedium,
+                ),
               ),
               const SizedBox(height: AcessaSpacing.xs),
               DistribuirCarta(
@@ -127,6 +177,7 @@ class _CartaoAjudaScreenState extends State<CartaoAjudaScreen> {
                 ),
               ),
               const SizedBox(height: AcessaSpacing.md),
+              if (destaque && mensagens != null) mensagens,
               // As frases são "distribuídas" como cartas de baralho.
               for (final (i, f) in frases.indexed)
                 Padding(
@@ -139,28 +190,17 @@ class _CartaoAjudaScreenState extends State<CartaoAjudaScreen> {
                     child: _ItemFrase(
                       icone: _icone(f.icone),
                       texto: _preencher(f.em(visitante), widget.destino),
-                      onTap: (origem) => Navigator.of(context).push(
-                        rotaExpandir<void>(
-                          context,
-                          _CartaoMostrar(
-                            frase: f,
-                            respostas: d.respostas,
-                            leitorInicial: _leitor,
-                            visitante: visitante,
-                            destino: widget.destino,
-                          ),
-                          origem: origem,
-                        ),
-                      ),
+                      onTap: (origem) => mostrar(f, origem),
                     ),
                   ),
                 ),
               const SizedBox(height: AcessaSpacing.sm),
+              if (!destaque && mensagens != null) mensagens,
               DistribuirCarta(
                 index: frases.length < 9 ? frases.length + 1 : 9,
                 atraso: const Duration(milliseconds: 220),
                 child: Text(
-                  'Traduções feitas previamente, não automáticas.',
+                  tr(context, 'Traduções feitas previamente, não automáticas.'),
                   style: text.bodyMedium?.copyWith(color: c.inkMuted),
                 ),
               ),
@@ -281,7 +321,7 @@ class _ItemFrase extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
-      hint: 'Mostra em letras grandes',
+      hint: tr(context, 'Mostra em letras grandes'),
       child: Pressionavel(
         child: InkWell(
           onTap: () => onTap(_retangulo(context)),
@@ -344,15 +384,19 @@ class _CartaoMostrarState extends State<_CartaoMostrar> {
   String _texto(FraseTraduzida f, AppLanguage l) =>
       _preencher(f.em(l), widget.destino);
 
-  void _anunciar(String s) {
-    final view = View.of(context);
-    SemanticsService.sendAnnouncement(view, s, TextDirection.ltr);
-  }
-
   void _responder(FraseTraduzida r) {
     setState(() => _resposta = r);
     HapticFeedback.heavyImpact();
-    _anunciar('Resposta: ${r.em(widget.visitante)}');
+    // Leitor de tela e, com "Orientações por áudio", também em voz alta,
+    // no idioma do visitante.
+    anunciar(context, 'Resposta: ${r.em(widget.visitante)}');
+  }
+
+  /// Botão "Ouvir": fala a frase no idioma de quem lê. É uma ação
+  /// explícita, então fala mesmo com o áudio desligado nas preferências.
+  void _ouvir() {
+    HapticFeedback.selectionClick();
+    Voz.instancia.falarNoIdioma(_texto(widget.frase, _leitor), _leitor);
   }
 
   @override
@@ -405,6 +449,23 @@ class _CartaoMostrarState extends State<_CartaoMostrar> {
           ),
           const SizedBox(height: AcessaSpacing.lg),
           fraseGrande,
+          const SizedBox(height: AcessaSpacing.md),
+          // Rótulo no idioma de quem lê: é a outra pessoa que vai tocar.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: _ouvir,
+              icon: const Icon(Icons.volume_up),
+              label: Text(traduzir('Ouvir', _leitor)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: preto,
+                backgroundColor: Colors.white,
+                side: const BorderSide(color: preto, width: 2),
+                minimumSize: const Size(48, AcessaSpacing.minTouch),
+                textStyle: text.titleMedium,
+              ),
+            ),
+          ),
           const SizedBox(height: AcessaSpacing.lg),
           Wrap(
             spacing: AcessaSpacing.sm,
@@ -436,7 +497,7 @@ class _CartaoMostrarState extends State<_CartaoMostrar> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Você está mostrando:',
+            tr(context, 'Você está mostrando:'),
             style: text.titleMedium?.copyWith(color: Colors.black87),
           ),
           Text(meu, style: text.titleLarge?.copyWith(color: preto)),
@@ -490,9 +551,12 @@ class _CartaoMostrarState extends State<_CartaoMostrar> {
                     child: SizedBox(
                       width: double.infinity,
                       child: Text(
-                        _resposta == null
-                            ? 'Aguardando resposta…'
-                            : 'Resposta: ${_resposta!.em(widget.visitante)}',
+                        tr(
+                          context,
+                          _resposta == null
+                              ? 'Aguardando resposta…'
+                              : 'Resposta: ${_resposta!.em(widget.visitante)}',
+                        ),
                         style: text.headlineSmall?.copyWith(color: preto),
                       ),
                     ),
@@ -515,7 +579,12 @@ class _CartaoMostrarState extends State<_CartaoMostrar> {
                     curve: Curves.easeInOutCubic,
                     child: const Icon(Icons.screen_rotation_alt),
                   ),
-                  label: Text(_frenteAFrente ? 'Desvirar' : 'Frente a frente'),
+                  label: Text(
+                    tr(
+                      context,
+                      _frenteAFrente ? 'Desvirar' : 'Frente a frente',
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: preto,
                     side: const BorderSide(color: preto, width: 2),
@@ -529,7 +598,7 @@ class _CartaoMostrarState extends State<_CartaoMostrar> {
                 child: FilledButton.icon(
                   onPressed: () => Navigator.of(context).maybePop(),
                   icon: const Icon(Icons.close),
-                  label: const Text('Fechar'),
+                  label: Text(tr(context, 'Fechar')),
                   style: FilledButton.styleFrom(
                     backgroundColor: preto,
                     foregroundColor: Colors.white,

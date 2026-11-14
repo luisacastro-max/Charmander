@@ -1,36 +1,37 @@
 # Documentação do Acessa+
 
-Revisão: 14/11/2026. Base: `2a05442`. Os documentos atuais descrevem o código versionado; mudanças locais podem estar em desenvolvimento.
+## Entrada para avaliação
 
-## Documentação atual
+- [Guia de avaliação](entrega/guia-avaliacao.md): materiais, código-fonte e jornada.
+- [Documentação técnica consolidada](documentacao-tecnica.md): projeto, arquitetura, tecnologias, funcionamento e limites.
+
+Revisão de 14/11/2026 sobre edbc8e9, integrado à main por 4cb0ea1. Alterações locais de voz, tradução e interface não são automaticamente entregas publicadas.
+
+## Referências atuais
 
 | Documento | Finalidade |
 |---|---|
-| [Estado atual e requisitos](requisitos/estado-atual.md) | Implementação, simulação e planejamento |
-| [Arquitetura atual](arquitetura/arquitetura-atual.md) | Módulos, estado e regras |
+| [Estado atual](requisitos/estado-atual.md) | Escopo e rastreabilidade resumida |
+| [Arquitetura](arquitetura/arquitetura-atual.md) | Organização e responsabilidades |
 | [Execução](desenvolvimento/execucao.md) | Ambiente, testes e build |
-| [Dicionário de dados](dados/dicionario-de-dados.md) | JSON, entidades e armazenamento |
-| [Mudanças de escopo](backlog/mudancas-de-escopo.md) | MUD-01 e MUD-02 |
-| [Pendências](backlog/pendencias.md) | Próximas entregas propostas |
-| [Plano de validação](qa/plano-de-validacao.md) | Testes automatizados e manuais |
-| [Demonstração](entrega/roteiro-demonstracao.md) | Apresentação do fluxo disponível |
-| [Direção visual](design/etapa-1-amostra-visual.md) | Histórico visual da primeira etapa |
+| [Dados](dados/dicionario-de-dados.md) | JSON e armazenamento |
+| [Validação](qa/plano-de-validacao.md) | Testes e evidências |
+| [Demonstração](entrega/roteiro-demonstracao.md) | Jornada para apresentação |
+| [Pendências](backlog/pendencias.md) | Melhorias e evolução |
+| [Mudanças de escopo](backlog/mudancas-de-escopo.md) | Histórico MUD-01 e MUD-02 |
+| [Direção visual](design/etapa-1-amostra-visual.md) | Histórico da primeira etapa |
 
-## Proposta original em Word
+## Documentos originais
 
-Os originais foram preservados. Descrevem o escopo pretendido, com referências antigas e decisões pendentes; não comprovam funcionalidades entregues.
+Propostas históricas preservadas, não comprovação de implementação.
 
 | Entrega | Arquivo |
 |---|---|
 | Requisitos v0.4 | [Requisitos](requisitos/requisitos-v0.4.docx) |
-| Arquitetura proposta | [Arquitetura](arquitetura/proposta-de-arquitetura.docx) |
+| Arquitetura proposta | [Arquitetura original](arquitetura/proposta-de-arquitetura.docx) |
 | Estrutura de 13 telas | [Telas](telas/proposta-e-estrutura-inicial-das-telas.docx) |
-| Justificativa técnica | [Tecnologias](tecnologias/justificativa-tecnica.docx) |
-| Plataforma e tecnologias v0.1 | [Plataforma](tecnologias/plataforma-e-tecnologias-v0.1.docx) |
-| Tecnologia sorteada: Trello | [Gestão](gestao/uso-do-trello.docx) |
+| Justificativa técnica | [Justificativa](tecnologias/justificativa-tecnica.docx) |
+| Plataforma e tecnologias | [Plataforma](tecnologias/plataforma-e-tecnologias-v0.1.docx) |
+| Trello | [Gestão](gestao/uso-do-trello.docx) |
 
-## Diferenças e atualização
-
-Para comportamento entregue, confira código e estado atual. Para alterações aprovadas de fluxo, confira MUD-01/MUD-02. Os IDs RF/RN/RNF continuam vindo dos requisitos v0.4. Diferenças devem virar pendência ou mudança explícita.
-
-O documento visual da Etapa 1 menciona fontes pela internet como histórico; atualmente estão empacotadas em `app/assets/fonts/`. Referências antigas à Etapa 3b como futura não descrevem a base atual.
+Para comportamento publicado, consultar fonte e documentação atual. Para decisões aprovadas, consultar mudanças de escopo. Os IDs continuam vindo dos requisitos v0.4. Fontes hoje são empacotadas; referências antigas a fontes online ou etapas futuras são históricas.

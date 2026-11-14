@@ -34,6 +34,17 @@ class Viagem extends ResultadoViagem {
   bool get usaEscada => pernas.any((p) => p.usaEscada);
   bool get usaElevador => pernas.any((p) => p.usaElevador);
 
+  /// Trechos de elevador de toda a viagem, sem repetir (ver
+  /// [Rota.trechosDeElevador]).
+  List<Trecho> get trechosDeElevador {
+    final vistos = <String>{};
+    return [
+      for (final p in pernas)
+        for (final t in p.trechosDeElevador)
+          if (vistos.add(t.id)) t,
+    ];
+  }
+
   /// Pisos na ordem em que aparecem em toda a viagem.
   List<String> get pisos {
     final r = <String>[];

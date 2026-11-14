@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/routes.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
@@ -8,6 +9,7 @@ import '../../core/widgets/brand_logo.dart';
 import '../../core/widgets/entrance.dart';
 import '../../core/widgets/preference_toggle.dart';
 import '../../core/widgets/sticker_button.dart';
+import '../../core/voz/voz.dart';
 import '../../core/widgets/sticker_card.dart';
 import '../destino/destino_screen.dart';
 import 'preferences.dart';
@@ -65,7 +67,7 @@ class PreferencesScreen extends StatelessWidget {
         scrolledUnderElevation: 0,
         title: const BrandLogo(size: 20, animate: false),
         leading: IconButton(
-          tooltip: 'Voltar',
+          tooltip: tr(context, 'Voltar'),
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -84,15 +86,21 @@ class PreferencesScreen extends StatelessWidget {
               index: i++,
               child: Semantics(
                 header: true,
-                child: Text('Minha acessibilidade', style: text.displayMedium),
+                child: Text(
+                  tr(context, 'Minha acessibilidade'),
+                  style: text.displayMedium,
+                ),
               ),
             ),
             const SizedBox(height: AcessaSpacing.sm),
             Entrance(
               index: i++,
               child: Text(
-                'Combine o que ajuda você. Não é preciso declarar nenhuma '
-                'deficiência. Dá para mudar quando quiser.',
+                tr(
+                  context,
+                  'Combine o que ajuda você. Não é preciso declarar nenhuma '
+                  'deficiência. Dá para mudar quando quiser.',
+                ),
                 style: text.bodyLarge?.copyWith(color: c.inkMuted),
               ),
             ),
@@ -106,19 +114,22 @@ class PreferencesScreen extends StatelessWidget {
               index: i++,
               child: _LivePreview(prefs: p),
             ),
-            group('Ver e ouvir', c.navigation, [
+            group(tr(context, 'Ver e ouvir'), c.navigation, [
               PreferenceToggle(
                 icon: Icons.text_increase,
-                title: 'Texto ampliado',
-                description: 'Letras maiores em todo o app.',
+                title: tr(context, 'Texto ampliado'),
+                description: tr(context, 'Letras maiores em todo o app.'),
                 value: p.largeText,
                 accent: c.navigation,
                 onChanged: (v) => set((p) => p.copyWith(largeText: v)),
               ),
               PreferenceToggle(
                 icon: Icons.contrast,
-                title: 'Alto contraste',
-                description: 'Fundo preto, texto branco e destaques amarelos.',
+                title: tr(context, 'Alto contraste'),
+                description: tr(
+                  context,
+                  'Fundo preto, texto branco e destaques amarelos.',
+                ),
                 value: p.highContrast,
                 accent: c.navigation,
                 revealsTheme: true,
@@ -126,62 +137,84 @@ class PreferencesScreen extends StatelessWidget {
               ),
               PreferenceToggle(
                 icon: Icons.volume_up_outlined,
-                title: 'Orientações por áudio',
-                description: 'Instruções faladas durante a navegação.',
+                title: tr(context, 'Orientações por áudio'),
+                description: tr(
+                  context,
+                  'Instruções faladas durante a navegação.',
+                ),
                 value: p.audioGuidance,
                 accent: c.navigation,
-                onChanged: (v) => set((p) => p.copyWith(audioGuidance: v)),
+                onChanged: (v) {
+                  set((p) => p.copyWith(audioGuidance: v));
+                  // Ação explícita: confirma em voz que o áudio ligou.
+                  if (v) _falarConfirmacao(p.language, _audioLigado);
+                },
               ),
             ]),
-            group('Comunicar', c.communication, [
+            group(tr(context, 'Comunicar'), c.communication, [
               PreferenceToggle(
                 icon: Icons.chat_outlined,
-                title: 'Comunicação por texto',
-                description: 'A Central abre direto na conversa escrita.',
+                title: tr(context, 'Comunicação por texto'),
+                description: tr(
+                  context,
+                  'A Central abre direto na conversa escrita.',
+                ),
                 value: p.textCommunication,
                 accent: c.communication,
                 onChanged: (v) => set((p) => p.copyWith(textCommunication: v)),
               ),
               PreferenceToggle(
                 icon: Icons.bolt_outlined,
-                title: 'Mensagens rápidas em destaque',
-                description: 'Frases prontas aparecem primeiro.',
+                title: tr(context, 'Mensagens rápidas em destaque'),
+                description: tr(context, 'Frases prontas aparecem primeiro.'),
                 value: p.quickMessages,
                 accent: c.communication,
                 onChanged: (v) => set((p) => p.copyWith(quickMessages: v)),
               ),
             ]),
-            group('Locomover-se', c.help, [
+            group(tr(context, 'Locomover-se'), c.help, [
+              // Atalho: só liga os recursos; a escolha não é guardada.
+              _ComoVaiCircular(
+                onEscolher: () => set(
+                  (p) => p.copyWith(avoidStairs: true, preferElevators: true),
+                ),
+              ),
               PreferenceToggle(
                 icon: Icons.accessible_forward,
-                title: 'Rotas sem escadas',
-                description: 'Nenhuma rota passará por degraus.',
+                title: tr(context, 'Rotas sem escadas'),
+                description: tr(context, 'Nenhuma rota passará por degraus.'),
                 value: p.avoidStairs,
                 accent: c.help,
                 onChanged: (v) => set((p) => p.copyWith(avoidStairs: v)),
               ),
               PreferenceToggle(
                 icon: Icons.elevator_outlined,
-                title: 'Preferência por elevadores',
-                description: 'Elevadores têm prioridade nas trocas de piso.',
+                title: tr(context, 'Preferência por elevadores'),
+                description: tr(
+                  context,
+                  'Elevadores têm prioridade nas trocas de piso.',
+                ),
                 value: p.preferElevators,
                 accent: c.help,
                 onChanged: (v) => set((p) => p.copyWith(preferElevators: v)),
               ),
             ]),
-            group('Conforto e clareza', c.marker, [
+            group(tr(context, 'Conforto e clareza'), c.marker, [
               PreferenceToggle(
                 icon: Icons.spa_outlined,
-                title: 'Redução de estímulos',
-                description: 'Sem animações e com cores mais suaves.',
+                title: tr(context, 'Redução de estímulos'),
+                description: tr(
+                  context,
+                  'Sem animações e com cores mais suaves.',
+                ),
                 value: p.calm,
                 accent: c.marker,
                 onChanged: (v) => set((p) => p.copyWith(calm: v)),
               ),
               PreferenceToggle(
                 icon: Icons.view_agenda_outlined,
-                title: 'Navegação simplificada',
-                description: 'Menos informações em cada tela.',
+                title: tr(context, 'Navegação simplificada'),
+                description: tr(context, 'Menos informações em cada tela.'),
                 value: p.simplified,
                 accent: c.marker,
                 onChanged: (v) => set((p) => p.copyWith(simplified: v)),
@@ -193,7 +226,14 @@ class PreferencesScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(top: AcessaSpacing.lg),
                 child: _LanguagePicker(
                   value: p.language,
-                  onChanged: (l) => set((p) => p.copyWith(language: l)),
+                  onChanged: (l) {
+                    if (l == p.language) return;
+                    set((p) => p.copyWith(language: l));
+                    // Com áudio ligado, confirma a troca já no novo idioma.
+                    if (p.audioGuidance) {
+                      _falarConfirmacao(l, 'Idioma: ${_nomeDoIdioma(l)}.');
+                    }
+                  },
                 ),
               ),
             ),
@@ -201,7 +241,10 @@ class PreferencesScreen extends StatelessWidget {
             Entrance(
               index: i++,
               child: StickerButton(
-                label: continuarParaDestino ? 'Continuar' : 'Voltar',
+                label: tr(
+                  context,
+                  continuarParaDestino ? 'Continuar' : 'Voltar',
+                ),
                 icon: continuarParaDestino
                     ? Icons.arrow_forward
                     : Icons.arrow_back,
@@ -215,10 +258,13 @@ class PreferencesScreen extends StatelessWidget {
             Entrance(
               index: i++,
               child: StickerButton(
-                label: 'Apagar minhas preferências',
+                label: tr(context, 'Apagar minhas preferências'),
                 kind: StickerButtonKind.secondary,
                 icon: Icons.delete_outline,
-                semanticHint: 'Apaga as escolhas salvas neste aparelho. Pede confirmação.',
+                semanticHint: tr(
+                  context,
+                  'Apaga as escolhas salvas neste aparelho. Pede confirmação.',
+                ),
                 onPressed: () => _confirmErase(context, ctrl),
               ),
             ),
@@ -226,12 +272,194 @@ class PreferencesScreen extends StatelessWidget {
             Entrance(
               index: i++,
               child: Text(
-                'Suas escolhas ficam salvas só neste aparelho. Nada é '
-                'enviado para fora.',
+                tr(
+                  context,
+                  'Suas escolhas ficam salvas só neste aparelho. Nada é '
+                  'enviado para fora.',
+                ),
                 style: text.bodyMedium?.copyWith(color: c.inkMuted),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Atalho "Como você vai circular hoje?" (RF03, RN01): cada opção só LIGA
+/// "Rotas sem escadas" e "Preferência por elevadores", que continuam
+/// independentes e podem ser desligados depois. A opção escolhida fica só
+/// na memória desta tela: não é salva nem vira preferência (ninguém
+/// declara deficiência ou equipamento — RN01, LGPD). Não mexe nas
+/// preferências de comunicação (RN02).
+class _ComoVaiCircular extends StatefulWidget {
+  const _ComoVaiCircular({required this.onEscolher});
+  final VoidCallback onEscolher;
+
+  @override
+  State<_ComoVaiCircular> createState() => _ComoVaiCircularState();
+}
+
+class _ComoVaiCircularState extends State<_ComoVaiCircular> {
+  static const _opcoes = [
+    (
+      Icons.accessible,
+      'Sobre rodas',
+      'cadeira de rodas, carrinho de bebê, mala',
+    ),
+    (Icons.assist_walker, 'Com apoio', 'andador, muletas, bengala'),
+  ];
+
+  static const _confirmacao =
+      'Ativamos "Rotas sem escadas" e "Preferência por elevadores". '
+      'Dá para desligar cada um logo abaixo.';
+
+  String? _escolha;
+
+  void _escolher(String opcao) {
+    setState(() => _escolha = opcao);
+    widget.onEscolher();
+    anunciar(context, _confirmacao);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AcessaTheme.of(context);
+    final c = t.colors;
+    final text = Theme.of(context).textTheme;
+    return StickerCard(
+      color: c.surface,
+      borderColor: c.border.withValues(alpha: t.highContrast ? 1 : .35),
+      shadow: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              tr(context, 'Como você vai circular hoje?'),
+              style: text.titleMedium,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            tr(
+              context,
+              'Atalho: liga os recursos de rota abaixo. '
+              'Não guardamos esta escolha.',
+            ),
+            style: text.bodyMedium?.copyWith(color: c.inkMuted),
+          ),
+          const SizedBox(height: AcessaSpacing.sm),
+          for (final (icone, titulo, detalhe) in _opcoes) ...[
+            _OpcaoCirculacao(
+              icone: icone,
+              titulo: tr(context, titulo),
+              detalhe: tr(context, detalhe),
+              escolhida: _escolha == titulo,
+              onTap: () => _escolher(titulo),
+            ),
+            const SizedBox(height: AcessaSpacing.sm),
+          ],
+          if (_escolha != null)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.check_circle_outline, color: c.ink, size: 20),
+                const SizedBox(width: AcessaSpacing.sm),
+                Expanded(
+                  child: Text(
+                    tr(context, _confirmacao),
+                    style: text.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OpcaoCirculacao extends StatelessWidget {
+  const _OpcaoCirculacao({
+    required this.icone,
+    required this.titulo,
+    required this.detalhe,
+    required this.escolhida,
+    required this.onTap,
+  });
+
+  final IconData icone;
+  final String titulo;
+  final String detalhe;
+  final bool escolhida;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AcessaTheme.of(context);
+    final c = t.colors;
+    final motion = Motion.of(context);
+    final text = Theme.of(context).textTheme;
+    final ativo = escolhida && !t.highContrast;
+    final fg = ativo ? c.onAccent : c.ink;
+    return Semantics(
+      button: true,
+      selected: escolhida,
+      label: '$titulo: $detalhe',
+      hint: tr(context, 'Liga Rotas sem escadas e Preferência por elevadores'),
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AcessaRadius.button),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: motion.d(Motion.base),
+            curve: Motion.enter,
+            constraints: const BoxConstraints(
+              minHeight: AcessaSpacing.minTouch,
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AcessaSpacing.md,
+              vertical: AcessaSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: ativo ? c.help : c.background,
+              borderRadius: BorderRadius.circular(AcessaRadius.button),
+              border: Border.all(
+                color: escolhida ? c.ink : c.inkMuted,
+                width: escolhida ? 2.5 : 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(icone, color: fg, size: 28),
+                const SizedBox(width: AcessaSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        titulo,
+                        style: text.titleMedium?.copyWith(color: fg),
+                      ),
+                      Text(
+                        detalhe,
+                        style: text.bodyMedium?.copyWith(
+                          color: ativo ? c.onAccent : c.inkMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (escolhida) Icon(Icons.check, color: fg),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -249,11 +477,14 @@ class _ActiveCounter extends StatelessWidget {
     final c = AcessaTheme.of(context).colors;
     final motion = Motion.of(context);
     final text = Theme.of(context).textTheme;
-    final label = count == 0
-        ? 'Nenhum recurso ativo'
-        : count == 1
-        ? '1 recurso ativo'
-        : '$count recursos ativos';
+    final label = tr(
+      context,
+      count == 0
+          ? 'Nenhum recurso ativo'
+          : count == 1
+          ? '1 recurso ativo'
+          : '$count recursos ativos',
+    );
 
     return Semantics(
       liveRegion: true,
@@ -298,19 +529,18 @@ class _LanguagePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AcessaTheme.of(context).colors;
     final text = Theme.of(context).textTheme;
-    const options = [
-      (AppLanguage.pt, 'Português'),
-      (AppLanguage.en, 'English'),
-      (AppLanguage.es, 'Español'),
-    ];
+    // Cada idioma aparece escrito na própria língua.
+    final options = [for (final l in AppLanguage.values) (l, _nomeDoIdioma(l))];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Semantics(header: true, child: Text('Idioma', style: text.titleLarge)),
+        Semantics(
+          header: true,
+          child: Text(tr(context, 'Idioma'), style: text.titleLarge),
+        ),
         const SizedBox(height: AcessaSpacing.xs),
         Text(
-          'Define a voz e as frases traduzidas. Nesta versão, os textos '
-          'do app seguem em português.',
+          tr(context, 'Muda os textos do app, a voz e as frases prontas.'),
           style: text.bodyMedium?.copyWith(color: c.inkMuted),
         ),
         const SizedBox(height: AcessaSpacing.sm),
@@ -377,11 +607,14 @@ class _LivePreview extends StatelessWidget {
     ];
 
     final summary = [
-      'Prévia ao vivo.',
-      p.textCommunication
-          ? 'A Central abre na conversa escrita.'
-          : 'A Central abre nos cartões de comunicação.',
-      ...chips.map((e) => '${e.$2}.'),
+      tr(context, 'Prévia ao vivo.'),
+      tr(
+        context,
+        p.textCommunication
+            ? 'A Central abre na conversa escrita.'
+            : 'A Central abre nos cartões de comunicação.',
+      ),
+      ...chips.map((e) => '${tr(context, e.$2)}.'),
     ].join(' ');
 
     return Semantics(
@@ -399,9 +632,12 @@ class _LivePreview extends StatelessWidget {
               children: [
                 Icon(Icons.visibility_outlined, color: c.focus, size: 20),
                 const SizedBox(width: AcessaSpacing.sm),
-                Text(
-                  'Prévia ao vivo',
-                  style: text.titleMedium?.copyWith(color: c.focus),
+                // Flexible: em outros idiomas o título pode ser mais longo.
+                Flexible(
+                  child: Text(
+                    tr(context, 'Prévia ao vivo'),
+                    style: text.titleMedium?.copyWith(color: c.focus),
+                  ),
                 ),
               ],
             ),
@@ -452,7 +688,7 @@ class _LivePreview extends StatelessWidget {
                       const SizedBox(width: AcessaSpacing.sm),
                       Flexible(
                         child: Text(
-                          'Onde fica o banheiro?',
+                          tr(context, 'Onde fica o banheiro?'),
                           style: text.bodyLarge?.copyWith(
                             color: t.highContrast ? c.ink : c.onAccent,
                             fontWeight: FontWeight.w700,
@@ -502,7 +738,7 @@ class _LivePreview extends StatelessWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              ch.$2,
+                              tr(context, ch.$2),
                               style: text.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: t.highContrast ? c.ink : c.onAccent,
@@ -529,17 +765,23 @@ Future<void> _confirmErase(
   PreferencesController ctrl,
 ) async {
   final c = AcessaTheme.of(context).colors;
+  // O aviso final sai no idioma em uso antes de apagar (depois volta ao
+  // padrão, português).
+  final idioma = idiomaDe(context);
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: c.surface,
       title: Text(
-        'Apagar suas preferências?',
+        tr(ctx, 'Apagar suas preferências?'),
         style: Theme.of(ctx).textTheme.titleLarge,
       ),
       content: Text(
-        'As escolhas salvas neste aparelho serão apagadas e o app volta '
-        'ao padrão. Dá para escolher de novo quando quiser.',
+        tr(
+          ctx,
+          'As escolhas salvas neste aparelho serão apagadas e o app volta '
+          'ao padrão. Dá para escolher de novo quando quiser.',
+        ),
         style: Theme.of(ctx).textTheme.bodyLarge,
       ),
       actions: [
@@ -549,7 +791,7 @@ Future<void> _confirmErase(
             foregroundColor: c.ink,
             minimumSize: const Size(64, AcessaSpacing.minTouch),
           ),
-          child: const Text('Cancelar'),
+          child: Text(tr(ctx, 'Cancelar')),
         ),
         FilledButton(
           onPressed: () => Navigator.of(ctx).pop(true),
@@ -558,7 +800,7 @@ Future<void> _confirmErase(
             foregroundColor: c.onPrimary,
             minimumSize: const Size(64, AcessaSpacing.minTouch),
           ),
-          child: const Text('Apagar'),
+          child: Text(tr(ctx, 'Apagar')),
         ),
       ],
     ),
@@ -567,6 +809,24 @@ Future<void> _confirmErase(
   await ctrl.eraseStored();
   if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Preferências apagadas deste aparelho.')),
+    SnackBar(
+      content: Text(traduzir('Preferências apagadas deste aparelho.', idioma)),
+    ),
   );
+}
+
+const _audioLigado = 'Orientações por áudio ligadas.';
+
+/// Nome do idioma escrito na própria língua (não é traduzido).
+String _nomeDoIdioma(AppLanguage l) => switch (l) {
+  AppLanguage.pt => 'Português',
+  AppLanguage.en => 'English',
+  AppLanguage.es => 'Español',
+};
+
+/// Confirmação falada de uma escolha feita agora pelo visitante.
+/// Sai no [idioma] indicado, mesmo que a tela ainda não tenha sido
+/// reconstruída com ele.
+void _falarConfirmacao(AppLanguage idioma, String textoPt) {
+  Voz.instancia.falarNoIdioma(traduzir(textoPt, idioma), idioma);
 }

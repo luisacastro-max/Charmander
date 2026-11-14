@@ -45,45 +45,135 @@
   ],
   "mensagensRapidas": [
     {
-      "categoria": "Informações",
+      "categoria": {
+        "id": "MC1",
+        "pt": "Informações",
+        "en": "Information",
+        "es": "Información"
+      },
       "frases": [
-        "Qual o horário de funcionamento?",
-        "Onde posso ver o mapa?"
+        {
+          "id": "M01",
+          "pt": "Qual o horário de funcionamento?",
+          "en": "What are the opening hours?",
+          "es": "¿Cuál es el horario de atención?"
+        },
+        {
+          "id": "M02",
+          "pt": "Onde posso ver o mapa?",
+          "en": "Where can I see the map?",
+          "es": "¿Dónde puedo ver el mapa?"
+        }
       ]
     },
     {
-      "categoria": "Localização",
+      "categoria": {
+        "id": "MC2",
+        "pt": "Localização",
+        "en": "Location",
+        "es": "Ubicación"
+      },
       "frases": [
-        "Onde estou agora?",
-        "Pode me levar até a saída?"
+        {
+          "id": "M03",
+          "pt": "Onde estou agora?",
+          "en": "Where am I now?",
+          "es": "¿Dónde estoy ahora?"
+        },
+        {
+          "id": "M04",
+          "pt": "Pode me levar até a saída?",
+          "en": "Can you take me to the exit?",
+          "es": "¿Puede llevarme a la salida?"
+        }
       ]
     },
     {
-      "categoria": "Atendimento",
+      "categoria": {
+        "id": "MC3",
+        "pt": "Atendimento",
+        "en": "Assistance",
+        "es": "Atención"
+      },
       "frases": [
-        "Preciso de atendimento por escrito.",
-        "Pode repetir mais devagar?"
+        {
+          "id": "M05",
+          "pt": "Preciso de atendimento por escrito.",
+          "en": "I need written assistance.",
+          "es": "Necesito atención por escrito."
+        },
+        {
+          "id": "M06",
+          "pt": "Pode repetir mais devagar?",
+          "en": "Could you repeat that more slowly?",
+          "es": "¿Puede repetirlo más despacio?"
+        }
       ]
     },
     {
-      "categoria": "Compras",
+      "categoria": {
+        "id": "MC4",
+        "pt": "Compras",
+        "en": "Shopping",
+        "es": "Compras"
+      },
       "frases": [
-        "Esta loja tem provador acessível?",
-        "Qual o valor deste produto?"
+        {
+          "id": "M07",
+          "pt": "Esta loja tem provador acessível?",
+          "en": "Does this store have an accessible fitting room?",
+          "es": "¿Esta tienda tiene probador accesible?"
+        },
+        {
+          "id": "M08",
+          "pt": "Qual o valor deste produto?",
+          "en": "How much is this product?",
+          "es": "¿Cuánto cuesta este producto?"
+        }
       ]
     },
     {
-      "categoria": "Alimentação",
+      "categoria": {
+        "id": "MC5",
+        "pt": "Alimentação",
+        "en": "Food",
+        "es": "Comida"
+      },
       "frases": [
-        "Há opções sem glúten?",
-        "Pode ler o cardápio para mim?"
+        {
+          "id": "M09",
+          "pt": "Há opções sem glúten?",
+          "en": "Are there gluten-free options?",
+          "es": "¿Hay opciones sin gluten?"
+        },
+        {
+          "id": "M10",
+          "pt": "Pode ler o cardápio para mim?",
+          "en": "Could you read the menu to me?",
+          "es": "¿Puede leerme el menú?"
+        }
       ]
     },
     {
-      "categoria": "Acessibilidade",
+      "categoria": {
+        "id": "MC6",
+        "pt": "Acessibilidade",
+        "en": "Accessibility",
+        "es": "Accesibilidad"
+      },
       "frases": [
-        "Preciso de uma rota sem escadas.",
-        "Preciso de um lugar tranquilo."
+        {
+          "id": "M11",
+          "pt": "Preciso de uma rota sem escadas.",
+          "en": "I need a route without stairs.",
+          "es": "Necesito una ruta sin escaleras."
+        },
+        {
+          "id": "M12",
+          "pt": "Preciso de um lugar tranquilo.",
+          "en": "I need a quiet place.",
+          "es": "Necesito un lugar tranquilo."
+        }
       ]
     }
   ],

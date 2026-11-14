@@ -17,7 +17,7 @@ Future<PreferencesController> abrirApp(
   WidgetTester t, {
   bool reduzirMovimento = false,
 }) async {
-  t.view.physicalSize = const Size(1080, 7500);
+  t.view.physicalSize = const Size(1080, 9000);
   t.view.devicePixelRatio = 2.5;
   addTearDown(t.view.reset);
   final ctrl = PreferencesController();
@@ -160,7 +160,7 @@ void main() {
 
   testWidgets('RF44/CA14: apagar preferências pede confirmação e limpa o '
       'que foi salvo', (t) async {
-    t.view.physicalSize = const Size(1080, 7500);
+    t.view.physicalSize = const Size(1080, 9000);
     t.view.devicePixelRatio = 2.5;
     addTearDown(t.view.reset);
     final store = MemoryPreferencesStore();

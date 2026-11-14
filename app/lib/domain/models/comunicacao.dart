@@ -23,18 +23,22 @@ class CartaoComunicacao {
       );
 }
 
-/// Grupo de mensagens rápidas por categoria (RF27).
+/// Grupo de mensagens rápidas por categoria (RF27), em 3 idiomas.
 @immutable
 class CategoriaMensagens {
   const CategoriaMensagens({required this.categoria, required this.frases});
 
-  final String categoria;
-  final List<String> frases;
+  final FraseTraduzida categoria;
+  final List<FraseTraduzida> frases;
 
   factory CategoriaMensagens.fromJson(Map<String, dynamic> j) =>
       CategoriaMensagens(
-        categoria: j['categoria'] as String,
-        frases: (j['frases'] as List).cast<String>(),
+        categoria: FraseTraduzida.fromJson(
+          j['categoria'] as Map<String, dynamic>,
+        ),
+        frases: (j['frases'] as List)
+            .map((f) => FraseTraduzida.fromJson(f as Map<String, dynamic>))
+            .toList(),
       );
 }
 

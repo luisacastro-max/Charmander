@@ -1,13 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/routes.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
 import '../../app/theme/tokens.dart';
+import '../../core/voz/voz.dart';
 import '../../core/widgets/sticker_button.dart';
 import '../../core/widgets/sticker_card.dart';
 import '../../data/shopping_data.dart';
@@ -16,6 +17,7 @@ import '../../domain/models/shopping.dart';
 import '../../domain/rules/assistencia.dart';
 import '../../domain/rules/informacao.dart';
 import '../comunicacao/cartao_ajuda_screen.dart';
+import '../comunicacao/mensagens_rapidas.dart';
 import '../welcome_preferences/preferences_scope.dart';
 import 'ajuda_animacoes.dart';
 
@@ -107,8 +109,9 @@ class _AjudaScreenState extends State<AjudaScreen> {
     super.dispose();
   }
 
-  void _anunciar(String s) =>
-      SemanticsService.sendAnnouncement(View.of(context), s, TextDirection.ltr);
+  /// Leitor de tela e, com "Orientações por áudio", voz — no idioma do
+  /// visitante. [s] em português.
+  void _anunciar(String s) => anunciar(context, s);
 
   void _revisar() {
     if (_categoria == null) {
@@ -161,9 +164,11 @@ class _AjudaScreenState extends State<AjudaScreen> {
     final motion = Motion.of(context);
     final titulo = switch (_etapa) {
       _Etapa.pedido => 'Ajuda+',
-      _Etapa.revisao => 'Confira seu pedido',
-      _Etapa.acompanhamento => 'Acompanhamento',
+      _Etapa.revisao => tr(context, 'Confira seu pedido'),
+      _Etapa.acompanhamento => tr(context, 'Acompanhamento'),
     };
+    final mensagensRapidas =
+        PreferencesScope.maybeOf(context)?.prefs.quickMessages ?? false;
     return PopScope(
       // Na revisão, "voltar" corrige o pedido em vez de sair.
       canPop: _etapa != _Etapa.revisao,
@@ -196,18 +201,21 @@ class _AjudaScreenState extends State<AjudaScreen> {
             child: Text(titulo, key: ValueKey(titulo)),
           ),
           leading: IconButton(
-            tooltip: 'Voltar',
+            tooltip: tr(context, 'Voltar'),
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
           actions: [
             IconButton(
-              tooltip: 'Cartão de ajuda',
+              tooltip: tr(context, 'Cartão de ajuda'),
               icon: const Icon(Icons.front_hand_outlined),
               onPressed: _abrirCartao,
             ),
           ],
         ),
+        // Com "Mensagens rápidas em destaque", o botão flutuante fica sempre
+        // à mão; a lista ganha espaço embaixo para ele não cobrir botões.
+        floatingActionButton: BotaoMensagensRapidas(destino: widget.destino),
         body: Column(
           children: [
             Padding(
@@ -254,11 +262,11 @@ class _AjudaScreenState extends State<AjudaScreen> {
                   key: ValueKey(_etapa),
                   // Cada etapa tem a própria rolagem durante a transição.
                   primary: false,
-                  padding: const EdgeInsets.fromLTRB(
+                  padding: EdgeInsets.fromLTRB(
                     AcessaSpacing.lg,
                     0,
                     AcessaSpacing.lg,
-                    AcessaSpacing.xl,
+                    AcessaSpacing.xl + (mensagensRapidas ? 72 : 0),
                   ),
                   children: switch (_etapa) {
                     _Etapa.pedido => _formulario(context),
@@ -293,12 +301,15 @@ class _AjudaScreenState extends State<AjudaScreen> {
       Surgir(
         index: 0,
         child: Text(
-          'Peça apoio só se quiser. Você decide como ser atendido(a).',
+          tr(
+            context,
+            'Peça apoio só se quiser. Você decide como ser atendido(a).',
+          ),
           style: text.bodyLarge,
         ),
       ),
       const SizedBox(height: AcessaSpacing.lg),
-      Surgir(index: 1, child: _Titulo('O que está acontecendo?')),
+      Surgir(index: 1, child: _Titulo(tr(context, 'O que está acontecendo?'))),
       if (_faltaCategoria && _categoria == null)
         Semantics(
           liveRegion: true,
@@ -313,7 +324,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
                   const SizedBox(width: AcessaSpacing.xs),
                   Expanded(
                     child: Text(
-                      'Escolha uma opção para continuar.',
+                      tr(context, 'Escolha uma opção para continuar.'),
                       style: text.titleMedium,
                     ),
                   ),
@@ -337,7 +348,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
                     index: 2 + n,
                     child: _Opcao(
                       icone: _iconeCategoria(cat),
-                      texto: cat.texto,
+                      texto: tr(context, cat.texto),
                       selecionada: _categoria == cat,
                       // Contraste do círculo também na opção destacada.
                       radio: Radio<CategoriaAjuda>(
@@ -355,7 +366,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
         ),
       ),
       const SizedBox(height: AcessaSpacing.md),
-      Surgir(index: 7, child: _Titulo('Onde você está')),
+      Surgir(index: 7, child: _Titulo(tr(context, 'Onde você está'))),
       StickerCard(
         shadow: false,
         child: Column(
@@ -375,7 +386,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
                       children: [...anteriores, ?atual],
                     ),
                     child: Text(
-                      _local,
+                      tr(context, _local),
                       key: ValueKey(_local),
                       style: text.titleLarge,
                     ),
@@ -386,8 +397,11 @@ class _AjudaScreenState extends State<AjudaScreen> {
             if (ponto != null) ...[
               const SizedBox(height: AcessaSpacing.xs),
               Text(
-                'Pelo beacon ${ponto.beacon} (simulado). Confira e troque se '
-                'não estiver certo.',
+                tr(
+                  context,
+                  'Pelo beacon ${ponto.beacon} (simulado). Confira e troque '
+                  'se não estiver certo.',
+                ),
                 style: text.bodyMedium?.copyWith(color: c.inkMuted),
               ),
             ],
@@ -396,15 +410,15 @@ class _AjudaScreenState extends State<AjudaScreen> {
               DropdownButtonFormField<String>(
                 initialValue: ponto?.id,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Trocar local',
+                decoration: InputDecoration(
+                  labelText: tr(context, 'Trocar local'),
                   border: OutlineInputBorder(),
                 ),
                 items: [
                   for (final p in dados.pontosSimulaveis)
                     DropdownMenuItem(
                       value: p.id,
-                      child: Text('${p.nome} · ${exibir(p.piso)}'),
+                      child: Text(tr(context, '${p.nome} · ${exibir(p.piso)}')),
                     ),
                 ],
                 onChanged: (id) => setState(() => _pontoId = id),
@@ -414,14 +428,14 @@ class _AjudaScreenState extends State<AjudaScreen> {
         ),
       ),
       const SizedBox(height: AcessaSpacing.lg),
-      _Titulo('Como prefere ser atendido(a)?'),
+      _Titulo(tr(context, 'Como prefere ser atendido(a)?')),
       Wrap(
         spacing: AcessaSpacing.sm,
         runSpacing: AcessaSpacing.sm,
         children: [
           for (final f in FormaAtendimento.values)
             ChoiceChip(
-              label: Text(f.texto),
+              label: Text(tr(context, f.texto)),
               avatar: Icon(_iconeForma(f), size: 20),
               selected: _formaEscolhida == f,
               onSelected: (_) => setState(() => _forma = f),
@@ -437,13 +451,16 @@ class _AjudaScreenState extends State<AjudaScreen> {
       ),
       const SizedBox(height: AcessaSpacing.xs),
       Text(
-        'É a sua preferência; a disponibilidade depende do shopping.',
+        tr(
+          context,
+          'É a sua preferência; a disponibilidade depende do shopping.',
+        ),
         style: text.bodyMedium?.copyWith(color: c.inkMuted),
       ),
       const SizedBox(height: AcessaSpacing.lg),
-      _Titulo('Detalhes (opcional)'),
+      _Titulo(tr(context, 'Detalhes (opcional)')),
       if (sugestoes.isNotEmpty) ...[
-        Text('Frases para este local:', style: text.bodyMedium),
+        Text(tr(context, 'Frases para este local:'), style: text.bodyMedium),
         const SizedBox(height: AcessaSpacing.xs),
         Wrap(
           spacing: AcessaSpacing.sm,
@@ -451,9 +468,10 @@ class _AjudaScreenState extends State<AjudaScreen> {
           children: [
             for (final s in sugestoes)
               ActionChip(
-                label: Text(s.titulo),
+                label: Text(tr(context, s.titulo)),
                 avatar: const Icon(Icons.add, size: 18),
-                onPressed: () => setState(() => _detalhes.text = s.mensagem!),
+                onPressed: () =>
+                    setState(() => _detalhes.text = tr(context, s.mensagem!)),
               ),
           ],
         ),
@@ -464,22 +482,24 @@ class _AjudaScreenState extends State<AjudaScreen> {
         minLines: 2,
         maxLines: 4,
         textCapitalization: TextCapitalization.sentences,
-        decoration: const InputDecoration(
-          labelText: 'Se quiser, conte mais',
+        decoration: InputDecoration(
+          labelText: tr(context, 'Se quiser, conte mais'),
           border: OutlineInputBorder(),
         ),
       ),
       const SizedBox(height: AcessaSpacing.lg),
       StickerButton(
-        label: 'Revisar pedido',
+        label: tr(context, 'Revisar pedido'),
         icon: Icons.arrow_forward,
         onPressed: _revisar,
       ),
       const SizedBox(height: AcessaSpacing.md),
-      const SimulationNotice(
-        text:
-            'Demonstração: o pedido fica só neste aparelho e nenhuma equipe '
-            'real é acionada.',
+      SimulationNotice(
+        text: tr(
+          context,
+          'Demonstração: o pedido fica só neste aparelho e nenhuma equipe '
+          'real é acionada.',
+        ),
       ),
     ];
   }
@@ -490,19 +510,27 @@ class _AjudaScreenState extends State<AjudaScreen> {
     final text = Theme.of(context).textTheme;
     final detalhes = _detalhes.text.trim();
     final linhas = [
-      _Linha(Icons.help_outline, 'O que acontece', _categoria!.texto),
-      _Linha(Icons.my_location, 'Onde', _local),
+      _Linha(
+        Icons.help_outline,
+        tr(context, 'O que acontece'),
+        tr(context, _categoria!.texto),
+      ),
+      _Linha(Icons.my_location, tr(context, 'Onde'), tr(context, _local)),
       _Linha(
         _iconeForma(_formaEscolhida),
-        'Atendimento',
-        _formaEscolhida.texto,
+        tr(context, 'Atendimento'),
+        tr(context, _formaEscolhida.texto),
       ),
-      _Linha(Icons.notes, 'Detalhes', detalhes.isEmpty ? 'Nenhum' : detalhes),
+      _Linha(
+        Icons.notes,
+        tr(context, 'Detalhes'),
+        detalhes.isEmpty ? tr(context, 'Nenhum') : detalhes,
+      ),
     ];
     return [
       Surgir(
         index: 0,
-        child: Text('Está tudo certo?', style: text.headlineSmall),
+        child: Text(tr(context, 'Está tudo certo?'), style: text.headlineSmall),
       ),
       const SizedBox(height: AcessaSpacing.md),
       Surgir(
@@ -522,7 +550,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
       Surgir(
         index: 6,
         child: StickerButton(
-          label: 'Confirmar e pedir ajuda',
+          label: tr(context, 'Confirmar e pedir ajuda'),
           icon: Icons.check,
           onPressed: _enviar,
         ),
@@ -531,7 +559,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
       Surgir(
         index: 7,
         child: StickerButton(
-          label: 'Corrigir',
+          label: tr(context, 'Corrigir'),
           icon: Icons.edit_outlined,
           kind: StickerButtonKind.secondary,
           onPressed: () => setState(() => _irPara(_Etapa.pedido)),
@@ -558,11 +586,14 @@ class _AjudaScreenState extends State<AjudaScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(p.categoria.texto, style: text.titleLarge),
-                    const SizedBox(height: AcessaSpacing.xs),
-                    Text('📍 ${p.local}', style: text.bodyLarge),
                     Text(
-                      'Preferência: ${p.forma.texto}',
+                      tr(context, p.categoria.texto),
+                      style: text.titleLarge,
+                    ),
+                    const SizedBox(height: AcessaSpacing.xs),
+                    Text('📍 ${tr(context, p.local)}', style: text.bodyLarge),
+                    Text(
+                      tr(context, 'Preferência: ${p.forma.texto}'),
                       style: text.bodyLarge,
                     ),
                     if (p.detalhes.isNotEmpty)
@@ -622,7 +653,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
                           const SizedBox(width: AcessaSpacing.sm),
                           Expanded(
                             child: Text(
-                              'Solicitação cancelada',
+                              tr(context, 'Solicitação cancelada'),
                               style: text.titleLarge,
                             ),
                           ),
@@ -635,11 +666,13 @@ class _AjudaScreenState extends State<AjudaScreen> {
         ),
       ),
       const SizedBox(height: AcessaSpacing.md),
-      const Surgir(
+      Surgir(
         index: 3,
         child: SimulationNotice(
-          text:
-              'Simulação para demonstração: nenhuma equipe real foi acionada.',
+          text: tr(
+            context,
+            'Simulação para demonstração: nenhuma equipe real foi acionada.',
+          ),
         ),
       ),
       const SizedBox(height: AcessaSpacing.lg),
@@ -648,7 +681,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
           key: const ValueKey('avancar'),
           index: 4,
           child: StickerButton(
-            label: 'Avançar etapa (demonstração)',
+            label: tr(context, 'Avançar etapa (demonstração)'),
             icon: Icons.fast_forward_outlined,
             onPressed: () => _mudarPedido(p.avancar()),
           ),
@@ -658,7 +691,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
           key: const ValueKey('cartao'),
           index: 5,
           child: StickerButton(
-            label: 'Mostrar cartão enquanto espera',
+            label: tr(context, 'Mostrar cartão enquanto espera'),
             icon: Icons.front_hand_outlined,
             kind: StickerButtonKind.secondary,
             onPressed: _abrirCartao,
@@ -669,7 +702,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
           key: const ValueKey('cancelar'),
           index: 6,
           child: StickerButton(
-            label: 'Cancelar solicitação',
+            label: tr(context, 'Cancelar solicitação'),
             icon: Icons.close,
             kind: StickerButtonKind.secondary,
             onPressed: () => _mudarPedido(p.cancelar()),
@@ -682,7 +715,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
             key: const ValueKey('retomar'),
             index: 2,
             child: StickerButton(
-              label: 'Retomar percurso',
+              label: tr(context, 'Retomar percurso'),
               icon: Icons.navigation_outlined,
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -693,7 +726,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
           key: const ValueKey('inicio'),
           index: 3,
           child: StickerButton(
-            label: 'Voltar ao início',
+            label: tr(context, 'Voltar ao início'),
             icon: Icons.home_outlined,
             kind: widget.durantePercurso
                 ? StickerButtonKind.secondary
@@ -706,7 +739,7 @@ class _AjudaScreenState extends State<AjudaScreen> {
           key: const ValueKey('novo'),
           index: 4,
           child: StickerButton(
-            label: 'Novo pedido',
+            label: tr(context, 'Novo pedido'),
             icon: Icons.add,
             kind: StickerButtonKind.secondary,
             onPressed: _novoPedido,

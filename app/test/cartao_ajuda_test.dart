@@ -108,12 +108,15 @@ void main() {
       find.text('Pode me levar até Balcão de Informações?'),
       findsOneWidget,
     );
-    expect(find.text('Você está mostrando:'), findsOneWidget);
-    expect(find.text('Aguardando resposta…'), findsOneWidget);
+    // A metade do visitante segue o idioma dele (inglês).
+    expect(find.text('You are showing:'), findsOneWidget);
+    expect(find.text('Waiting for an answer…'), findsOneWidget);
+    // O botão "Ouvir" fica no idioma de quem lê (português).
+    expect(find.text('Ouvir'), findsOneWidget);
 
     await t.tap(find.text('Me siga'));
     await t.pumpAndSettle();
-    expect(find.text('Resposta: Follow me'), findsOneWidget);
+    expect(find.text('Answer: Follow me'), findsOneWidget);
   });
 
   testWidgets('Troca o idioma de quem lê e vira frente a frente', (t) async {

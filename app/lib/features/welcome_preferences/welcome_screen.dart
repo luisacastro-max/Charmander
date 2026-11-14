@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/i18n/i18n.dart';
 import '../../app/routes.dart';
 import '../../app/theme/app_theme.dart';
 import '../../app/theme/tokens.dart';
@@ -32,8 +33,8 @@ class WelcomeScreen extends StatelessWidget {
     final pillars = [
       (
         Icons.forum_outlined,
-        'Comunicação Universal',
-        'Texto, voz, cartões e frases em 3 idiomas.',
+        tr(context, 'Comunicação Universal'),
+        tr(context, 'Texto, voz, cartões e frases em 3 idiomas.'),
         c.communication,
         () =>
             Navigator.of(context)
@@ -41,15 +42,15 @@ class WelcomeScreen extends StatelessWidget {
       ),
       (
         Icons.explore_outlined,
-        'Navegação Viva',
-        'Rotas que respeitam o seu jeito de se locomover.',
+        tr(context, 'Navegação Viva'),
+        tr(context, 'Rotas que respeitam o seu jeito de se locomover.'),
         c.navigation,
         null,
       ),
       (
         Icons.volunteer_activism_outlined,
-        'Ajuda+',
-        'Peça apoio só quando quiser, do seu jeito.',
+        tr(context, 'Ajuda+'),
+        tr(context, 'Peça apoio só quando quiser, do seu jeito.'),
         c.help,
         () =>
             Navigator.of(context).push(acessaRoute<void>(const AjudaScreen())),
@@ -75,7 +76,7 @@ class WelcomeScreen extends StatelessWidget {
             const SizedBox(height: AcessaSpacing.lg),
             Semantics(
               header: true,
-              label: 'Acessibilidade que conecta pessoas.',
+              label: tr(context, 'Acessibilidade que conecta pessoas.'),
               excludeSemantics: true,
               // Em telas estreitas (ex.: 360 dp) o título encolhe por inteiro
               // em vez de quebrar "Acessibilidade" no meio da palavra.
@@ -89,7 +90,10 @@ class WelcomeScreen extends StatelessWidget {
                     Entrance(
                       index: 0,
                       delay: titleDelay,
-                      child: Text('Acessibilidade', style: text.displayLarge),
+                      child: Text(
+                        tr(context, 'Acessibilidade'),
+                        style: text.displayLarge,
+                      ),
                     ),
                     Entrance(
                       index: 2,
@@ -97,9 +101,9 @@ class WelcomeScreen extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('que ', style: text.displayLarge),
+                          Text(tr(context, 'que '), style: text.displayLarge),
                           MarkerHighlight(
-                            text: 'conecta',
+                            text: tr(context, 'conecta'),
                             style: text.displayLarge,
                             delay: const Duration(milliseconds: 900),
                           ),
@@ -109,7 +113,10 @@ class WelcomeScreen extends StatelessWidget {
                     Entrance(
                       index: 4,
                       delay: titleDelay,
-                      child: Text('pessoas.', style: text.displayLarge),
+                      child: Text(
+                        tr(context, 'pessoas.'),
+                        style: text.displayLarge,
+                      ),
                     ),
                   ],
                 ),
@@ -120,9 +127,12 @@ class WelcomeScreen extends StatelessWidget {
               index: 6,
               delay: titleDelay,
               child: Text(
-                'Comunique-se do seu jeito, encontre caminhos que fazem '
-                'sentido para você e peça apoio quando quiser. '
-                'Sem cadastro e sem precisar explicar nada.',
+                tr(
+                  context,
+                  'Comunique-se do seu jeito, encontre caminhos que fazem '
+                  'sentido para você e peça apoio quando quiser. '
+                  'Sem cadastro e sem precisar explicar nada.',
+                ),
                 style: text.bodyLarge?.copyWith(color: c.inkMuted),
               ),
             ),
@@ -147,9 +157,12 @@ class WelcomeScreen extends StatelessWidget {
               index: 8,
               delay: pillarsDelay,
               child: StickerButton(
-                label: 'Começar',
+                label: tr(context, 'Começar'),
                 icon: Icons.arrow_forward,
-                semanticHint: 'Abre as preferências de acessibilidade',
+                semanticHint: tr(
+                  context,
+                  'Abre as preferências de acessibilidade',
+                ),
                 onPressed: () =>
                     Navigator.of(context)
                         .push(acessaRoute(const PreferencesScreen())),
@@ -160,7 +173,7 @@ class WelcomeScreen extends StatelessWidget {
               index: 9,
               delay: pillarsDelay,
               child: StickerButton(
-                label: 'Configurar depois',
+                label: tr(context, 'Configurar depois'),
                 kind: StickerButtonKind.secondary,
                 onPressed: () =>
                     Navigator.of(context)
@@ -171,10 +184,12 @@ class WelcomeScreen extends StatelessWidget {
             Entrance(
               index: 10,
               delay: pillarsDelay,
-              child: const SimulationNotice(
-                text:
-                    'Protótipo de demonstração: shopping, beacons e '
-                    'atendimentos são simulados, com dados fictícios.',
+              child: SimulationNotice(
+                text: tr(
+                  context,
+                  'Protótipo de demonstração: shopping, beacons e '
+                  'atendimentos são simulados, com dados fictícios.',
+                ),
               ),
             ),
           ],
