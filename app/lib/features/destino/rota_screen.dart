@@ -13,6 +13,8 @@ import '../../data/shopping_data.dart';
 import '../../domain/models/shopping.dart';
 import '../../domain/rules/informacao.dart';
 import '../../domain/rules/rotas.dart';
+import '../../domain/rules/viagem.dart';
+import '../navegacao/navegacao_screen.dart';
 import '../welcome_preferences/preferences_scope.dart';
 import '../welcome_preferences/preferences_screen.dart';
 import 'destino_screen.dart';
@@ -20,7 +22,11 @@ import 'destino_screen.dart';
 /// Resumo da rota (T05 simplificada): distância, tempo, pisos, critérios
 /// considerados e as etapas em texto (RF13, RF15, RF18). A rota é
 /// recalculada quando as preferências mudam (RF45).
-class RotaScreen extends StatelessWidget {
+///
+/// Etapa 3b: como num app de transporte, o visitante pode acrescentar
+/// paradas ("primeiro o elevador, depois a Praça de Alimentação"),
+/// reordenar e remover, antes de iniciar a navegação.
+class RotaScreen extends StatefulWidget {
   const RotaScreen({
     super.key,
     required this.origemId,
@@ -29,20 +35,66 @@ class RotaScreen extends StatelessWidget {
   });
 
   final String origemId;
+
+  /// Primeira parada escolhida na tela "Para onde?".
   final Local destino;
   final ShoppingData dados;
+
+  @override
+  State<RotaScreen> createState() => _RotaScreenState();
+}
+
+class _RotaScreenState extends State<RotaScreen> {
+  late final List<Local> _paradas = [widget.destino];
+  String _aviso = '';
+
+  ShoppingData get dados => widget.dados;
+
+  Future<void> _adicionarParada() async {
+    final ultima = _paradas.last;
+    final escolhido = await Navigator.of(context).push<Local>(
+      acessaRoute(
+        DestinoScreen(
+          pontoInicial: ultima.pontoId,
+          paradaDepoisDe: ultima.nome,
+        ),
+      ),
+    );
+    if (escolhido == null || !mounted) return;
+    if (escolhido.pontoId == ultima.pontoId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${escolhido.nome} já é a última parada.')),
+      );
+      return;
+    }
+    setState(() {
+      _paradas.add(escolhido);
+      _aviso =
+          '${escolhido.nome} adicionada como parada ${_paradas.length}. '
+          'Rota recalculada.';
+    });
+  }
+
+  void _remover(int i) => setState(() {
+    final l = _paradas.removeAt(i);
+    _aviso = '${l.nome} removida. Rota recalculada.';
+  });
+
+  void _mover(int i, int para) => setState(() {
+    final l = _paradas.removeAt(i);
+    _paradas.insert(para, l);
+    _aviso = '${l.nome} agora é a parada ${para + 1}. Rota recalculada.';
+  });
 
   @override
   Widget build(BuildContext context) {
     final c = AcessaTheme.of(context).colors;
     final text = Theme.of(context).textTheme;
     final prefs = PreferencesScope.of(context).prefs;
-    final resultado = dados.motor.calcular(
-      origemId,
-      destino.pontoId,
-      criteriosDe(prefs),
-    );
-    final pontoDestino = dados.ponto(destino.pontoId);
+    final resultado = dados.motor.calcularViagem(widget.origemId, [
+      for (final p in _paradas) p.pontoId,
+    ], criteriosDe(prefs));
+    final destino = _paradas.last;
 
     var i = 0;
     return Scaffold(
@@ -88,25 +140,51 @@ class RotaScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: AcessaSpacing.xs),
+          const SizedBox(height: AcessaSpacing.md),
           Entrance(
             index: i++,
-            child: Text(
-              'Saindo de ${dados.ponto(origemId).nome}',
-              style: text.bodyLarge?.copyWith(color: c.inkMuted),
+            child: _PainelParadas(
+              origem: dados.ponto(widget.origemId),
+              paradas: _paradas,
+              falhou: resultado is ViagemImpossivel ? resultado.perna : null,
+              onAdicionar: _paradas.length < maxParadas
+                  ? _adicionarParada
+                  : null,
+              onRemover: _remover,
+              onMover: _mover,
             ),
+          ),
+          // Anuncia mudanças na lista de paradas para leitores de tela.
+          Semantics(
+            liveRegion: true,
+            child: _aviso.isEmpty
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(top: AcessaSpacing.sm),
+                    child: Text(
+                      _aviso,
+                      style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                    ),
+                  ),
           ),
           const SizedBox(height: AcessaSpacing.md),
           switch (resultado) {
-            Rota() => _ComRota(
-              rota: resultado,
+            Viagem() => _ComRota(
+              viagem: resultado,
               destino: destino,
-              pontoDestino: pontoDestino,
+              pontoDestino: dados.ponto(destino.pontoId),
               primeiroIndice: i,
+              dados: dados,
             ),
-            SemRota() => Entrance(
+            ViagemImpossivel() => Entrance(
               index: i,
-              child: _SemRotaCard(resultado: resultado),
+              child: _SemRotaCard(
+                resultado: resultado.motivo,
+                onRemoverParada: _paradas.length > 1
+                    ? () => _remover(resultado.perna)
+                    : null,
+                nomeParada: _paradas[resultado.perna].nome,
+              ),
             ),
           },
         ],
@@ -115,18 +193,192 @@ class RotaScreen extends StatelessWidget {
   }
 }
 
+/// Lista de paradas no estilo dos apps de transporte: origem, paradas
+/// numeradas e o destino final, com botões para reordenar e remover
+/// (botões em vez de arrastar, para quem usa leitor de tela ou teclado).
+class _PainelParadas extends StatelessWidget {
+  const _PainelParadas({
+    required this.origem,
+    required this.paradas,
+    required this.falhou,
+    required this.onAdicionar,
+    required this.onRemover,
+    required this.onMover,
+  });
+
+  final PontoReferencia origem;
+  final List<Local> paradas;
+  final int? falhou;
+  final VoidCallback? onAdicionar;
+  final ValueChanged<int> onRemover;
+  final void Function(int de, int para) onMover;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AcessaTheme.of(context);
+    final c = t.colors;
+    final text = Theme.of(context).textTheme;
+    final varias = paradas.length > 1;
+
+    Widget marcador(Widget filho, Color cor, {bool cheio = true}) => Container(
+      width: 32,
+      height: 32,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: cheio ? cor : c.surface,
+        shape: BoxShape.circle,
+        border: Border.all(color: cor, width: 2),
+      ),
+      child: filho,
+    );
+
+    Widget botao(IconData icone, String dica, VoidCallback? onTap) =>
+        IconButton(
+          tooltip: dica,
+          onPressed: onTap,
+          icon: Icon(icone),
+          color: c.ink,
+          disabledColor: c.inkMuted.withValues(alpha: .35),
+          constraints: const BoxConstraints(
+            minWidth: AcessaSpacing.minTouch,
+            minHeight: AcessaSpacing.minTouch,
+          ),
+        );
+
+    return StickerCard(
+      color: c.surface,
+      borderColor: c.navigation,
+      padding: const EdgeInsets.fromLTRB(
+        AcessaSpacing.md,
+        AcessaSpacing.sm,
+        AcessaSpacing.xs,
+        AcessaSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MergeSemantics(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AcessaSpacing.sm),
+              child: Row(
+                children: [
+                  marcador(
+                    Icon(Icons.my_location, size: 18, color: c.navigation),
+                    c.navigation,
+                    cheio: false,
+                  ),
+                  const SizedBox(width: AcessaSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Saindo de',
+                          style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                        ),
+                        Text(origem.nome, style: text.titleMedium),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          for (final (n, l) in paradas.indexed)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  marcador(
+                    n == paradas.length - 1
+                        ? Icon(Icons.flag, size: 18, color: c.onAccent)
+                        : Text(
+                            '${n + 1}',
+                            style: text.labelLarge?.copyWith(color: c.onAccent),
+                          ),
+                    falhou == n ? c.simulation : c.help,
+                  ),
+                  const SizedBox(width: AcessaSpacing.md),
+                  Expanded(
+                    child: MergeSemantics(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            !varias
+                                ? 'Destino'
+                                : n == paradas.length - 1
+                                ? 'Destino final'
+                                : 'Parada ${n + 1}',
+                            style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                          ),
+                          Text(l.nome, style: text.titleMedium),
+                          if (falhou == n)
+                            Text(
+                              'Sem caminho compatível até aqui',
+                              style: text.bodyMedium?.copyWith(
+                                color: c.simulation,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (varias) ...[
+                    botao(
+                      Icons.arrow_upward,
+                      'Mover ${l.nome} para antes',
+                      n == 0 ? null : () => onMover(n, n - 1),
+                    ),
+                    botao(
+                      Icons.arrow_downward,
+                      'Mover ${l.nome} para depois',
+                      n == paradas.length - 1 ? null : () => onMover(n, n + 1),
+                    ),
+                    botao(Icons.close, 'Remover ${l.nome}', () => onRemover(n)),
+                  ],
+                ],
+              ),
+            ),
+          const SizedBox(height: AcessaSpacing.xs),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: onAdicionar,
+              icon: const Icon(Icons.add_location_alt_outlined),
+              label: Text(
+                onAdicionar == null
+                    ? 'Limite de $maxParadas paradas'
+                    : 'Adicionar outra parada',
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: c.focus,
+                minimumSize: const Size(48, AcessaSpacing.minTouch),
+                textStyle: text.titleMedium,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ComRota extends StatelessWidget {
   const _ComRota({
-    required this.rota,
+    required this.viagem,
     required this.destino,
     required this.pontoDestino,
     required this.primeiroIndice,
+    required this.dados,
   });
 
-  final Rota rota;
+  final Viagem viagem;
   final Local destino;
   final PontoReferencia pontoDestino;
   final int primeiroIndice;
+  final ShoppingData dados;
 
   @override
   Widget build(BuildContext context) {
@@ -134,8 +386,9 @@ class _ComRota extends StatelessWidget {
     final c = t.colors;
     final text = Theme.of(context).textTheme;
     var i = primeiroIndice;
+    final varias = viagem.pernas.length > 1;
 
-    if (rota.etapas.isEmpty) {
+    if (viagem.totalEtapas == 0) {
       return Entrance(
         index: i,
         child: StickerCard(
@@ -147,23 +400,25 @@ class _ComRota extends StatelessWidget {
     }
 
     final badges = <(IconData, String)>[
-      if (rota.criterios.semEscadas)
+      if (viagem.criterios.semEscadas)
         (Icons.accessible_forward, 'Sem escadas')
-      else if (rota.usaEscada)
+      else if (viagem.usaEscada)
         (Icons.stairs_outlined, 'Tem degraus'),
-      if (rota.usaElevador) (Icons.elevator_outlined, 'Usa elevador'),
-      if (rota.criterios.caminhoTranquilo)
+      if (viagem.usaElevador) (Icons.elevator_outlined, 'Usa elevador'),
+      if (viagem.criterios.caminhoTranquilo)
         (Icons.spa_outlined, 'Evita movimento'),
+      if (varias) (Icons.alt_route, '${viagem.pernas.length} paradas'),
     ];
 
+    var numero = 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Entrance(
           index: i++,
-          child: _ResumoNeon(rota: rota, badges: badges),
+          child: _ResumoNeon(viagem: viagem, badges: badges),
         ),
-        if (!rota.criterios.semEscadas && rota.usaEscada) ...[
+        if (!viagem.criterios.semEscadas && viagem.usaEscada) ...[
           const SizedBox(height: AcessaSpacing.sm),
           Entrance(
             index: i++,
@@ -177,37 +432,65 @@ class _ComRota extends StatelessWidget {
         const SizedBox(height: AcessaSpacing.lg),
         Entrance(
           index: i++,
+          child: StickerButton(
+            label: 'Iniciar navegação',
+            icon: Icons.navigation_outlined,
+            semanticHint: 'Abre a bússola e o mapa interativo',
+            onPressed: () async {
+              final nav = Navigator.of(context);
+              final novoDestino = await nav.push<bool>(
+                acessaRoute(NavegacaoScreen(viagem: viagem, dados: dados)),
+              );
+              // "Escolher novo destino" ao chegar: volta para "Para onde?".
+              if (novoDestino == true) nav.pop();
+            },
+          ),
+        ),
+        const SizedBox(height: AcessaSpacing.lg),
+        Entrance(
+          index: i++,
           child: Semantics(
             header: true,
             child: Text('Passo a passo', style: text.titleLarge),
           ),
         ),
         const SizedBox(height: AcessaSpacing.sm),
-        for (final (n, e) in rota.etapas.indexed)
-          Entrance(
-            index: (i + n).clamp(0, 14),
-            child: _Etapa(
-              numero: n + 1,
-              etapa: e,
-              ultima: n == rota.etapas.length - 1,
-            ),
-          ),
-        const SizedBox(height: AcessaSpacing.lg),
-        Entrance(
-          index: i++,
-          child: StickerButton(
-            label: 'Iniciar navegação',
-            icon: Icons.navigation_outlined,
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'A navegação com bússola e mapa chega na Etapa 3b.',
+        for (final (p, perna) in viagem.pernas.indexed) ...[
+          if (varias)
+            Padding(
+              padding: const EdgeInsets.only(
+                top: AcessaSpacing.xs,
+                bottom: AcessaSpacing.sm,
+              ),
+              child: Semantics(
+                header: true,
+                child: Text(
+                  p == viagem.pernas.length - 1
+                      ? 'Até o destino final: ${viagem.paradas[p].nome}'
+                      : 'Até a parada ${p + 1}: ${viagem.paradas[p].nome}',
+                  style: text.titleMedium?.copyWith(color: c.help),
                 ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: AcessaSpacing.lg),
+          if (perna.etapas.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AcessaSpacing.md),
+              child: Text(
+                'Você já está aqui.',
+                style: text.bodyLarge?.copyWith(color: c.inkMuted),
+              ),
+            ),
+          for (final (n, e) in perna.etapas.indexed)
+            Entrance(
+              index: (i + numero).clamp(0, 14),
+              child: _Etapa(
+                numero: ++numero,
+                etapa: e,
+                ultima: n == perna.etapas.length - 1,
+              ),
+            ),
+        ],
+        const SizedBox(height: AcessaSpacing.md),
         Entrance(
           index: i++,
           child: _SobreDestino(local: destino, ponto: pontoDestino),
@@ -219,8 +502,8 @@ class _ComRota extends StatelessWidget {
 
 /// Cartão de destaque com distância animada (conta de 0 até o valor).
 class _ResumoNeon extends StatelessWidget {
-  const _ResumoNeon({required this.rota, required this.badges});
-  final Rota rota;
+  const _ResumoNeon({required this.viagem, required this.badges});
+  final Viagem viagem;
   final List<(IconData, String)> badges;
 
   @override
@@ -233,8 +516,8 @@ class _ResumoNeon extends StatelessWidget {
 
     return Semantics(
       label:
-          '${rota.distanciaM} metros, cerca de ${rota.minutos} minutos. '
-          'Pisos: ${rota.pisos.join(' para ')}. ${badges.map((b) => b.$2).join('. ')}.',
+          '${viagem.distanciaM} metros, cerca de ${viagem.minutos} minutos. '
+          'Pisos: ${viagem.pisos.join(' para ')}. ${badges.map((b) => b.$2).join('. ')}.',
       excludeSemantics: true,
       child: StickerCard(
         color: t.highContrast ? c.surface : c.help,
@@ -250,7 +533,7 @@ class _ResumoNeon extends StatelessWidget {
                 TextSpan(
                   children: [
                     TextSpan(
-                      text: '${(rota.distanciaM * v).round()}',
+                      text: '${(viagem.distanciaM * v).round()}',
                       style: text.displayLarge?.copyWith(color: fg),
                     ),
                     TextSpan(
@@ -262,7 +545,7 @@ class _ResumoNeon extends StatelessWidget {
               ),
             ),
             Text(
-              'cerca de ${rota.minutos} min a pé',
+              'cerca de ${viagem.minutos} min a pé',
               style: text.titleMedium?.copyWith(color: fg),
             ),
             const SizedBox(height: AcessaSpacing.sm),
@@ -270,7 +553,7 @@ class _ResumoNeon extends StatelessWidget {
               spacing: 6,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                for (final (n, p) in rota.pisos.indexed) ...[
+                for (final (n, p) in viagem.pisos.indexed) ...[
                   if (n > 0) Icon(Icons.arrow_forward, size: 18, color: fg),
                   Text(p, style: text.titleMedium?.copyWith(color: fg)),
                 ],
@@ -448,8 +731,16 @@ class _SobreDestino extends StatelessWidget {
 /// RN04 / RF15: informa a limitação e oferece alternativas, sem mudar a
 /// preferência do visitante por conta própria.
 class _SemRotaCard extends StatelessWidget {
-  const _SemRotaCard({required this.resultado});
+  const _SemRotaCard({
+    required this.resultado,
+    required this.nomeParada,
+    this.onRemoverParada,
+  });
   final SemRota resultado;
+  final String nomeParada;
+
+  /// Só existe quando há mais de uma parada.
+  final VoidCallback? onRemoverParada;
 
   @override
   Widget build(BuildContext context) {
@@ -493,6 +784,14 @@ class _SemRotaCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AcessaSpacing.lg),
+        if (onRemoverParada != null) ...[
+          StickerButton(
+            label: 'Remover a parada $nomeParada',
+            icon: Icons.remove_circle_outline,
+            onPressed: onRemoverParada,
+          ),
+          const SizedBox(height: AcessaSpacing.md),
+        ],
         StickerButton(
           label: 'Escolher outro destino',
           icon: Icons.search,

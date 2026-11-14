@@ -50,9 +50,19 @@ final _atalhos = <_Atalho>[
 /// une Explorar (T04) e o início do Planejamento de rota (T05).
 /// RF07–RF13, RF15, RF51, RN03, RN04, RNF08.
 class DestinoScreen extends StatefulWidget {
-  const DestinoScreen({super.key, this.pontoInicial = 'ENT_P'});
+  const DestinoScreen({
+    super.key,
+    this.pontoInicial = 'ENT_P',
+    this.paradaDepoisDe,
+  });
 
   final String pontoInicial;
+
+  /// Modo "adicionar parada" (Etapa 3b): nome da parada anterior. Ao
+  /// escolher um local, a tela devolve o [Local] em vez de abrir a rota.
+  final String? paradaDepoisDe;
+
+  bool get escolhendoParada => paradaDepoisDe != null;
 
   @override
   State<DestinoScreen> createState() => _DestinoScreenState();
@@ -126,6 +136,10 @@ class _DestinoScreenState extends State<DestinoScreen> {
 
     final filtrados = dados.locais.where((l) {
       if (!l.destino) return false;
+      // Escolhendo a próxima parada, a anterior não aparece de novo.
+      if (widget.escolhendoParada && l.pontoId == widget.pontoInicial) {
+        return false;
+      }
       if (_atalho != null && !_atalho!.filtro(l)) return false;
       if (_piso != null && dados.ponto(l.pontoId).piso != _piso) return false;
       return l.corresponde(_busca.text);
@@ -154,16 +168,23 @@ class _DestinoScreenState extends State<DestinoScreen> {
           index: i++,
           child: Semantics(
             header: true,
-            child: Text('Para onde você quer ir?', style: text.displayMedium),
+            child: Text(
+              widget.escolhendoParada
+                  ? 'Qual a próxima parada?'
+                  : 'Para onde você quer ir?',
+              style: text.displayMedium,
+            ),
           ),
         ),
         const SizedBox(height: AcessaSpacing.md),
         Entrance(
           index: i++,
-          child: _VoceEstaAqui(
-            ponto: aqui,
-            onTrocar: () => _escolherPonto(context, dados),
-          ),
+          child: widget.escolhendoParada
+              ? _DepoisDe(nome: widget.paradaDepoisDe!)
+              : _VoceEstaAqui(
+                  ponto: aqui,
+                  onTrocar: () => _escolherPonto(context, dados),
+                ),
         ),
         const SizedBox(height: AcessaSpacing.md),
         Entrance(
@@ -248,11 +269,20 @@ class _DestinoScreenState extends State<DestinoScreen> {
                 local: local,
                 ponto: dados.ponto(local.pontoId),
                 rota: rota,
-                onTap: () => Navigator.of(context).push(
-                  acessaRoute(
-                    RotaScreen(origemId: _aqui, destino: local, dados: dados),
-                  ),
-                ),
+                hint: widget.escolhendoParada
+                    ? 'Adicionar como próxima parada'
+                    : 'Ver rota',
+                onTap: () => widget.escolhendoParada
+                    ? Navigator.of(context).pop(local)
+                    : Navigator.of(context).push(
+                        acessaRoute(
+                          RotaScreen(
+                            origemId: _aqui,
+                            destino: local,
+                            dados: dados,
+                          ),
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: AcessaSpacing.sm),
@@ -377,6 +407,46 @@ class _VoceEstaAqui extends StatelessWidget {
             child: const Text('Trocar'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// No modo "adicionar parada": de onde as distâncias são contadas.
+class _DepoisDe extends StatelessWidget {
+  const _DepoisDe({required this.nome});
+  final String nome;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AcessaTheme.of(context).colors;
+    final text = Theme.of(context).textTheme;
+    return StickerCard(
+      color: c.surface,
+      borderColor: c.help,
+      child: MergeSemantics(
+        child: Row(
+          children: [
+            Icon(Icons.alt_route, color: c.help, size: 30),
+            const SizedBox(width: AcessaSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Depois de',
+                    style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                  ),
+                  Text(nome, style: text.titleMedium),
+                  Text(
+                    'Distâncias contadas a partir daí.',
+                    style: text.bodyMedium?.copyWith(color: c.inkMuted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -617,11 +687,13 @@ class _CartaoResultado extends StatelessWidget {
     required this.ponto,
     required this.rota,
     required this.onTap,
+    this.hint = 'Ver rota',
   });
   final Local local;
   final PontoReferencia ponto;
   final ResultadoRota rota;
   final VoidCallback onTap;
+  final String hint;
 
   @override
   Widget build(BuildContext context) {
@@ -639,7 +711,7 @@ class _CartaoResultado extends StatelessWidget {
 
     return Semantics(
       button: true,
-      hint: 'Ver rota',
+      hint: hint,
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(

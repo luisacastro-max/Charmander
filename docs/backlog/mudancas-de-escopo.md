@@ -29,4 +29,18 @@ Registro do PO. Cada mudança mantém os identificadores dos requisitos originai
 | Motor de rotas | Cálculo sobre pontos e trechos (opção B da arquitetura). |
 | "Redução de estímulos" nas rotas | Também evita trechos cadastrados com muito movimento (RN10), quando existe alternativa. |
 
+## MUD-02 — Rota com paradas (Etapa 3b, novembro de 2026)
+
+**Pedido da equipe:** como nos apps de transporte, montar uma rota com mais de um ponto — por exemplo, "primeiro o elevador, depois a Praça de Alimentação".
+
+| Tema | Decisão |
+|---|---|
+| Como adicionar | No resumo da rota, "Adicionar outra parada" abre a busca no modo "Qual a próxima parada?", com distâncias contadas a partir da parada anterior. |
+| Ordem | Botões "Mover para antes/depois" e "Remover" (em vez de arrastar, para funcionar com leitor de tela e teclado). |
+| Limite | 5 paradas, destino final incluído. |
+| Sem caminho compatível | A parada que falhou é apontada; o app oferece removê-la e nunca desliga "Rotas sem escadas" por conta própria (RN04). |
+| Na navegação | Ao chegar numa parada intermediária, a navegação espera o visitante tocar em "Seguir para …". |
+
+**Requisitos afetados (sem mudar os IDs):** RF12–RF15 (planejamento) e RF17–RF22 (Navegação Viva) passam a aceitar várias paradas.
+
 **Atualizações pendentes nos documentos Word** (para a equipe): Requisitos v0.4 (seções 7 e 8 — telas e fluxos), Proposta das 13 telas (seções 7 e 9) e Arquitetura (decisão do motor de rotas e do gerenciador de estado).
