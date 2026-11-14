@@ -4,7 +4,7 @@
 
 Para usar e avaliar o Acessa+, basta clicar no link da versão publicada na Vercel. O aplicativo abre diretamente no navegador do celular ou computador, sem instalar Flutter, baixar o código-fonte ou executar comandos.
 
-**Link do aplicativo na Vercel:** a ser informado pela equipe.
+**[Clique aqui para abrir o Acessa+ na Vercel](https://acessa-plus-j6efrj192-charmander5.vercel.app/)**
 
 1. Abra o link do aplicativo.
 2. Ajuste as preferências de acessibilidade e o idioma, se desejar.
@@ -106,7 +106,7 @@ O teste Node sobe seu próprio servidor local; não exige manter serve-web.js ab
 
 A saída web está em app/build/web. Sirva por HTTP, sem abrir o HTML diretamente. Para subpasta, configure --base-href /subpasta/.
 
-O MVP é disponibilizado pela equipe na Vercel. O endereço será incluído em ENTREGA_FINAL.md quando informado. As instruções desta página permitem reproduzir a aplicação localmente e não exigem uma nova publicação.
+O MVP é disponibilizado pela equipe na Vercel. Acesse a [versão publicada](https://acessa-plus-j6efrj192-charmander5.vercel.app/) diretamente pelo navegador. As instruções desta página permitem reproduzir a aplicação localmente e não exigem uma nova publicação.
 
 Uma hospedagem estática não executa .claude/serve-web.js nem cria a API de alertas. Configure uma API separada ou mantenha o modo simulado. Não há garantia de instalação offline ou de suporte a voz idêntico em todos os aparelhos.
 
